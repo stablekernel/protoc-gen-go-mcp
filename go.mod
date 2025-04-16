@@ -1,4 +1,4 @@
-module protoc-gen-mcp-go
+module protoc-gen-go-mcp
 
 go 1.24
 
