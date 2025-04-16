@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -13,6 +14,11 @@ const fileDescriptorProtoPackageFieldNumber = 2
 
 // FileDescriptorProto.syntax field number
 const fileDescriptorProtoSyntaxFieldNumber = 12
+
+const grpcPackage = protogen.GoImportPath("google.golang.org/grpc")
+const contextPackage = protogen.GoImportPath("context")
+const mcpPackage = protogen.GoImportPath("github.com/mark3labs/mcp-go/mcp")
+const mcpServerPackage = protogen.GoImportPath("github.com/mark3labs/mcp-go/server")
 
 // generateFile generates a _grpc.pb.go file containing gRPC service definitions.
 func generateFile(gen *protogen.Plugin, file *protogen.File) *protogen.GeneratedFile {
@@ -33,7 +39,7 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 	//} else {
 	//	g.P("// source: ", file.Desc.Path())
 	//}
-	//g.P()
+	g.P()
 	//// Attach all comments associated with the package field.
 	genLeadingComments(g, file.Desc.SourceLocations().ByPath(protoreflect.SourcePath{fileDescriptorProtoPackageFieldNumber}))
 	g.P("package ", file.GoPackageName)
@@ -47,13 +53,54 @@ func generateFileContent(gen *protogen.Plugin, file *protogen.File, g *protogen.
 		return
 	}
 	for _, service := range file.Services {
-		genService(gen, file, g, service)
+		genMCPService(gen, file, g, service)
 	}
 }
 
-func genService(gen *protogen.Plugin, file *protogen.File, g *protogen.GeneratedFile, service *protogen.Service) {
-
+func genMCPService(gen *protogen.Plugin, file *protogen.File, g *protogen.GeneratedFile, service *protogen.Service) {
+	mcpServerName := service.GoName + "MCPServer"
+	clientName := service.GoName + "Client"
+	generateMcpServerStruct(g, mcpServerName, clientName)
+	generateMcpServerHandlers(g, service, mcpServerName, clientName)
 }
+
+func generateMcpServerHandlers(g *protogen.GeneratedFile, service *protogen.Service, mcpServerName string, clientName string) {
+	for _, method := range service.Methods {
+		if method.Desc.IsStreamingClient() || method.Desc.IsStreamingServer() {
+			// Skip streaming methods
+			// TODO: Evaluate support of streaming methods
+		} else {
+			generateHandler(g, method, mcpServerName, clientName)
+		}
+	}
+}
+
+func generateHandler(g *protogen.GeneratedFile, method *protogen.Method, mcpServerName string, clientName string) {
+	g.P("func (s *", unexport(mcpServerName), ") ", method.GoName, "Handler(ctx ", contextPackage.Ident("Context"), ", req ", mcpPackage.Ident("CallToolRequest"), ") (", QualifiedGoIdentPointer(g, mcpPackage.Ident("CallToolResult")), ", error) {")
+	g.P("// TODO: Implement the handler for ", method.GoName)
+	g.P("return nil, nil")
+	g.P("}")
+}
+
+func generateMcpServerStruct(g *protogen.GeneratedFile, mcpServerName string, clientName string) {
+	g.P("type ", unexport(mcpServerName), " struct {")
+	g.P(clientName)
+	g.P()
+	g.P("MCPServer ", QualifiedGoIdentPointer(g, mcpServerPackage.Ident("MCPServer")))
+	g.P("}")
+	g.P()
+}
+
+// QualifiedGoIdentPointer returns the string to use for a Go identifier as a pointer type.
+//
+// If the identifier is from a different Go package than the generated file,
+// the returned name will be qualified (package.name) and an import statement
+// for the identifier's package will be included in the file.
+func QualifiedGoIdentPointer(g *protogen.GeneratedFile, ident protogen.GoIdent) string {
+	return "*" + g.QualifiedGoIdent(ident)
+}
+
+func unexport(s string) string { return strings.ToLower(s[:1]) + s[1:] }
 
 func protocVersion(gen *protogen.Plugin) string {
 	v := gen.Request.GetCompilerVersion()
@@ -70,10 +117,8 @@ func protocVersion(gen *protogen.Plugin) string {
 func genLeadingComments(g *protogen.GeneratedFile, loc protoreflect.SourceLocation) {
 	for _, s := range loc.LeadingDetachedComments {
 		g.P(protogen.Comments(s))
-		g.P()
 	}
 	if s := loc.LeadingComments; s != "" {
 		g.P(protogen.Comments(s))
-		g.P()
 	}
 }
