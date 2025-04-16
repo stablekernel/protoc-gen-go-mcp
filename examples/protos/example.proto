@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package examples.v1;
+
+option go_package = "examples/gen/example/v1;examplev1";
+
+message SetVibeRequest {
+  string vibe = 1;
+}
+
+message SetVibeResponse {
+  string previousVibe = 1;
+  string vibe = 2;
+}
+
+message GetVibeRequest {}
+
+message GetVibeResponse {
+  string vibe = 1;
+}
+
+service VibeService {
+  // Set Vibe
+  rpc SetVibe(SetVibeRequest) returns (SetVibeResponse) {}
+  // Get Vibe
+  rpc GetVibe(GetVibeRequest) returns (GetVibeResponse) {}
+}
