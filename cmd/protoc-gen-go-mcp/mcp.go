@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
+	"log"
+
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"log"
 )
 
 // FileDescriptorProto.syntax field number
@@ -32,10 +33,10 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 	//g.P()
 	//// Attach all comments associated with the package field.
 	//genLeadingComments(g, file.Desc.SourceLocations().ByPath(protoreflect.SourcePath{fileDescriptorProtoPackageFieldNumber}))
-	//g.P("package ", file.GoPackageName)
-	//g.P()
+	g.P("package ", file.GoPackageName)
+	g.P()
 	//generateFileContent(gen, file, g)
-	return nil
+	return g
 }
 
 func protocVersion(gen *protogen.Plugin) string {

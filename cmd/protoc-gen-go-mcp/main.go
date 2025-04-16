@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+
 	"google.golang.org/protobuf/types/pluginpb"
 
 	"google.golang.org/protobuf/compiler/protogen"
@@ -15,7 +16,7 @@ func main() {
 	showVersion := flag.Bool("version", false, "print the version and exit")
 	flag.Parse()
 	if *showVersion {
-		fmt.Printf("protoc-gen-mcp-go %v\n", version)
+		fmt.Printf("protoc-gen-go-mcp %v\n", version)
 		return
 	}
 
