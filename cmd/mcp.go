@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"log"
@@ -35,6 +36,18 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 	//g.P()
 	//generateFileContent(gen, file, g)
 	return nil
+}
+
+func protocVersion(gen *protogen.Plugin) string {
+	v := gen.Request.GetCompilerVersion()
+	if v == nil {
+		return "(unknown)"
+	}
+	var suffix string
+	if s := v.GetSuffix(); s != "" {
+		suffix = "-" + s
+	}
+	return fmt.Sprintf("v%d.%d.%d%s", v.GetMajor(), v.GetMinor(), v.GetPatch(), suffix)
 }
 
 func genLeadingComments(g *protogen.GeneratedFile, loc protoreflect.SourceLocation) {
