@@ -8,6 +8,9 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
+// FileDescriptorProto.package field number
+const fileDescriptorProtoPackageFieldNumber = 2
+
 // FileDescriptorProto.syntax field number
 const fileDescriptorProtoSyntaxFieldNumber = 12
 
@@ -32,11 +35,24 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 	//}
 	//g.P()
 	//// Attach all comments associated with the package field.
-	//genLeadingComments(g, file.Desc.SourceLocations().ByPath(protoreflect.SourcePath{fileDescriptorProtoPackageFieldNumber}))
+	genLeadingComments(g, file.Desc.SourceLocations().ByPath(protoreflect.SourcePath{fileDescriptorProtoPackageFieldNumber}))
 	g.P("package ", file.GoPackageName)
 	g.P()
-	//generateFileContent(gen, file, g)
+	generateFileContent(gen, file, g)
 	return g
+}
+
+func generateFileContent(gen *protogen.Plugin, file *protogen.File, g *protogen.GeneratedFile) {
+	if len(file.Services) == 0 {
+		return
+	}
+	for _, service := range file.Services {
+		genService(gen, file, g, service)
+	}
+}
+
+func genService(gen *protogen.Plugin, file *protogen.File, g *protogen.GeneratedFile, service *protogen.Service) {
+
 }
 
 func protocVersion(gen *protogen.Plugin) string {

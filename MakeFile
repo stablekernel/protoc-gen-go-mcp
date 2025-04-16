@@ -14,6 +14,7 @@ protoc-gen-go-mcp:
 
 generate: protoc-gen-go-mcp
 	@echo "Generating new files..."
-	@protoc --go_out=. --go_opt=paths=source_relative $(PROTOS)
+	@export PATH="$PATH:$(go env GOPATH)/bin"
+	@protoc --go_out=. $(PROTOS)
+	@protoc --go-grpc_out=. $(PROTOS)
 	@protoc --go-mcp_out=. --proto_path=examples/protos $(PROTOS) && echo "Generated successfully!"
-	@$(MAKE) -s fmt
