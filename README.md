@@ -55,6 +55,8 @@ func (s *vibeServiceMCPServer) SetVibeHandler(ctx context.Context, req mcp.CallT
 3. These two pieces are combined upon registration to provide the LLM with knowledge of the RPC method and how to use them:
 ```golang
 func (s *vibeServiceMCPServer) RegisterDefaultTools() {
+	//...other tools added above
 	s.MCPServer.AddTool(s.SetVibeTool(), s.SetVibeHandler)
+    //...other tools added below
 }
 ```
