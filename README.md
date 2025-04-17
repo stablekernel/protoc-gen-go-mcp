@@ -8,7 +8,7 @@ This is a plugin for the [protoc compiler](https://grpc.io/docs/protoc-installat
 - [protoc-gen-go-grpc](https://grpc.io/docs/languages/go/quickstart/) 1.71 or later
 
 #### Running the plugin
-Check out the [MakeFile](./MakeFile) for explicit command usage. Use `make generate` to generate the example [proto file](./protos/example.proto) and run the example server.
+Check out the [MakeFile](./MakeFile) for explicit command usage. Use `make generate` to generate the example MCP server from the [proto file](./protos/example.proto).
 
 #### Philosophical Notes 
 The plugin uses the existing code generation for protocol buffers and gRPC servers and builds upon that base, using and reusing parts where necessary. This gives us a healthy amount of code reuse while allowing us to control what we expose to end users. We want this plugin to provide sane, out-of-the-box functionality while allowing for easy extension.
