@@ -43,4 +43,5 @@ func (s *vibeServiceMCPServer) SetVibeTool() mcp.Tool {
 }
 ```
 This tool can be subsequently registered with the server to make the RPC available to the model.
+
 2. The `protoc-gen-go-mcp` plugin generates a default handler that interacts with a generated gRPC client for interaction with this server to parse the `mcp.Tool` into a defined gRPC request leveraging a generated client.
