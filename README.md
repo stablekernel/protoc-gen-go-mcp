@@ -60,3 +60,6 @@ func (s *vibeServiceMCPServer) RegisterDefaultTools() {
     //...other tools added below
 }
 ```
+
+#### Contributing
+We welcome contributions to this project! If you have an idea for a new feature or improvement, please open an issue or submit a pull request. For existing issues, assign yourself to it and start working on it. We will review your changes and provide feedback as needed.

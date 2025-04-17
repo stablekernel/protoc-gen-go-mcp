@@ -103,7 +103,7 @@ func generateMCPTool(g *protogen.GeneratedFile, method *protogen.Method, mcpServ
 	if len(method.Comments.Leading) > 0 {
 		methodDescription = processCommentToString(method.Comments.Leading)
 	} else {
-		//TODO: Determine how we should handle this from an API perspective
+		//TODO: Determine how we should handle this from an API perspective -- we need a comment here to ensure that there is natural language to key in on for what the API does
 	}
 	g.P("tool := mcp.NewTool(\"", method.GoName, "\", mcp.WithDescription(\"", methodDescription, "\"))")
 	g.P("return tool")
