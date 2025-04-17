@@ -65,15 +65,21 @@ func genMCPService(gen *protogen.Plugin, file *protogen.File, g *protogen.Genera
 }
 
 func generateMcpServerHandlers(g *protogen.GeneratedFile, service *protogen.Service, mcpServerName string, clientName string) {
+	methods := make([]*protogen.Method, 0)
 	for _, method := range service.Methods {
 		if method.Desc.IsStreamingClient() || method.Desc.IsStreamingServer() {
 			// Skip streaming methods
 			// TODO: Evaluate support of streaming methods
 		} else {
+			methods = append(methods, method)
 			generateHandler(g, method, mcpServerName, clientName)
+			g.P()
 			generateMCPTool(g, method, mcpServerName)
+			g.P()
 		}
 	}
+	g.P()
+	generateDefaultToolsRegistration(g, methods, mcpServerName)
 }
 
 /*
@@ -110,6 +116,21 @@ func generateMcpServerStruct(g *protogen.GeneratedFile, mcpServerName string, cl
 	g.P(clientName)
 	g.P()
 	g.P("MCPServer ", QualifiedGoIdentPointer(g, mcpServerPackage.Ident("MCPServer")))
+	g.P("}")
+	g.P()
+}
+
+/*
+	func (s *vibeServiceMCPServer) RegisterDefaultTools() {
+		s.MCPServer.AddTool(s.SetVibeTool(), s.SetVibeHandler)
+		s.MCPServer.AddTool(s.GetVibeTool(), s.GetVibeHandler)
+	}
+*/
+func generateDefaultToolsRegistration(g *protogen.GeneratedFile, methods []*protogen.Method, mcpServerName string) {
+	g.P("func (s *", unexport(mcpServerName), ") RegisterDefaultTools() {")
+	for _, method := range methods {
+		g.P("s.MCPServer.AddTool(s.", method.GoName, "Tool(), s.", method.GoName, "Handler)")
+	}
 	g.P("}")
 	g.P()
 }

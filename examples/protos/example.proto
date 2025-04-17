@@ -9,7 +9,7 @@ message SetVibeRequest {
 }
 
 message SetVibeResponse {
-  string previousVibe = 1;
+  string previous_vibe = 1;
   string vibe = 2;
 }
 
