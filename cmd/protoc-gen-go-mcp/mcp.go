@@ -91,7 +91,7 @@ tool := mcp.NewTool("set_driver_unavailable", mcp.WithDescription("Set A Deliver
 )
 */
 func generateMCPTool(g *protogen.GeneratedFile, method *protogen.Method, mcpServerName string) {
-	g.P("func (s *", unexport(mcpServerName), ") ", method.GoName, "Tool() (", QualifiedGoIdentPointer(g, mcpPackage.Ident("Tool")), ") {")
+	g.P("func (s *", unexport(mcpServerName), ") ", method.GoName, "Tool() (", mcpPackage.Ident("Tool"), ") {")
 	g.P("// TODO: Implement the tool generator for ", method.GoName)
 	g.P("tool := mcp.NewTool(\"", method.Desc.FullName(), "\", mcp.WithDescription(\"TODO: Implement the tool description\"))")
 	g.P("return tool")
