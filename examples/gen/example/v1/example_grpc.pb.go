@@ -27,9 +27,10 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type VibeServiceClient interface {
-	// Set Vibe
+	// Set the Vibe
 	SetVibe(ctx context.Context, in *SetVibeRequest, opts ...grpc.CallOption) (*SetVibeResponse, error)
 	// Get Vibe
+	// of the server
 	GetVibe(ctx context.Context, in *GetVibeRequest, opts ...grpc.CallOption) (*GetVibeResponse, error)
 }
 
@@ -65,9 +66,10 @@ func (c *vibeServiceClient) GetVibe(ctx context.Context, in *GetVibeRequest, opt
 // All implementations must embed UnimplementedVibeServiceServer
 // for forward compatibility.
 type VibeServiceServer interface {
-	// Set Vibe
+	// Set the Vibe
 	SetVibe(context.Context, *SetVibeRequest) (*SetVibeResponse, error)
 	// Get Vibe
+	// of the server
 	GetVibe(context.Context, *GetVibeRequest) (*GetVibeResponse, error)
 	mustEmbedUnimplementedVibeServiceServer()
 }

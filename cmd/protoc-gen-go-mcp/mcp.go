@@ -98,8 +98,14 @@ tool := mcp.NewTool("set_driver_unavailable", mcp.WithDescription("Set A Deliver
 */
 func generateMCPTool(g *protogen.GeneratedFile, method *protogen.Method, mcpServerName string) {
 	g.P("func (s *", unexport(mcpServerName), ") ", method.GoName, "Tool() (", mcpPackage.Ident("Tool"), ") {")
-	g.P("// TODO: Implement the tool generator for ", method.GoName)
-	g.P("tool := mcp.NewTool(\"", method.Desc.FullName(), "\", mcp.WithDescription(\"TODO: Implement the tool description\"))")
+
+	methodDescription := ""
+	if len(method.Comments.Leading) > 0 {
+		methodDescription = processCommentToString(method.Comments.Leading)
+	} else {
+		//TODO: Determine how we should handle this from an API perspective
+	}
+	g.P("tool := mcp.NewTool(\"", method.GoName, "\", mcp.WithDescription(\"", methodDescription, "\"))")
 	g.P("return tool")
 	g.P("}")
 }
@@ -109,6 +115,12 @@ func generateHandler(g *protogen.GeneratedFile, method *protogen.Method, mcpServ
 	g.P("// TODO: Implement the handler for ", method.GoName)
 	g.P("return nil, nil")
 	g.P("}")
+}
+
+// TODO: this needs some love, multiline strings are handled not so well, leading trailing spaces, etc
+// processCommentToString processes the comments to a single line string
+func processCommentToString(comments protogen.Comments) string {
+	return strings.TrimSuffix(strings.Replace(strings.TrimPrefix(string(comments), " "), "\n", " ", -1), " ")
 }
 
 func generateMcpServerStruct(g *protogen.GeneratedFile, mcpServerName string, clientName string) {

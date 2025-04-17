@@ -23,8 +23,7 @@ func (s *vibeServiceMCPServer) SetVibeHandler(ctx context.Context, req mcp.CallT
 }
 
 func (s *vibeServiceMCPServer) SetVibeTool() mcp.Tool {
-	// TODO: Implement the tool generator for SetVibe
-	tool := mcp.NewTool("examples.v1.VibeService.SetVibe", mcp.WithDescription("TODO: Implement the tool description"))
+	tool := mcp.NewTool("SetVibe", mcp.WithDescription("Set the Vibe"))
 	return tool
 }
 
@@ -34,8 +33,7 @@ func (s *vibeServiceMCPServer) GetVibeHandler(ctx context.Context, req mcp.CallT
 }
 
 func (s *vibeServiceMCPServer) GetVibeTool() mcp.Tool {
-	// TODO: Implement the tool generator for GetVibe
-	tool := mcp.NewTool("examples.v1.VibeService.GetVibe", mcp.WithDescription("TODO: Implement the tool description"))
+	tool := mcp.NewTool("GetVibe", mcp.WithDescription("Get Vibe  of the server "))
 	return tool
 }
 

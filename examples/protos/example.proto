@@ -20,8 +20,10 @@ message GetVibeResponse {
 }
 
 service VibeService {
-  // Set Vibe
+  // Set the Vibe
   rpc SetVibe(SetVibeRequest) returns (SetVibeResponse) {}
   // Get Vibe
+  // of the server
+  //
   rpc GetVibe(GetVibeRequest) returns (GetVibeResponse) {}
 }
