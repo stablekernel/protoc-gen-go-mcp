@@ -21,7 +21,17 @@ func (s *vibeServiceMCPServer) SetVibeHandler(ctx context.Context, req mcp.CallT
 	// TODO: Implement the handler for SetVibe
 	return nil, nil
 }
+func (s *vibeServiceMCPServer) SetVibeTool() *mcp.Tool {
+	// TODO: Implement the tool generator for SetVibe
+	tool := mcp.NewTool("examples.v1.VibeService.SetVibe", mcp.WithDescription("TODO: Implement the tool description"))
+	return tool
+}
 func (s *vibeServiceMCPServer) GetVibeHandler(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	// TODO: Implement the handler for GetVibe
 	return nil, nil
+}
+func (s *vibeServiceMCPServer) GetVibeTool() *mcp.Tool {
+	// TODO: Implement the tool generator for GetVibe
+	tool := mcp.NewTool("examples.v1.VibeService.GetVibe", mcp.WithDescription("TODO: Implement the tool description"))
+	return tool
 }

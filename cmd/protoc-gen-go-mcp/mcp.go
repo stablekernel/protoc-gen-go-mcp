@@ -71,8 +71,31 @@ func generateMcpServerHandlers(g *protogen.GeneratedFile, service *protogen.Serv
 			// TODO: Evaluate support of streaming methods
 		} else {
 			generateHandler(g, method, mcpServerName, clientName)
+			generateMCPTool(g, method, mcpServerName)
 		}
 	}
+}
+
+/*
+tool := mcp.NewTool("set_driver_unavailable", mcp.WithDescription("Set A Delivery Driver Unavailable"),
+
+	mcp.WithString("driver_id",
+		mcp.Required(),
+		mcp.Description("The ID of the driver to set unavailable"),
+	),
+	mcp.WithString("location_number",
+		mcp.Required(),
+		mcp.Description("The location number of the restaurant the driver is at"),
+	),
+
+)
+*/
+func generateMCPTool(g *protogen.GeneratedFile, method *protogen.Method, mcpServerName string) {
+	g.P("func (s *", unexport(mcpServerName), ") ", method.GoName, "Tool() (", QualifiedGoIdentPointer(g, mcpPackage.Ident("Tool")), ") {")
+	g.P("// TODO: Implement the tool generator for ", method.GoName)
+	g.P("tool := mcp.NewTool(\"", method.Desc.FullName(), "\", mcp.WithDescription(\"TODO: Implement the tool description\"))")
+	g.P("return tool")
+	g.P("}")
 }
 
 func generateHandler(g *protogen.GeneratedFile, method *protogen.Method, mcpServerName string, clientName string) {
