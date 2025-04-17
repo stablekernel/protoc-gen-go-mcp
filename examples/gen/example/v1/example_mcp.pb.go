@@ -25,6 +25,10 @@ func (s *vibeServiceMCPServer) SetVibeHandler(ctx context.Context, req mcp.CallT
 func (s *vibeServiceMCPServer) SetVibeTool() mcp.Tool {
 	tool := mcp.NewTool(
 		"SetVibe", mcp.WithDescription("Set the Vibe"),
+		mcp.WithString(
+			mcp.Required(),
+			mcp.Description("The vibe of the server to be set"),
+		),
 	)
 	return tool
 }

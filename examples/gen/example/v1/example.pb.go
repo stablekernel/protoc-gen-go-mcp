@@ -25,6 +25,7 @@ type SetVibeRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// The vibe of the server to be set
 	Vibe string `protobuf:"bytes,1,opt,name=vibe,proto3" json:"vibe,omitempty"`
 }
 

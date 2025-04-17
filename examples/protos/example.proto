@@ -5,6 +5,7 @@ package examples.v1;
 option go_package = "examples/gen/example/v1;examplev1";
 
 message SetVibeRequest {
+  //The vibe of the server to be set
   string vibe = 1;
 }
 

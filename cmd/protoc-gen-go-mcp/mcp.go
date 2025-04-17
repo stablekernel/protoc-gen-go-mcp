@@ -106,9 +106,36 @@ func generateMCPTool(g *protogen.GeneratedFile, method *protogen.Method, mcpServ
 	}
 	g.P("tool := mcp.NewTool(")
 	g.P("\"", method.GoName, "\", mcp.WithDescription(\"", methodDescription, "\"),")
+	log.Println(method.Input)
+	for _, field := range method.Input.Fields {
+		log.Println(field)
+		generateMCPToolField(g, field)
+	}
 	g.P(")")
 	g.P("return tool")
 	g.P("}")
+}
+
+/*
+mcp.WithString(
+
+	"vibe",
+	mcp.Required(),
+	mcp.Description("The vibe to set on the server"),
+
+),
+*/
+func generateMCPToolField(g *protogen.GeneratedFile, field *protogen.Field) {
+	switch field.Desc.Kind().String() {
+	case "string":
+		g.P("mcp.WithString(")
+		if field.Desc.HasOptionalKeyword() {
+		} else {
+			g.P("mcp.Required(),")
+		}
+		g.P("mcp.Description(\"", processCommentToString(field.Comments.Leading), "\"),")
+		g.P("),")
+	}
 }
 
 func generateHandler(g *protogen.GeneratedFile, method *protogen.Method, mcpServerName string, clientName string) {
