@@ -83,18 +83,17 @@ func generateMcpServerHandlers(g *protogen.GeneratedFile, service *protogen.Serv
 }
 
 /*
-tool := mcp.NewTool("set_driver_unavailable", mcp.WithDescription("Set A Delivery Driver Unavailable"),
-
-	mcp.WithString("driver_id",
-		mcp.Required(),
-		mcp.Description("The ID of the driver to set unavailable"),
-	),
-	mcp.WithString("location_number",
-		mcp.Required(),
-		mcp.Description("The location number of the restaurant the driver is at"),
-	),
-
-)
+	func (s *vibeServiceMCPServer) SetVibeTool() mcp.Tool {
+		tool := mcp.NewTool(
+			"SetVibe", mcp.WithDescription("Set the Vibe"),
+			mcp.WithString(
+				"vibe",
+				mcp.Required(),
+				mcp.Description("The vibe to set on the server"),
+			),
+		)
+		return tool
+	}
 */
 func generateMCPTool(g *protogen.GeneratedFile, method *protogen.Method, mcpServerName string) {
 	g.P("func (s *", unexport(mcpServerName), ") ", method.GoName, "Tool() (", mcpPackage.Ident("Tool"), ") {")
@@ -105,7 +104,9 @@ func generateMCPTool(g *protogen.GeneratedFile, method *protogen.Method, mcpServ
 	} else {
 		//TODO: Determine how we should handle this from an API perspective -- we need a comment here to ensure that there is natural language to key in on for what the API does
 	}
-	g.P("tool := mcp.NewTool(\"", method.GoName, "\", mcp.WithDescription(\"", methodDescription, "\"))")
+	g.P("tool := mcp.NewTool(")
+	g.P("\"", method.GoName, "\", mcp.WithDescription(\"", methodDescription, "\"),")
+	g.P(")")
 	g.P("return tool")
 	g.P("}")
 }
