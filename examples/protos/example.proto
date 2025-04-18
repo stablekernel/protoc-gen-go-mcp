@@ -61,5 +61,5 @@ service VibeService {
   //
   rpc GetVibe(GetVibeRequest) returns (GetVibeResponse) {}
   // Set vibe details
-  rpc SetVibeDetails(SetVibeDetailsRequest) returns (SetVibeResponse) {}
+  rpc SetVibeDetails(SetVibeScalarRequest) returns (SetVibeResponse) {}
 }
