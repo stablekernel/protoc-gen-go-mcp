@@ -8,7 +8,7 @@ This is a plugin for the [protoc compiler](https://grpc.io/docs/protoc-installat
 - [protoc-gen-go-grpc](https://grpc.io/docs/languages/go/quickstart/) 1.71 or later
 
 #### Running the plugin
-Check out the [MakeFile](./MakeFile) for explicit command usage. Use `make generate` to generate the example MCP server from the [proto file](./protos/example.proto).
+Check out the [Makefile](./Makefile) for explicit command usage. Use `make generate` to generate the example MCP server from the [proto file](./protos/example.proto).
 
 #### Testing the example
 Install the example `mcp-vibe` server
