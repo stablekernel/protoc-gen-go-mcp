@@ -129,7 +129,7 @@ func generateMCPToolField(g *protogen.GeneratedFile, field *protogen.Field) {
 	switch field.Desc.Kind().String() {
 	case "string":
 		g.P("mcp.WithString(")
-		g.P(field.GoName, ",")
+		g.P("\"", field.Desc.Name(), "\",")
 		if field.Desc.HasOptionalKeyword() {
 		} else {
 			g.P("mcp.Required(),")
