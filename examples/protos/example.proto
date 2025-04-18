@@ -9,6 +9,7 @@ message SetVibeRequest {
   string vibe = 1;
 }
 
+// the new vibe of the server
 message SetVibeResponse {
   string previous_vibe = 1;
   string vibe = 2;
@@ -16,6 +17,7 @@ message SetVibeResponse {
 
 message GetVibeRequest {}
 
+// What the server is currently vibing
 message GetVibeResponse {
   string vibe = 1;
 }
