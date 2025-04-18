@@ -61,7 +61,24 @@ func genMCPService(gen *protogen.Plugin, file *protogen.File, g *protogen.Genera
 	mcpServerName := service.GoName + "MCPServer"
 	clientName := service.GoName + "Client"
 	generateMcpServerStruct(g, mcpServerName, clientName)
+	generateMcpServerService(g, service, mcpServerName, clientName)
 	generateMcpServerHandlers(g, service, mcpServerName, clientName)
+}
+
+func generateMcpServerService(g *protogen.GeneratedFile, service *protogen.Service, mcpServerName string, clientName string) {
+	constructorName := "New" + service.GoName + "MCPServer"
+	serverStructName := unexport(mcpServerName)
+
+	g.P("func ", constructorName, "(")
+	g.P("    client ", clientName, ",")
+	g.P("    mcpServer *", mcpServerPackage.Ident("MCPServer"), ",")
+	g.P(") *", serverStructName, " {")
+	g.P("    return &", serverStructName, "{")
+	g.P("        ", clientName, ": client,")
+	g.P("        MCPServer: mcpServer,")
+	g.P("    }")
+	g.P("}")
+	g.P()
 }
 
 func generateMcpServerHandlers(g *protogen.GeneratedFile, service *protogen.Service, mcpServerName string, clientName string) {
