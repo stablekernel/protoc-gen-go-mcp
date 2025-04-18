@@ -20,6 +20,16 @@ type vibeServiceMCPServer struct {
 	MCPServer *server.MCPServer
 }
 
+func NewVibeServiceMCPServer(
+	client examplev1.VibeServiceClient,
+	mcpServer *server.MCPServer,
+) *vibeServiceMCPServer {
+	return &vibeServiceMCPServer{
+		VibeServiceClient: client,
+		MCPServer:         mcpServer,
+	}
+}
+
 func (s *vibeServiceMCPServer) SetVibeHandler(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	result, err := s.SetVibe(ctx, &examplev1.SetVibeRequest{
 		Vibe: req.Params.Arguments["vibe"].(string),
