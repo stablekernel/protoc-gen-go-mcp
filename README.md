@@ -10,6 +10,28 @@ This is a plugin for the [protoc compiler](https://grpc.io/docs/protoc-installat
 #### Running the plugin
 Check out the [Makefile](./Makefile) for explicit command usage. Use `make generate` to generate the example MCP server from the [proto file](./protos/example.proto).
 
+#### Debugging the plugin
+
+```bash
+make start-debugger
+```
+
+Will start the delve debugger in headless mode on port 2345. The file under
+debug will be `$GOPATH/bin/protoc-gen-go-mcp`. You can connect to that in VSCode
+with the following `launch.json` configuration.
+
+```json
+{
+  "name": "Connect to protoc-gen-go-mcp plugin",
+  "type": "go",
+  "request": "attach",
+  "mode": "remote",
+  "remotePath": "${workspaceFolder}",
+  "port": 2345,
+  "host": "127.0.0.1"
+}
+```
+
 #### Testing the example
 Install the example `mcp-vibe` server
 ```bash
