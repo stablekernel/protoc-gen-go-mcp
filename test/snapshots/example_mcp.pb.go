@@ -194,61 +194,61 @@ func (s *vibeServiceMCPServer) SetVibeDetailsTool() mcp.Tool {
 			mcp.Description("The details of the vibe"),
 			mcp.Properties(map[string]interface{}{
 				"vibeDouble": map[string]interface{}{
-					"type":        "double",
+					"type":        "number",
 					"description": "The details of the vibe double",
 					"required":    true,
 				},
 				"vibeFloat": map[string]interface{}{
-					"type":        "float",
+					"type":        "number",
 					"description": "The details of the vibe float",
 					"required":    true,
 				},
 				"vibeInt32": map[string]interface{}{
-					"type":        "integer",
+					"type":        "number",
 					"description": "The details of the vibe int32",
 					"required":    true,
 				},
 				"vibeInt64": map[string]interface{}{
-					"type":        "integer",
+					"type":        "number",
 					"description": "The details of the vibe int64",
 					"required":    true,
 				},
 				"vibeUint32": map[string]interface{}{
-					"type":        "integer",
+					"type":        "number",
 					"description": "The details of the vibe uint32",
 				},
 				"vibeUint64": map[string]interface{}{
-					"type":        "integer",
+					"type":        "number",
 					"description": "The details of the vibe uint64",
 					"required":    true,
 				},
 				"vibeSint32": map[string]interface{}{
-					"type":        "integer",
+					"type":        "number",
 					"description": "The details of the vibe sint32",
 					"required":    true,
 				},
 				"vibeSint64": map[string]interface{}{
-					"type":        "integer",
+					"type":        "number",
 					"description": "The details of the vibe sint64",
 					"required":    true,
 				},
 				"vibeFixed32": map[string]interface{}{
-					"type":        "fixed",
+					"type":        "number",
 					"description": "The details of the vibe fixed32",
 					"required":    true,
 				},
 				"vibeFixed64": map[string]interface{}{
-					"type":        "fixed",
+					"type":        "number",
 					"description": "The details of the vibe fixed64",
 					"required":    true,
 				},
 				"vibeSfixed32": map[string]interface{}{
-					"type":        "fixed",
+					"type":        "number",
 					"description": "The details of the vibe sfixed32",
 					"required":    true,
 				},
 				"vibeSfixed64": map[string]interface{}{
-					"type":        "fixed",
+					"type":        "number",
 					"description": "The details of the vibe sfixed64",
 					"required":    true,
 				},
