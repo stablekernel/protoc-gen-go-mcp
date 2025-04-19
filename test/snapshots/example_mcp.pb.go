@@ -30,10 +30,14 @@ func NewVibeServiceMCPServer(
 	}
 }
 
-func (s *vibeServiceMCPServer) SetVibeHandler(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	result, err := s.SetVibe(ctx, &examplev1.SetVibeRequest{
+func (s *vibeServiceMCPServer) buildSetVibeRequest(req mcp.CallToolRequest) *examplev1.SetVibeRequest {
+	return &examplev1.SetVibeRequest{
 		Vibe: req.Params.Arguments["vibe"].(string),
-	})
+	}
+}
+
+func (s *vibeServiceMCPServer) SetVibeHandler(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	result, err := s.SetVibe(ctx, s.buildSetVibeRequest(req))
 	if err != nil {
 		return mcp.NewToolResultErrorFromErr("error calling SetVibe", err), nil
 	}
@@ -46,9 +50,9 @@ func (s *vibeServiceMCPServer) SetVibeHandler(ctx context.Context, req mcp.CallT
 	return mcp.NewToolResultResource(
 		"the new vibe of the server",
 		mcp.TextResourceContents{
-			URI: "examples.v1://SetVibeResponse",
+			URI:      "examples.v1://SetVibeResponse",
 			MIMEType: "application/json",
-			Text: string(resultJson),
+			Text:     string(resultJson),
 		},
 	), nil
 }
@@ -65,9 +69,12 @@ func (s *vibeServiceMCPServer) SetVibeTool() mcp.Tool {
 	return tool
 }
 
+func (s *vibeServiceMCPServer) buildGetVibeRequest(req mcp.CallToolRequest) *examplev1.GetVibeRequest {
+	return &examplev1.GetVibeRequest{}
+}
 
 func (s *vibeServiceMCPServer) GetVibeHandler(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	result, err := s.GetVibe(ctx, &examplev1.GetVibeRequest{})
+	result, err := s.GetVibe(ctx, s.buildGetVibeRequest(req))
 	if err != nil {
 		return mcp.NewToolResultErrorFromErr("error calling GetVibe", err), nil
 	}
@@ -80,9 +87,9 @@ func (s *vibeServiceMCPServer) GetVibeHandler(ctx context.Context, req mcp.CallT
 	return mcp.NewToolResultResource(
 		"What the server is currently vibing",
 		mcp.TextResourceContents{
-			URI: "examples.v1://GetVibeResponse",
+			URI:      "examples.v1://GetVibeResponse",
 			MIMEType: "application/json",
-			Text: string(resultJson),
+			Text:     string(resultJson),
 		},
 	), nil
 }
@@ -94,7 +101,176 @@ func (s *vibeServiceMCPServer) GetVibeTool() mcp.Tool {
 	return tool
 }
 
+func buildVibeScalar(vibeScalar interface{}) *examplev1.VibeScalar {
+	if vibeScalar == nil {
+		return nil
+	}
+	vibeScalarMap := vibeScalar.(map[string]interface{})
+	vibeScalarObj := &examplev1.VibeScalar{}
+	if vibeScalarMap["vibeDouble"] != nil {
+		vibeScalarObj.VibeDouble = vibeScalarMap["vibeDouble"].(float64)
+	}
+	if vibeScalarMap["vibeFloat"] != nil {
+		vibeScalarObj.VibeFloat = float32(vibeScalarMap["vibeFloat"].(float64))
+	}
+	if vibeScalarMap["vibeInt32"] != nil {
+		vibeScalarObj.VibeInt32 = int32(vibeScalarMap["vibeInt32"].(float64))
+	}
+	if vibeScalarMap["vibeInt64"] != nil {
+		vibeScalarObj.VibeInt64 = int64(vibeScalarMap["vibeInt64"].(float64))
+	}
+	if vibeScalarMap["vibeUint32"] != nil {
+		vibeScalarObj.VibeUint32 = uint32(vibeScalarMap["vibeUint32"].(float64))
+	}
+	if vibeScalarMap["vibeUint64"] != nil {
+		vibeScalarObj.VibeUint64 = uint64(vibeScalarMap["vibeUint64"].(float64))
+	}
+	if vibeScalarMap["vibeSint32"] != nil {
+		vibeScalarObj.VibeSint32 = int32(vibeScalarMap["vibeSint32"].(float64))
+	}
+	if vibeScalarMap["vibeSint64"] != nil {
+		vibeScalarObj.VibeSint64 = int64(vibeScalarMap["vibeSint64"].(float64))
+	}
+	if vibeScalarMap["vibeFixed32"] != nil {
+		vibeScalarObj.VibeFixed32 = uint32(vibeScalarMap["vibeFixed32"].(float64))
+	}
+	if vibeScalarMap["vibeFixed64"] != nil {
+		vibeScalarObj.VibeFixed64 = uint64(vibeScalarMap["vibeFixed64"].(float64))
+	}
+	if vibeScalarMap["vibeSfixed32"] != nil {
+		vibeScalarObj.VibeSfixed32 = int32(vibeScalarMap["vibeSfixed32"].(float64))
+	}
+	if vibeScalarMap["vibeSfixed64"] != nil {
+		vibeScalarObj.VibeSfixed64 = int64(vibeScalarMap["vibeSfixed64"].(float64))
+	}
+	if vibeScalarMap["vibeBool"] != nil {
+		vibeScalarObj.VibeBool = vibeScalarMap["vibeBool"].(bool)
+	}
+	if vibeScalarMap["vibeBytes"] != nil {
+		vibeScalarObj.VibeBytes = []byte(vibeScalarMap["vibeBytes"].(string))
+	}
+	return vibeScalarObj
+}
+
+func (s *vibeServiceMCPServer) buildSetVibeDetailsRequest(req mcp.CallToolRequest) *examplev1.SetVibeDetailsRequest {
+	return &examplev1.SetVibeDetailsRequest{
+		Vibe:       req.Params.Arguments["vibe"].(string),
+		VibeScalar: buildVibeScalar(req.Params.Arguments["vibeScalar"]),
+	}
+}
+
+func (s *vibeServiceMCPServer) SetVibeDetailsHandler(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	result, err := s.SetVibeDetails(ctx, s.buildSetVibeDetailsRequest(req))
+	if err != nil {
+		return mcp.NewToolResultErrorFromErr("error calling SetVibeDetails", err), nil
+	}
+
+	resultJson, err := json.Marshal(result)
+	if err != nil {
+		return mcp.NewToolResultErrorFromErr("error marshalling SetVibeDetailsResponse", err), nil
+	}
+
+	return mcp.NewToolResultResource(
+		"the new vibe details of the server",
+		mcp.TextResourceContents{
+			URI:      "examples.v1://SetVibeDetailsResponse",
+			MIMEType: "application/json",
+			Text:     string(resultJson),
+		},
+	), nil
+}
+
+func (s *vibeServiceMCPServer) SetVibeDetailsTool() mcp.Tool {
+	tool := mcp.NewTool(
+		"SetVibeDetails", mcp.WithDescription("Set vibe details"),
+		mcp.WithString(
+			"vibe",
+			mcp.Required(),
+			mcp.Description("The vibe of the string to be set"),
+		),
+		mcp.WithObject(
+			"vibeScalar",
+			mcp.Required(),
+			mcp.Description("The details of the vibe"),
+			mcp.Properties(map[string]interface{}{
+				"vibeDouble": map[string]interface{}{
+					"type":        "number",
+					"description": "The details of the vibe double",
+					"required":    true,
+				},
+				"vibeFloat": map[string]interface{}{
+					"type":        "number",
+					"description": "The details of the vibe float",
+					"required":    true,
+				},
+				"vibeInt32": map[string]interface{}{
+					"type":        "number",
+					"description": "The details of the vibe int32",
+					"required":    true,
+				},
+				"vibeInt64": map[string]interface{}{
+					"type":        "number",
+					"description": "The details of the vibe int64",
+					"required":    true,
+				},
+				"vibeUint32": map[string]interface{}{
+					"type":        "number",
+					"description": "The details of the vibe uint32",
+				},
+				"vibeUint64": map[string]interface{}{
+					"type":        "number",
+					"description": "The details of the vibe uint64",
+					"required":    true,
+				},
+				"vibeSint32": map[string]interface{}{
+					"type":        "number",
+					"description": "The details of the vibe sint32",
+					"required":    true,
+				},
+				"vibeSint64": map[string]interface{}{
+					"type":        "number",
+					"description": "The details of the vibe sint64",
+					"required":    true,
+				},
+				"vibeFixed32": map[string]interface{}{
+					"type":        "number",
+					"description": "The details of the vibe fixed32",
+					"required":    true,
+				},
+				"vibeFixed64": map[string]interface{}{
+					"type":        "number",
+					"description": "The details of the vibe fixed64",
+					"required":    true,
+				},
+				"vibeSfixed32": map[string]interface{}{
+					"type":        "number",
+					"description": "The details of the vibe sfixed32",
+					"required":    true,
+				},
+				"vibeSfixed64": map[string]interface{}{
+					"type":        "number",
+					"description": "The details of the vibe sfixed64",
+					"required":    true,
+				},
+				"vibeBool": map[string]interface{}{
+					"type":        "boolean",
+					"description": "The details of the vibe bool",
+					"required":    true,
+				},
+				"vibeBytes": map[string]interface{}{
+					"type":        "string",
+					"format":      "byte",
+					"description": "The details of the vibe bytes",
+					"required":    true,
+				},
+			}),
+		),
+	)
+	return tool
+}
+
 func (s *vibeServiceMCPServer) RegisterDefaultTools() {
 	s.MCPServer.AddTool(s.SetVibeTool(), s.SetVibeHandler)
 	s.MCPServer.AddTool(s.GetVibeTool(), s.GetVibeHandler)
+	s.MCPServer.AddTool(s.SetVibeDetailsTool(), s.SetVibeDetailsHandler)
 }

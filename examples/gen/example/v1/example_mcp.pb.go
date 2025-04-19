@@ -46,7 +46,25 @@ func (s *vibeServiceMCPServer) GetVibeTool() mcp.Tool {
 	return tool
 }
 
+func (s *vibeServiceMCPServer) SetVibeDetailsHandler(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	// TODO: Implement the handler for SetVibeDetails
+	return nil, nil
+}
+
+func (s *vibeServiceMCPServer) SetVibeDetailsTool() mcp.Tool {
+	tool := mcp.NewTool(
+		"SetVibeDetails", mcp.WithDescription("Set vibe details"),
+		mcp.WithString(
+			"vibe",
+			mcp.Required(),
+			mcp.Description("The vibe of the string to be set"),
+		),
+	)
+	return tool
+}
+
 func (s *vibeServiceMCPServer) RegisterDefaultTools() {
 	s.MCPServer.AddTool(s.SetVibeTool(), s.SetVibeHandler)
 	s.MCPServer.AddTool(s.GetVibeTool(), s.GetVibeHandler)
+	s.MCPServer.AddTool(s.SetVibeDetailsTool(), s.SetVibeDetailsHandler)
 }
