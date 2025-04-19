@@ -18,3 +18,7 @@ generate: protoc-gen-go-mcp
 	@protoc --go_out=. $(PROTOS)
 	@protoc --go-grpc_out=. $(PROTOS)
 	@protoc --go-mcp_out=. --proto_path=examples/protos $(PROTOS) && echo "Generated successfully!"
+
+start-debugger: protoc-gen-go-mcp
+	@echo "Starting debugger"
+	@protoc --plugin=protoc-gen-debug=./protoc-gen-debug --debug_out=. $(PROTOS)

@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+dlv exec $GOPATH/bin/protoc-gen-go-mcp --headless --listen=:2345 --api-version=2 -- "$@"
+
