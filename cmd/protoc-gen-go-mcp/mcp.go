@@ -123,9 +123,7 @@ func generateMCPTool(g *protogen.GeneratedFile, method *protogen.Method, mcpServ
 	}
 	g.P("tool := mcp.NewTool(")
 	g.P("\"", method.GoName, "\", mcp.WithDescription(\"", methodDescription, "\"),")
-	log.Println(method.Input)
 	for _, field := range method.Input.Fields {
-		log.Println(field)
 		generateMCPToolField(g, field)
 	}
 	g.P(")")
@@ -168,7 +166,7 @@ func generateMCPToolField(g *protogen.GeneratedFile, field *protogen.Field) {
 			generateMCPPropertyForField(g, messageField)
 		}
 		g.P("}),")
-
+		g.P("),")
 	}
 }
 
