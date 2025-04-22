@@ -174,7 +174,16 @@ func generateMCPToolField(g *protogen.GeneratedFile, field *protogen.Field) {
 
 func generateMCPPropertyForField(g *protogen.GeneratedFile, field *protogen.Field) {
 	g.P("\"", field.Desc.Name(), "\": map[string]interface{}{")
-	g.P("\"type\": \"", field.Desc.Kind().String(), "\",") //TODO -- need to actually parse a proper type here -- eg. uint32 should be converted to number, bool to boolean, etc
+	typeName := field.Desc.Kind().String()
+	switch field.Desc.Kind().String() {
+	case "double", "float", "int32", "int64", "uint32", "uint64", "sint32", "sint64", "fixed32", "fixed64", "sfixed32", "sfixed64":
+		typeName = "number"
+	case "bool":
+		typeName = "boolean"
+	case "bytes":
+		typeName = "string"
+	}
+	g.P("\"type\": \"", typeName, "\",")
 	g.P("\"description\": \"", processCommentToString(field.Comments.Leading), "\",")
 	if field.Desc.HasOptionalKeyword() {
 		g.P("\"required\": false,")
