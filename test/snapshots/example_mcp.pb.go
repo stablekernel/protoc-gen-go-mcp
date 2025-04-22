@@ -66,6 +66,7 @@ func (s *vibeServiceMCPServer) SetVibeTool() mcp.Tool {
 			mcp.Description("The vibe of the server to be set"),
 		),
 	)
+
 	return tool
 }
 

@@ -143,6 +143,7 @@ mcp.WithString(
 ),
 */
 func generateMCPToolField(g *protogen.GeneratedFile, field *protogen.Field) {
+	log.Println(field.Desc.Kind().String())
 	switch field.Desc.Kind().String() {
 	case "string":
 		g.P("mcp.WithString(")
@@ -153,7 +154,34 @@ func generateMCPToolField(g *protogen.GeneratedFile, field *protogen.Field) {
 		}
 		g.P("mcp.Description(\"", processCommentToString(field.Comments.Leading), "\"),")
 		g.P("),")
+	case "message":
+		g.P("mcp.WithObject(")
+		g.P("\"", field.Desc.Name(), "\",")
+		if field.Desc.HasOptionalKeyword() {
+		} else {
+			g.P("mcp.Required(),")
+		}
+		g.P("mcp.Description(\"", processCommentToString(field.Comments.Leading), "\"),")
+		g.P("mcp.Properties(map[string]interface{}{")
+		for _, messageField := range field.Message.Fields {
+			log.Println(messageField)
+			generateMCPPropertyForField(g, messageField)
+		}
+		g.P("}),")
+		g.P("),")
 	}
+}
+
+func generateMCPPropertyForField(g *protogen.GeneratedFile, field *protogen.Field) {
+	g.P("\"", field.Desc.Name(), "\": map[string]interface{}{")
+	g.P("\"type\": \"", field.Desc.Kind().String(), "\",")
+	g.P("\"description\": \"", processCommentToString(field.Comments.Leading), "\",")
+	if field.Desc.HasOptionalKeyword() {
+		g.P("\"required\": false,")
+	} else {
+		g.P("\"required\": true,")
+	}
+	g.P("},")
 }
 
 func generateHandler(g *protogen.GeneratedFile, method *protogen.Method, mcpServerName string, clientName string) {
