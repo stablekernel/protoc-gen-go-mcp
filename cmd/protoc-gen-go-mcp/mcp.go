@@ -188,6 +188,9 @@ func generateMCPPropertyForField(g *protogen.GeneratedFile, field *protogen.Fiel
 	} else {
 		g.P("\"required\": true,")
 	}
+	if field.Desc.Kind().String() == "bytes" {
+		g.P("\"format\": \"byte\",")
+	}
 	g.P("},")
 }
 
