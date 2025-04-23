@@ -3,7 +3,7 @@
 // - protoc-gen-go-mcp v0.0.1
 // - protoc             v5.29.3
 
-package examplev1
+package v1
 
 import (
 	context "context"

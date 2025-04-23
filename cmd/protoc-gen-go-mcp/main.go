@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"protoc-gen-go-mcp/internal"
 
 	"google.golang.org/protobuf/types/pluginpb"
 
@@ -32,7 +33,7 @@ func main() {
 			if !f.Generate {
 				continue
 			}
-			generateFile(gen, f)
+			internal.GenerateFile(gen, f)
 		}
 		return nil
 	})

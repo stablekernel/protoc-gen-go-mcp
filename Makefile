@@ -22,3 +22,9 @@ generate: protoc-gen-go-mcp
 start-debugger: protoc-gen-go-mcp
 	@echo "Starting debugger"
 	@protoc --plugin=protoc-gen-debug=./protoc-gen-debug --debug_out=. $(PROTOS)
+
+PROTO_FILES=$(shell find test/ -type f -name '*.proto')
+
+test/image.binpb: $(PROTO_FILES)
+	@echo "Generating fixture descriptor set"
+	buf build -o test/image.binpb
