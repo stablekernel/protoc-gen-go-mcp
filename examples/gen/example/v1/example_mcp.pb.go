@@ -143,6 +143,7 @@ func (s *vibeServiceMCPServer) SetVibeDetailsTool() mcp.Tool {
 					"type":        "string",
 					"description": "the details of the vibe bytes",
 					"required":    true,
+					"format":      "byte",
 				},
 			}),
 		),

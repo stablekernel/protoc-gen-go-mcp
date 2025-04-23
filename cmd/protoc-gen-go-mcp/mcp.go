@@ -141,6 +141,7 @@ mcp.WithString(
 ),
 */
 func generateMCPToolField(g *protogen.GeneratedFile, field *protogen.Field) {
+	log.Println(field.Desc.Kind().String())
 	switch field.Desc.Kind().String() {
 	case "string":
 		g.P("mcp.WithString(")
