@@ -17,6 +17,16 @@ type vibeServiceMCPServer struct {
 	MCPServer *server.MCPServer
 }
 
+func NewVibeServiceMCPServer(
+	client VibeServiceClient,
+	mcpServer *server.MCPServer,
+) *vibeServiceMCPServer {
+	return &vibeServiceMCPServer{
+		VibeServiceClient: client,
+		MCPServer:         mcpServer,
+	}
+}
+
 func (s *vibeServiceMCPServer) SetVibeHandler(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	// TODO: Implement the handler for SetVibe
 	return nil, nil
@@ -58,6 +68,84 @@ func (s *vibeServiceMCPServer) SetVibeDetailsTool() mcp.Tool {
 			"vibe",
 			mcp.Required(),
 			mcp.Description("The vibe of the string to be set"),
+		),
+		mcp.WithObject(
+			"vibe_scalar",
+			mcp.Required(),
+			mcp.Description("The details of the vibe"),
+			mcp.Properties(map[string]interface{}{
+				"vibe_double": map[string]interface{}{
+					"type":        "number",
+					"description": "The details of the vibe double",
+					"required":    true,
+				},
+				"vibe_float": map[string]interface{}{
+					"type":        "number",
+					"description": "the details of the vibe float",
+					"required":    true,
+				},
+				"vibe_int32": map[string]interface{}{
+					"type":        "number",
+					"description": "The details of the vibe int32",
+					"required":    true,
+				},
+				"vibe_int64": map[string]interface{}{
+					"type":        "number",
+					"description": "The details of the vibe int64",
+					"required":    true,
+				},
+				"vibe_uint32": map[string]interface{}{
+					"type":        "number",
+					"description": "The details of the vibe uint32",
+					"required":    false,
+				},
+				"vibe_uint64": map[string]interface{}{
+					"type":        "number",
+					"description": "The details of the vibe uint64",
+					"required":    true,
+				},
+				"vibe_sint32": map[string]interface{}{
+					"type":        "number",
+					"description": "The details of the vibe sint32",
+					"required":    true,
+				},
+				"vibe_sint64": map[string]interface{}{
+					"type":        "number",
+					"description": "The details of the vibe sint64",
+					"required":    true,
+				},
+				"vibe_fixed32": map[string]interface{}{
+					"type":        "number",
+					"description": "The details of the vibe fixed32",
+					"required":    true,
+				},
+				"vibe_fixed64": map[string]interface{}{
+					"type":        "number",
+					"description": "The details of the vibe fixed64",
+					"required":    true,
+				},
+				"vibe_sfixed32": map[string]interface{}{
+					"type":        "number",
+					"description": "The details of the vibe sfixed32",
+					"required":    true,
+				},
+				"vibe_sfixed64": map[string]interface{}{
+					"type":        "number",
+					"description": "The details of the vibe sfixed64",
+					"required":    true,
+				},
+				"vibe_bool": map[string]interface{}{
+					"type":        "boolean",
+					"description": "The details of the vibe bool",
+					"required":    true,
+				},
+				"vibe_bytes": map[string]interface{}{
+					"type":        "string",
+					"description": "the details of the vibe bytes",
+					"required":    true,
+					"format":      "byte",
+				},
+			}),
 		),
 	)
 	return tool

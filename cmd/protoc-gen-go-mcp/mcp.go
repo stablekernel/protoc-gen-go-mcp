@@ -123,9 +123,7 @@ func generateMCPTool(g *protogen.GeneratedFile, method *protogen.Method, mcpServ
 	}
 	g.P("tool := mcp.NewTool(")
 	g.P("\"", method.GoName, "\", mcp.WithDescription(\"", methodDescription, "\"),")
-	log.Println(method.Input)
 	for _, field := range method.Input.Fields {
-		log.Println(field)
 		generateMCPToolField(g, field)
 	}
 	g.P(")")
@@ -143,6 +141,7 @@ mcp.WithString(
 ),
 */
 func generateMCPToolField(g *protogen.GeneratedFile, field *protogen.Field) {
+	log.Println(field.Desc.Kind().String())
 	switch field.Desc.Kind().String() {
 	case "string":
 		g.P("mcp.WithString(")
@@ -153,7 +152,46 @@ func generateMCPToolField(g *protogen.GeneratedFile, field *protogen.Field) {
 		}
 		g.P("mcp.Description(\"", processCommentToString(field.Comments.Leading), "\"),")
 		g.P("),")
+	case "message":
+		g.P("mcp.WithObject(")
+		g.P("\"", field.Desc.Name(), "\",")
+		if field.Desc.HasOptionalKeyword() {
+		} else {
+			g.P("mcp.Required(),")
+		}
+		g.P("mcp.Description(\"", processCommentToString(field.Comments.Leading), "\"),")
+		g.P("mcp.Properties(map[string]interface{}{")
+		for _, messageField := range field.Message.Fields {
+			log.Println(messageField)
+			generateMCPPropertyForField(g, messageField)
+		}
+		g.P("}),")
+		g.P("),")
 	}
+}
+
+func generateMCPPropertyForField(g *protogen.GeneratedFile, field *protogen.Field) {
+	g.P("\"", field.Desc.Name(), "\": map[string]interface{}{")
+	typeName := field.Desc.Kind().String()
+	switch field.Desc.Kind().String() {
+	case "double", "float", "int32", "int64", "uint32", "uint64", "sint32", "sint64", "fixed32", "fixed64", "sfixed32", "sfixed64":
+		typeName = "number"
+	case "bool":
+		typeName = "boolean"
+	case "bytes":
+		typeName = "string"
+	}
+	g.P("\"type\": \"", typeName, "\",")
+	g.P("\"description\": \"", processCommentToString(field.Comments.Leading), "\",")
+	if field.Desc.HasOptionalKeyword() {
+		g.P("\"required\": false,")
+	} else {
+		g.P("\"required\": true,")
+	}
+	if field.Desc.Kind().String() == "bytes" {
+		g.P("\"format\": \"byte\",")
+	}
+	g.P("},")
 }
 
 func generateHandler(g *protogen.GeneratedFile, method *protogen.Method, mcpServerName string, clientName string) {
