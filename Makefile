@@ -10,11 +10,11 @@ fmt: $(GOLANG_SRCS)
 
 protoc-gen-go-mcp:
 	@echo "Building protoc-gen-go-mcp..."
-	@go build -o $(GOPATH)/bin/protoc-gen-go-mcp ./cmd/protoc-gen-go-mcp && echo "Built successful!"
+	@go build -o $(shell go env GOPATH)/bin/protoc-gen-go-mcp ./cmd/protoc-gen-go-mcp && echo "Built successful!"
 
 generate: protoc-gen-go-mcp
 	@echo "Generating new files..."
-	@export PATH="$PATH:$(go env GOPATH)/bin"
+	@export PATH="$PATH:$(shell go env GOPATH)/bin"
 	@protoc --go_out=. $(PROTOS)
 	@protoc --go-grpc_out=. $(PROTOS)
 	@protoc --go-mcp_out=. --proto_path=examples/protos $(PROTOS) && echo "Generated successfully!"
