@@ -372,23 +372,40 @@ func generateFieldAssignment(g *protogen.GeneratedFile, field *protogen.Field, v
 			}
 		}
 		g.P("                }")
-	case "sint32", "sint64", "sfixed32", "sfixed64", "fixed32", "fixed64":
+	case "sint32", "sfixed32":
 		g.P("                if numVal, ok := ", valName, ".(float64); ok {")
-		switch field.Desc.Kind().String() {
-		case "sint32", "sfixed32", "fixed32":
-			if isOptional {
-				g.P("                    val := int32(numVal)")
-				g.P("                    ", varName, ".", field.GoName, " = &val")
-			} else {
-				g.P("                    ", varName, ".", field.GoName, " = int32(numVal)")
-			}
-		case "sint64", "sfixed64", "fixed64":
-			if isOptional {
-				g.P("                    val := int64(numVal)")
-				g.P("                    ", varName, ".", field.GoName, " = &val")
-			} else {
-				g.P("                    ", varName, ".", field.GoName, " = int64(numVal)")
-			}
+		if isOptional {
+			g.P("                    val := int32(numVal)")
+			g.P("                    ", varName, ".", field.GoName, " = &val")
+		} else {
+			g.P("                    ", varName, ".", field.GoName, " = int32(numVal)")
+		}
+		g.P("                }")
+	case "sint64", "sfixed64":
+		g.P("                if numVal, ok := ", valName, ".(float64); ok {")
+		if isOptional {
+			g.P("                    val := int64(numVal)")
+			g.P("                    ", varName, ".", field.GoName, " = &val")
+		} else {
+			g.P("                    ", varName, ".", field.GoName, " = int64(numVal)")
+		}
+		g.P("                }")
+	case "fixed32":
+		g.P("                if numVal, ok := ", valName, ".(float64); ok {")
+		if isOptional {
+			g.P("                    val := uint32(numVal)")
+			g.P("                    ", varName, ".", field.GoName, " = &val")
+		} else {
+			g.P("                    ", varName, ".", field.GoName, " = uint32(numVal)")
+		}
+		g.P("                }")
+	case "fixed64":
+		g.P("                if numVal, ok := ", valName, ".(float64); ok {")
+		if isOptional {
+			g.P("                    val := uint64(numVal)")
+			g.P("                    ", varName, ".", field.GoName, " = &val")
+		} else {
+			g.P("                    ", varName, ".", field.GoName, " = uint64(numVal)")
 		}
 		g.P("                }")
 	case "bytes":
@@ -435,79 +452,6 @@ func generateFieldAssignment(g *protogen.GeneratedFile, field *protogen.Field, v
 		g.P("                // Unsupported type: ", field.Desc.Kind().String())
 	}
 }
-
-// func generateFieldAssignment(g *protogen.GeneratedFile, field *protogen.Field, varName string, valName string) {
-// 	switch field.Desc.Kind().String() {
-// 	case "string":
-// 		g.P("                if strVal, ok := ", valName, ".(string); ok {")
-// 		g.P("                    ", varName, ".", field.GoName, " = strVal")
-// 		g.P("                }")
-// 	case "int32":
-// 		g.P("                if numVal, ok := ", valName, ".(float64); ok {")
-// 		g.P("                    ", varName, ".", field.GoName, " = int32(numVal)")
-// 		g.P("                }")
-// 	case "int64":
-// 		g.P("                if numVal, ok := ", valName, ".(float64); ok {")
-// 		g.P("                    ", varName, ".", field.GoName, " = int64(numVal)")
-// 		g.P("                }")
-// 	case "bool":
-// 		g.P("                if boolVal, ok := ", valName, ".(bool); ok {")
-// 		g.P("                    ", varName, ".", field.GoName, " = boolVal")
-// 		g.P("                }")
-// 	case "float", "double":
-// 		g.P("                if numVal, ok := ", valName, ".(float64); ok {")
-// 		if field.Desc.Kind().String() == "float" {
-// 			g.P("                    ", varName, ".", field.GoName, " = float32(numVal)")
-// 		} else {
-// 			g.P("                    ", varName, ".", field.GoName, " = numVal")
-// 		}
-// 		g.P("                }")
-// 	case "uint32", "uint64":
-// 		g.P("                if numVal, ok := ", valName, ".(float64); ok {")
-// 		if field.Desc.Kind().String() == "uint32" {
-// 			g.P("                    ", varName, ".", field.GoName, " = uint32(numVal)")
-// 		} else {
-// 			g.P("                    ", varName, ".", field.GoName, " = uint64(numVal)")
-// 		}
-// 		g.P("                }")
-// 	case "sint32", "sint64", "sfixed32", "sfixed64", "fixed32", "fixed64":
-// 		g.P("                if numVal, ok := ", valName, ".(float64); ok {")
-// 		switch field.Desc.Kind().String() {
-// 		case "sint32", "sfixed32", "fixed32":
-// 			g.P("                    ", varName, ".", field.GoName, " = int32(numVal)")
-// 		case "sint64", "sfixed64", "fixed64":
-// 			g.P("                    ", varName, ".", field.GoName, " = int64(numVal)")
-// 		}
-// 		g.P("                }")
-// 	case "bytes":
-// 		g.P("                if strVal, ok := ", valName, ".(string); ok {")
-// 		g.P("                    ", varName, ".", field.GoName, " = []byte(strVal)")
-// 		g.P("                }")
-// 	case "message":
-// 		g.P("                if objVal, ok := ", valName, ".(map[string]interface{}); ok {")
-// 		g.P("                    msgVal := &", g.QualifiedGoIdent(field.Message.GoIdent), "{}")
-// 		g.P("                    // Process nested fields")
-// 		for _, nestedField := range field.Message.Fields {
-// 			nestedFieldName := string(nestedField.Desc.Name())
-// 			g.P("                    if fieldVal, ok := objVal[\"", nestedFieldName, "\"]; ok {")
-// 			g.P("                        // Recursive field assignment")
-// 			generateFieldAssignment(g, nestedField, "msgVal", "fieldVal")
-// 			g.P("                    }")
-// 		}
-// 		g.P("                    ", varName, ".", field.GoName, " = msgVal")
-// 		g.P("                }")
-// 	case "enum":
-// 		g.P("                if numVal, ok := ", valName, ".(float64); ok {")
-// 		g.P("                    ", varName, ".", field.GoName, " = ", g.QualifiedGoIdent(field.Enum.GoIdent), "(int32(numVal))")
-// 		g.P("                } else if strVal, ok := ", valName, ".(string); ok {")
-// 		g.P("                    // Try to convert string enum value if provided as string")
-// 		g.P("                    val := ", g.QualifiedGoIdent(field.Enum.GoIdent), "_value[strVal]")
-// 		g.P("                    ", varName, ".", field.GoName, " = ", g.QualifiedGoIdent(field.Enum.GoIdent), "(val)")
-// 		g.P("                }")
-// 	default:
-// 		g.P("                // Unsupported type: ", field.Desc.Kind().String())
-// 	}
-// }
 
 // TODO: this needs some love, multiline strings are handled not so well, leading trailing spaces, etc
 // processCommentToString processes the comments to a single line string
