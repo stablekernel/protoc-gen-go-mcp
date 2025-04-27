@@ -161,7 +161,7 @@ func generateMCPToolField(g *protogen.GeneratedFile, field *protogen.Field) {
 			g.P("mcp.Required(),")
 		}
 		g.P("mcp.Description(\"", processCommentToString(field.Comments.Leading), "\"),")
-		g.P("mcp.Properties(map[string]interface{}{")
+		g.P("mcp.Properties(map[string]any{")
 		for _, messageField := range field.Message.Fields {
 			log.Println(messageField)
 			generateMCPPropertyForField(g, messageField)
@@ -172,7 +172,7 @@ func generateMCPToolField(g *protogen.GeneratedFile, field *protogen.Field) {
 }
 
 func generateMCPPropertyForField(g *protogen.GeneratedFile, field *protogen.Field) {
-	g.P("\"", field.Desc.Name(), "\": map[string]interface{}{")
+	g.P("\"", field.Desc.Name(), "\": map[string]any{")
 	typeName := field.Desc.Kind().String()
 	switch field.Desc.Kind().String() {
 	case "double", "float", "int32", "int64", "uint32", "uint64", "sint32", "sint64", "fixed32", "fixed64", "sfixed32", "sfixed64":
@@ -219,7 +219,7 @@ func generateHandler(g *protogen.GeneratedFile, method *protogen.Method, mcpServ
 			g.P("    }")
 		case "message":
 			g.P("    if val, ok := req.Params.Arguments[\"", fieldName, "\"]; ok {")
-			g.P("        if objVal, ok := val.(map[string]interface{}); ok {")
+			g.P("        if objVal, ok := val.(map[string]any); ok {")
 			g.P("            msgVal := &", g.QualifiedGoIdent(field.Message.GoIdent), "{}")
 
 			// Process nested message fields
@@ -271,7 +271,7 @@ func generateHandler(g *protogen.GeneratedFile, method *protogen.Method, mcpServ
 	// Create and return successful result
 	g.P("    // Create successful result")
 	g.P("    // Convert response to JSON")
-	g.P("    respContent := make(map[string]interface{})")
+	g.P("    respContent := make(map[string]any)")
 
 	// Add response fields
 	if len(method.Output.Fields) > 0 {
@@ -295,7 +295,6 @@ func generateHandler(g *protogen.GeneratedFile, method *protogen.Method, mcpServ
 	g.P("}")
 }
 
-// Helper function to generate field assignment based on type
 func generateFieldAssignment(g *protogen.GeneratedFile, field *protogen.Field, varName string, valName string) {
 	isOptional := field.Desc.HasOptionalKeyword()
 
@@ -310,21 +309,20 @@ func generateFieldAssignment(g *protogen.GeneratedFile, field *protogen.Field, v
 		}
 		g.P("                }")
 	case "int32":
-		g.P("                if numVal, ok := ", valName, ".(float64); ok {")
+		g.P("                if numVal, ok := ", valName, ".(int32); ok {")
 		if isOptional {
-			g.P("                    val := int32(numVal)")
+			g.P("                    val := numVal")
 			g.P("                    ", varName, ".", field.GoName, " = &val")
 		} else {
-			g.P("                    ", varName, ".", field.GoName, " = int32(numVal)")
+			g.P("                    ", varName, ".", field.GoName, " = numVal")
 		}
 		g.P("                }")
 	case "int64":
-		g.P("                if numVal, ok := ", valName, ".(float64); ok {")
+		g.P("                if numVal, ok := ", valName, ".(int64); ok {")
 		if isOptional {
-			g.P("                    val := int64(numVal)")
 			g.P("                    ", varName, ".", field.GoName, " = &val")
 		} else {
-			g.P("                    ", varName, ".", field.GoName, " = int64(numVal)")
+			g.P("                    ", varName, ".", field.GoName, " = numVal")
 		}
 		g.P("                }")
 	case "bool":
@@ -336,89 +334,97 @@ func generateFieldAssignment(g *protogen.GeneratedFile, field *protogen.Field, v
 			g.P("                    ", varName, ".", field.GoName, " = boolVal")
 		}
 		g.P("                }")
-	case "float", "double":
-		g.P("                if numVal, ok := ", valName, ".(float64); ok {")
-		if field.Desc.Kind().String() == "float" {
-			if isOptional {
-				g.P("                    val := float32(numVal)")
-				g.P("                    ", varName, ".", field.GoName, " = &val")
-			} else {
-				g.P("                    ", varName, ".", field.GoName, " = float32(numVal)")
-			}
-		} else {
-			if isOptional {
-				g.P("                    val := numVal")
-				g.P("                    ", varName, ".", field.GoName, " = &val")
-			} else {
-				g.P("                    ", varName, ".", field.GoName, " = numVal")
-			}
-		}
-		g.P("                }")
-	case "uint32", "uint64":
-		g.P("                if numVal, ok := ", valName, ".(float64); ok {")
-		if field.Desc.Kind().String() == "uint32" {
-			if isOptional {
-				g.P("                    val := uint32(numVal)")
-				g.P("                    ", varName, ".", field.GoName, " = &val")
-			} else {
-				g.P("                    ", varName, ".", field.GoName, " = uint32(numVal)")
-			}
-		} else {
-			if isOptional {
-				g.P("                    val := uint64(numVal)")
-				g.P("                    ", varName, ".", field.GoName, " = &val")
-			} else {
-				g.P("                    ", varName, ".", field.GoName, " = uint64(numVal)")
-			}
-		}
-		g.P("                }")
-	case "sint32", "sfixed32":
+	case "double":
 		g.P("                if numVal, ok := ", valName, ".(float64); ok {")
 		if isOptional {
-			g.P("                    val := int32(numVal)")
-			g.P("                    ", varName, ".", field.GoName, " = &val")
+			g.P("                    ", varName, ".", field.GoName, " = &numVal")
 		} else {
-			g.P("                    ", varName, ".", field.GoName, " = int32(numVal)")
+			g.P("                    ", varName, ".", field.GoName, " = numVal")
 		}
 		g.P("                }")
-	case "sint64", "sfixed64":
-		g.P("                if numVal, ok := ", valName, ".(float64); ok {")
+	case "float":
+		g.P("                if numVal, ok := ", valName, ".(float32); ok {")
 		if isOptional {
-			g.P("                    val := int64(numVal)")
-			g.P("                    ", varName, ".", field.GoName, " = &val")
+			g.P("                    ", varName, ".", field.GoName, " = &numVal")
 		} else {
-			g.P("                    ", varName, ".", field.GoName, " = int64(numVal)")
+			g.P("                    ", varName, ".", field.GoName, " = numVal")
+		}
+		g.P("                }")
+	case "uint32":
+		g.P("                if numVal, ok := ", valName, ".(uint32); ok {")
+		if isOptional {
+			g.P("                    ", varName, ".", field.GoName, " = &numVal")
+		} else {
+			g.P("                    ", varName, ".", field.GoName, " = numVal")
+		}
+		g.P("                }")
+	case "uint64":
+		g.P("                if numVal, ok := ", valName, ".(uint64); ok {")
+		if isOptional {
+			g.P("                    ", varName, ".", field.GoName, " = &numVal")
+		} else {
+			g.P("                    ", varName, ".", field.GoName, " = numVal")
+		}
+		g.P("                }")
+	case "sint32":
+		g.P("                if numVal, ok := ", valName, ".(int32); ok {")
+		if isOptional {
+			g.P("                    ", varName, ".", field.GoName, " = &numVal")
+		} else {
+			g.P("                    ", varName, ".", field.GoName, " = numVal")
+		}
+		g.P("                }")
+
+	case "sfixed32":
+		g.P("                if numVal, ok := ", valName, ".(int32); ok {")
+		if isOptional {
+			g.P("                    ", varName, ".", field.GoName, " = &numVal")
+		} else {
+			g.P("                    ", varName, ".", field.GoName, " = numVal")
+		}
+		g.P("                }")
+	case "sint64":
+		g.P("                if numVal, ok := ", valName, ".(int64); ok {")
+		if isOptional {
+			g.P("                    ", varName, ".", field.GoName, " = &numVal")
+		} else {
+			g.P("                    ", varName, ".", field.GoName, " = numVal")
+		}
+		g.P("                }")
+	case "sfixed64":
+		g.P("                if numVal, ok := ", valName, ".(int64); ok {")
+		if isOptional {
+			g.P("                    ", varName, ".", field.GoName, " = &numVal")
+		} else {
+			g.P("                    ", varName, ".", field.GoName, " = numVal")
 		}
 		g.P("                }")
 	case "fixed32":
-		g.P("                if numVal, ok := ", valName, ".(float64); ok {")
+		g.P("                if numVal, ok := ", valName, ".(uint32); ok {")
 		if isOptional {
-			g.P("                    val := uint32(numVal)")
-			g.P("                    ", varName, ".", field.GoName, " = &val")
+			g.P("                    ", varName, ".", field.GoName, " = &numVal")
 		} else {
-			g.P("                    ", varName, ".", field.GoName, " = uint32(numVal)")
+			g.P("                    ", varName, ".", field.GoName, " = numVal")
 		}
 		g.P("                }")
 	case "fixed64":
-		g.P("                if numVal, ok := ", valName, ".(float64); ok {")
+		g.P("                if numVal, ok := ", valName, ".(uint64); ok {")
 		if isOptional {
-			g.P("                    val := uint64(numVal)")
-			g.P("                    ", varName, ".", field.GoName, " = &val")
+			g.P("                    ", varName, ".", field.GoName, " = &numVal")
 		} else {
-			g.P("                    ", varName, ".", field.GoName, " = uint64(numVal)")
+			g.P("                    ", varName, ".", field.GoName, " = numVal")
 		}
 		g.P("                }")
 	case "bytes":
-		g.P("                if strVal, ok := ", valName, ".(string); ok {")
+		g.P("                if bytesVal, ok := ", valName, ".([]byte); ok {")
 		if isOptional {
-			g.P("                    b := []byte(strVal)")
-			g.P("                    ", varName, ".", field.GoName, " = b")
+			g.P("                    ", varName, ".", field.GoName, " = &bytesVal")
 		} else {
-			g.P("                    ", varName, ".", field.GoName, " = []byte(strVal)")
+			g.P("                    ", varName, ".", field.GoName, " = bytesVal")
 		}
 		g.P("                }")
 	case "message":
-		g.P("                if objVal, ok := ", valName, ".(map[string]interface{}); ok {")
+		g.P("                if objVal, ok := ", valName, ".(map[string]any); ok {")
 		g.P("                    msgVal := &", g.QualifiedGoIdent(field.Message.GoIdent), "{}")
 		g.P("                    // Process nested fields")
 		for _, nestedField := range field.Message.Fields {

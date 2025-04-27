@@ -121,7 +121,7 @@ func buildVibeScalar(vibeScalar interface{}) *examplev1.VibeScalar {
 		vibeScalarObj.VibeInt64 = int64(vibeScalarMap["vibeInt64"].(float64))
 	}
 	if vibeScalarMap["vibeUint32"] != nil {
-		vibeScalarObj.VibeUint32 = uint32(vibeScalarMap["vibeUint32"].(float64))
+		vibeScalarObj.VibeUint32 = vibeScalarMap["vibeUint32"].(*uint32)
 	}
 	if vibeScalarMap["vibeUint64"] != nil {
 		vibeScalarObj.VibeUint64 = uint64(vibeScalarMap["vibeUint64"].(float64))

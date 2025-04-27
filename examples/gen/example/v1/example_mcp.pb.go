@@ -52,7 +52,7 @@ func (s *vibeServiceMCPServer) SetVibeHandler(ctx context.Context, req mcp.CallT
 	}
 	// Create successful result
 	// Convert response to JSON
-	respContent := make(map[string]interface{})
+	respContent := make(map[string]any)
 	respContent["previous_vibe"] = resp.PreviousVibe
 	respContent["vibe"] = resp.Vibe
 	// Create and return the CallToolResult
@@ -98,7 +98,7 @@ func (s *vibeServiceMCPServer) GetVibeHandler(ctx context.Context, req mcp.CallT
 	}
 	// Create successful result
 	// Convert response to JSON
-	respContent := make(map[string]interface{})
+	respContent := make(map[string]any)
 	respContent["vibe"] = resp.Vibe
 	// Create and return the CallToolResult
 	jsonContent, _ := json.Marshal(respContent)
@@ -131,7 +131,7 @@ func (s *vibeServiceMCPServer) SetVibeDetailsHandler(ctx context.Context, req mc
 	}
 	// Extract vibe_scalar
 	if val, ok := req.Params.Arguments["vibe_scalar"]; ok {
-		if objVal, ok := val.(map[string]interface{}); ok {
+		if objVal, ok := val.(map[string]any); ok {
 			msgVal := &VibeScalar{}
 			if fieldVal, ok := objVal["vibe_double"]; ok {
 				if numVal, ok := fieldVal.(float64); ok {
@@ -139,59 +139,58 @@ func (s *vibeServiceMCPServer) SetVibeDetailsHandler(ctx context.Context, req mc
 				}
 			}
 			if fieldVal, ok := objVal["vibe_float"]; ok {
-				if numVal, ok := fieldVal.(float64); ok {
-					msgVal.VibeFloat = float32(numVal)
+				if numVal, ok := fieldVal.(float32); ok {
+					msgVal.VibeFloat = numVal
 				}
 			}
 			if fieldVal, ok := objVal["vibe_int32"]; ok {
-				if numVal, ok := fieldVal.(float64); ok {
-					msgVal.VibeInt32 = int32(numVal)
+				if numVal, ok := fieldVal.(int32); ok {
+					msgVal.VibeInt32 = numVal
 				}
 			}
 			if fieldVal, ok := objVal["vibe_int64"]; ok {
-				if numVal, ok := fieldVal.(float64); ok {
-					msgVal.VibeInt64 = int64(numVal)
+				if numVal, ok := fieldVal.(int64); ok {
+					msgVal.VibeInt64 = numVal
 				}
 			}
 			if fieldVal, ok := objVal["vibe_uint32"]; ok {
-				if numVal, ok := fieldVal.(float64); ok {
-					val := uint32(numVal)
-					msgVal.VibeUint32 = &val
+				if numVal, ok := fieldVal.(uint32); ok {
+					msgVal.VibeUint32 = &numVal
 				}
 			}
 			if fieldVal, ok := objVal["vibe_uint64"]; ok {
-				if numVal, ok := fieldVal.(float64); ok {
-					msgVal.VibeUint64 = uint64(numVal)
+				if numVal, ok := fieldVal.(uint64); ok {
+					msgVal.VibeUint64 = numVal
 				}
 			}
 			if fieldVal, ok := objVal["vibe_sint32"]; ok {
-				if numVal, ok := fieldVal.(float64); ok {
-					msgVal.VibeSint32 = int32(numVal)
+				if numVal, ok := fieldVal.(int32); ok {
+					msgVal.VibeSint32 = numVal
 				}
 			}
 			if fieldVal, ok := objVal["vibe_sint64"]; ok {
-				if numVal, ok := fieldVal.(float64); ok {
-					msgVal.VibeSint64 = int64(numVal)
+				if numVal, ok := fieldVal.(int64); ok {
+					msgVal.VibeSint64 = numVal
 				}
 			}
 			if fieldVal, ok := objVal["vibe_fixed32"]; ok {
-				if numVal, ok := fieldVal.(float64); ok {
-					msgVal.VibeFixed32 = uint32(numVal)
+				if numVal, ok := fieldVal.(uint32); ok {
+					msgVal.VibeFixed32 = numVal
 				}
 			}
 			if fieldVal, ok := objVal["vibe_fixed64"]; ok {
-				if numVal, ok := fieldVal.(float64); ok {
-					msgVal.VibeFixed64 = uint64(numVal)
+				if numVal, ok := fieldVal.(uint64); ok {
+					msgVal.VibeFixed64 = numVal
 				}
 			}
 			if fieldVal, ok := objVal["vibe_sfixed32"]; ok {
-				if numVal, ok := fieldVal.(float64); ok {
-					msgVal.VibeSfixed32 = int32(numVal)
+				if numVal, ok := fieldVal.(int32); ok {
+					msgVal.VibeSfixed32 = numVal
 				}
 			}
 			if fieldVal, ok := objVal["vibe_sfixed64"]; ok {
-				if numVal, ok := fieldVal.(float64); ok {
-					msgVal.VibeSfixed64 = int64(numVal)
+				if numVal, ok := fieldVal.(int64); ok {
+					msgVal.VibeSfixed64 = numVal
 				}
 			}
 			if fieldVal, ok := objVal["vibe_bool"]; ok {
@@ -200,8 +199,8 @@ func (s *vibeServiceMCPServer) SetVibeDetailsHandler(ctx context.Context, req mc
 				}
 			}
 			if fieldVal, ok := objVal["vibe_bytes"]; ok {
-				if strVal, ok := fieldVal.(string); ok {
-					msgVal.VibeBytes = []byte(strVal)
+				if bytesVal, ok := fieldVal.([]byte); ok {
+					msgVal.VibeBytes = bytesVal
 				}
 			}
 			protoReq.VibeScalar = msgVal
@@ -222,7 +221,7 @@ func (s *vibeServiceMCPServer) SetVibeDetailsHandler(ctx context.Context, req mc
 	}
 	// Create successful result
 	// Convert response to JSON
-	respContent := make(map[string]interface{})
+	respContent := make(map[string]any)
 	respContent["previous_vibe"] = resp.PreviousVibe
 	respContent["vibe"] = resp.Vibe
 	// Create and return the CallToolResult
@@ -250,73 +249,73 @@ func (s *vibeServiceMCPServer) SetVibeDetailsTool() mcp.Tool {
 			"vibe_scalar",
 			mcp.Required(),
 			mcp.Description("The details of the vibe"),
-			mcp.Properties(map[string]interface{}{
-				"vibe_double": map[string]interface{}{
+			mcp.Properties(map[string]any{
+				"vibe_double": map[string]any{
 					"type":        "number",
 					"description": "The details of the vibe double",
 					"required":    true,
 				},
-				"vibe_float": map[string]interface{}{
+				"vibe_float": map[string]any{
 					"type":        "number",
 					"description": "the details of the vibe float",
 					"required":    true,
 				},
-				"vibe_int32": map[string]interface{}{
+				"vibe_int32": map[string]any{
 					"type":        "number",
 					"description": "The details of the vibe int32",
 					"required":    true,
 				},
-				"vibe_int64": map[string]interface{}{
+				"vibe_int64": map[string]any{
 					"type":        "number",
 					"description": "The details of the vibe int64",
 					"required":    true,
 				},
-				"vibe_uint32": map[string]interface{}{
+				"vibe_uint32": map[string]any{
 					"type":        "number",
 					"description": "The details of the vibe uint32",
 					"required":    false,
 				},
-				"vibe_uint64": map[string]interface{}{
+				"vibe_uint64": map[string]any{
 					"type":        "number",
 					"description": "The details of the vibe uint64",
 					"required":    true,
 				},
-				"vibe_sint32": map[string]interface{}{
+				"vibe_sint32": map[string]any{
 					"type":        "number",
 					"description": "The details of the vibe sint32",
 					"required":    true,
 				},
-				"vibe_sint64": map[string]interface{}{
+				"vibe_sint64": map[string]any{
 					"type":        "number",
 					"description": "The details of the vibe sint64",
 					"required":    true,
 				},
-				"vibe_fixed32": map[string]interface{}{
+				"vibe_fixed32": map[string]any{
 					"type":        "number",
 					"description": "The details of the vibe fixed32",
 					"required":    true,
 				},
-				"vibe_fixed64": map[string]interface{}{
+				"vibe_fixed64": map[string]any{
 					"type":        "number",
 					"description": "The details of the vibe fixed64",
 					"required":    true,
 				},
-				"vibe_sfixed32": map[string]interface{}{
+				"vibe_sfixed32": map[string]any{
 					"type":        "number",
 					"description": "The details of the vibe sfixed32",
 					"required":    true,
 				},
-				"vibe_sfixed64": map[string]interface{}{
+				"vibe_sfixed64": map[string]any{
 					"type":        "number",
 					"description": "The details of the vibe sfixed64",
 					"required":    true,
 				},
-				"vibe_bool": map[string]interface{}{
+				"vibe_bool": map[string]any{
 					"type":        "boolean",
 					"description": "The details of the vibe bool",
 					"required":    true,
 				},
-				"vibe_bytes": map[string]interface{}{
+				"vibe_bytes": map[string]any{
 					"type":        "string",
 					"description": "the details of the vibe bytes",
 					"required":    true,
