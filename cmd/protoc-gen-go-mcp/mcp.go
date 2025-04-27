@@ -282,7 +282,10 @@ func generateHandler(g *protogen.GeneratedFile, method *protogen.Method, mcpServ
 	}
 
 	g.P("    // Create and return the CallToolResult")
-	g.P("    jsonContent, _ := json.Marshal(respContent)")
+	g.P("    jsonContent, err := json.Marshal(respContent)")
+	g.P("    if err != nil {")
+	g.P("        return nil, err")
+	g.P("    }")
 	g.P("    return &", mcpPackage.Ident("CallToolResult"), "{")
 	g.P("        Content: []", mcpPackage.Ident("Content"), "{")
 	g.P("            &", mcpPackage.Ident("TextContent"), "{")
@@ -302,8 +305,7 @@ func generateFieldAssignment(g *protogen.GeneratedFile, field *protogen.Field, v
 	case "string":
 		g.P("                if strVal, ok := ", valName, ".(string); ok {")
 		if isOptional {
-			g.P("                    str := strVal")
-			g.P("                    ", varName, ".", field.GoName, " = &str")
+			g.P("                    ", varName, ".", field.GoName, " = &strVal")
 		} else {
 			g.P("                    ", varName, ".", field.GoName, " = strVal")
 		}
@@ -311,8 +313,7 @@ func generateFieldAssignment(g *protogen.GeneratedFile, field *protogen.Field, v
 	case "int32":
 		g.P("                if numVal, ok := ", valName, ".(int32); ok {")
 		if isOptional {
-			g.P("                    val := numVal")
-			g.P("                    ", varName, ".", field.GoName, " = &val")
+			g.P("                    ", varName, ".", field.GoName, " = &numVal")
 		} else {
 			g.P("                    ", varName, ".", field.GoName, " = numVal")
 		}
@@ -328,8 +329,7 @@ func generateFieldAssignment(g *protogen.GeneratedFile, field *protogen.Field, v
 	case "bool":
 		g.P("                if boolVal, ok := ", valName, ".(bool); ok {")
 		if isOptional {
-			g.P("                    b := boolVal")
-			g.P("                    ", varName, ".", field.GoName, " = &b")
+			g.P("                    ", varName, ".", field.GoName, " = &boolVal")
 		} else {
 			g.P("                    ", varName, ".", field.GoName, " = boolVal")
 		}

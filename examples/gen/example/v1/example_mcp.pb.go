@@ -56,7 +56,10 @@ func (s *vibeServiceMCPServer) SetVibeHandler(ctx context.Context, req mcp.CallT
 	respContent["previous_vibe"] = resp.PreviousVibe
 	respContent["vibe"] = resp.Vibe
 	// Create and return the CallToolResult
-	jsonContent, _ := json.Marshal(respContent)
+	jsonContent, err := json.Marshal(respContent)
+	if err != nil {
+		return nil, err
+	}
 	return &mcp.CallToolResult{
 		Content: []mcp.Content{
 			&mcp.TextContent{
@@ -101,7 +104,10 @@ func (s *vibeServiceMCPServer) GetVibeHandler(ctx context.Context, req mcp.CallT
 	respContent := make(map[string]any)
 	respContent["vibe"] = resp.Vibe
 	// Create and return the CallToolResult
-	jsonContent, _ := json.Marshal(respContent)
+	jsonContent, err := json.Marshal(respContent)
+	if err != nil {
+		return nil, err
+	}
 	return &mcp.CallToolResult{
 		Content: []mcp.Content{
 			&mcp.TextContent{
@@ -225,7 +231,10 @@ func (s *vibeServiceMCPServer) SetVibeDetailsHandler(ctx context.Context, req mc
 	respContent["previous_vibe"] = resp.PreviousVibe
 	respContent["vibe"] = resp.Vibe
 	// Create and return the CallToolResult
-	jsonContent, _ := json.Marshal(respContent)
+	jsonContent, err := json.Marshal(respContent)
+	if err != nil {
+		return nil, err
+	}
 	return &mcp.CallToolResult{
 		Content: []mcp.Content{
 			&mcp.TextContent{
