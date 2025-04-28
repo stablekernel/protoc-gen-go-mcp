@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	"google.golang.org/protobuf/compiler/protogen"
@@ -27,7 +26,6 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 		return nil
 	}
 	filename := file.GeneratedFilenamePrefix + "_mcp.pb.go"
-	log.Println(filename)
 	g := gen.NewGeneratedFile(filename, file.GoImportPath)
 	// Attach all comments associated with the syntax field.
 	genLeadingComments(g, file.Desc.SourceLocations().ByPath(protoreflect.SourcePath{fileDescriptorProtoSyntaxFieldNumber}))
@@ -142,7 +140,6 @@ mcp.WithString(
 ),
 */
 func generateMCPToolField(g *protogen.GeneratedFile, field *protogen.Field) {
-	log.Println(field.Desc.Kind().String())
 	switch field.Desc.Kind().String() {
 	case "string":
 		g.P("mcp.WithString(")
@@ -163,7 +160,6 @@ func generateMCPToolField(g *protogen.GeneratedFile, field *protogen.Field) {
 		g.P("mcp.Description(\"", processCommentToString(field.Comments.Leading), "\"),")
 		g.P("mcp.Properties(map[string]any{")
 		for _, messageField := range field.Message.Fields {
-			log.Println(messageField)
 			generateMCPPropertyForField(g, messageField)
 		}
 		g.P("}),")
@@ -284,7 +280,7 @@ func generateHandler(g *protogen.GeneratedFile, method *protogen.Method, mcpServ
 	g.P("    // Create and return the CallToolResult")
 	g.P("    jsonContent, err := json.Marshal(respContent)")
 	g.P("    if err != nil {")
-	g.P("        return nil, err")
+	g.P("        return mcp.NewToolResultErrorFromErr(\"error marshaling\", err), nil")
 	g.P("    }")
 	g.P("    return &", mcpPackage.Ident("CallToolResult"), "{")
 	g.P("        Content: []", mcpPackage.Ident("Content"), "{")

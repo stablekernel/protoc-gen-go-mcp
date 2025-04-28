@@ -58,7 +58,7 @@ func (s *vibeServiceMCPServer) SetVibeHandler(ctx context.Context, req mcp.CallT
 	// Create and return the CallToolResult
 	jsonContent, err := json.Marshal(respContent)
 	if err != nil {
-		return nil, err
+		return mcp.NewToolResultErrorFromErr("error marshaling", err), nil
 	}
 	return &mcp.CallToolResult{
 		Content: []mcp.Content{
@@ -106,7 +106,7 @@ func (s *vibeServiceMCPServer) GetVibeHandler(ctx context.Context, req mcp.CallT
 	// Create and return the CallToolResult
 	jsonContent, err := json.Marshal(respContent)
 	if err != nil {
-		return nil, err
+		return mcp.NewToolResultErrorFromErr("error marshaling", err), nil
 	}
 	return &mcp.CallToolResult{
 		Content: []mcp.Content{
@@ -233,7 +233,7 @@ func (s *vibeServiceMCPServer) SetVibeDetailsHandler(ctx context.Context, req mc
 	// Create and return the CallToolResult
 	jsonContent, err := json.Marshal(respContent)
 	if err != nil {
-		return nil, err
+		return mcp.NewToolResultErrorFromErr("error marshaling", err), nil
 	}
 	return &mcp.CallToolResult{
 		Content: []mcp.Content{
