@@ -64,7 +64,7 @@ func (s *vibeServiceMCPServer) SetVibeHandler(ctx context.Context, req mcp.CallT
 		Content: []mcp.Content{
 			&mcp.TextContent{
 				Text: string(jsonContent),
-				Type: "application/json",
+				Type: "text",
 			},
 		},
 		IsError: false,
@@ -112,7 +112,7 @@ func (s *vibeServiceMCPServer) GetVibeHandler(ctx context.Context, req mcp.CallT
 		Content: []mcp.Content{
 			&mcp.TextContent{
 				Text: string(jsonContent),
-				Type: "application/json",
+				Type: "text",
 			},
 		},
 		IsError: false,
@@ -239,7 +239,7 @@ func (s *vibeServiceMCPServer) SetVibeDetailsHandler(ctx context.Context, req mc
 		Content: []mcp.Content{
 			&mcp.TextContent{
 				Text: string(jsonContent),
-				Type: "application/json",
+				Type: "text",
 			},
 		},
 		IsError: false,
