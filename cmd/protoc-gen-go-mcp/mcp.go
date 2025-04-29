@@ -286,7 +286,7 @@ func generateHandler(g *protogen.GeneratedFile, method *protogen.Method, mcpServ
 	g.P("        Content: []", mcpPackage.Ident("Content"), "{")
 	g.P("            &", mcpPackage.Ident("TextContent"), "{")
 	g.P("                Text:        string(jsonContent),")
-	g.P("                Type: \"application/json\",")
+	g.P("                Type: \"text\",")
 	g.P("            },")
 	g.P("        },")
 	g.P("        IsError: false,")
