@@ -22,6 +22,18 @@ message GetVibeResponse {
   string vibe = 1;
 }
 
+// The vibe array request
+message SetVibeArrayRequest {
+  // The details of the vibe array
+  VibeArray vibe_array = 1;
+}
+
+// The vibe array response
+message SetVibeArrayResponse {
+  // The details of the vibe array
+  VibeArray vibe_array = 1;
+}
+
 // The vibe scalar
 message VibeScalar {
   // The details of the vibe double
@@ -54,6 +66,39 @@ message VibeScalar {
   bytes vibe_bytes = 15;
 }
 
+// The vibe array message
+message VibeArray {
+  // The details of the vibe double array
+  repeated double vibe_double = 2;
+  // the details of the vibe float array
+  repeated float vibe_float = 3;
+  // The details of the vibe int32 array
+  repeated int32 vibe_int32 = 4;
+  // The details of the vibe int64 array
+  repeated int64 vibe_int64 = 5;
+  // The details of the vibe uint32 array
+  repeated uint32 vibe_uint32 = 6;
+  // The details of the vibe uint64 array
+  repeated uint64 vibe_uint64 = 7;
+  // The details of the vibe sint32 array
+  repeated sint32 vibe_sint32 = 8;
+  // The details of the vibe sint64 array
+  repeated sint64 vibe_sint64 = 9;
+  // The details of the vibe fixed32 array
+  repeated fixed32 vibe_fixed32 = 10;
+  // The details of the vibe fixed64 array
+  repeated fixed64 vibe_fixed64 = 11;
+  // The details of the vibe sfixed32 array
+  repeated sfixed32 vibe_sfixed32 = 12;
+  // The details of the vibe sfixed64 array
+  repeated sfixed64 vibe_sfixed64 = 13;
+  // The details of the vibe bool array
+  repeated bool vibe_bool = 14;
+  // the details of the vibe bytes array
+  repeated bytes vibe_bytes = 15;
+  // The details of the vibe scalar array
+}
+
 // The detailed vibe of the server
 message SetVibeDetailsRequest {
   // The vibe of the string to be set
@@ -71,4 +116,6 @@ service VibeService {
   rpc GetVibe(GetVibeRequest) returns (GetVibeResponse) {}
   // Set vibe details
   rpc SetVibeDetails(SetVibeDetailsRequest) returns (SetVibeResponse) {}
+  // Set the vibe arrays
+  rpc SetVibeArray(SetVibeArrayRequest) returns (SetVibeArrayResponse) {}
 }
