@@ -187,7 +187,7 @@ func generateHandler(g *protogen.GeneratedFile, method *protogen.Method, mcpServ
 	for _, field := range method.Input.Fields {
 		// Get parameter from request parameters
 		fieldName := string(field.Desc.Name())
-		g.P("    // Extract ", fieldName)
+		g.P("// Extract ", fieldName)
 
 		switch field.Desc.Kind().String() {
 		case "string":
