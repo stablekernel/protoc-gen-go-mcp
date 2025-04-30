@@ -69,13 +69,13 @@ func generateMcpServerService(g *protogen.GeneratedFile, service *protogen.Servi
 	serverStructName := unexport(mcpServerName)
 
 	g.P("func ", constructorName, "(")
-	g.P("    client ", clientName, ",")
-	g.P("    mcpServer *", mcpServerPackage.Ident("MCPServer"), ",")
+	g.P("client ", clientName, ",")
+	g.P("mcpServer *", mcpServerPackage.Ident("MCPServer"), ",")
 	g.P(") *", serverStructName, " {")
-	g.P("    return &", serverStructName, "{")
-	g.P("        ", clientName, ": client,")
-	g.P("        MCPServer: mcpServer,")
-	g.P("    }")
+	g.P("return &", serverStructName, "{")
+	g.P("", clientName, ": client,")
+	g.P("MCPServer: mcpServer,")
+	g.P("}")
 	g.P("}")
 	g.P()
 }
@@ -98,19 +98,6 @@ func generateMcpServerHandlers(g *protogen.GeneratedFile, service *protogen.Serv
 	generateDefaultToolsRegistration(g, methods, mcpServerName)
 }
 
-/*
-	func (s *vibeServiceMCPServer) SetVibeTool() mcp.Tool {
-		tool := mcp.NewTool(
-			"SetVibe", mcp.WithDescription("Set the Vibe"),
-			mcp.WithString(
-				"vibe",
-				mcp.Required(),
-				mcp.Description("The vibe to set on the server"),
-			),
-		)
-		return tool
-	}
-*/
 func generateMCPTool(g *protogen.GeneratedFile, method *protogen.Method, mcpServerName string) {
 	g.P("func (s *", unexport(mcpServerName), ") ", method.GoName, "Tool() (", mcpPackage.Ident("Tool"), ") {")
 
@@ -130,15 +117,6 @@ func generateMCPTool(g *protogen.GeneratedFile, method *protogen.Method, mcpServ
 	g.P("}")
 }
 
-/*
-mcp.WithString(
-
-	"vibe",
-	mcp.Required(),
-	mcp.Description("The vibe to set on the server"),
-
-),
-*/
 func generateMCPToolField(g *protogen.GeneratedFile, field *protogen.Field) {
 	switch field.Desc.Kind().String() {
 	case "string":
@@ -197,8 +175,8 @@ func generateHandler(g *protogen.GeneratedFile, method *protogen.Method, mcpServ
 	g.P("func (s *", unexport(mcpServerName), ") ", method.GoName, "Handler(ctx ", contextPackage.Ident("Context"), ", req ", mcpPackage.Ident("CallToolRequest"), ") (", QualifiedGoIdentPointer(g, mcpPackage.Ident("CallToolResult")), ", error) {")
 
 	// Create request message
-	g.P("    // Create request message from parameters")
-	g.P("    protoReq := &", g.QualifiedGoIdent(method.Input.GoIdent), "{}")
+	g.P("// Create request message from parameters")
+	g.P("protoReq := &", g.QualifiedGoIdent(method.Input.GoIdent), "{}")
 
 	// Process each field in the input message
 	for _, field := range method.Input.Fields {
@@ -208,89 +186,89 @@ func generateHandler(g *protogen.GeneratedFile, method *protogen.Method, mcpServ
 
 		switch field.Desc.Kind().String() {
 		case "string":
-			g.P("    if val, ok := req.Params.Arguments[\"", fieldName, "\"]; ok {")
-			g.P("        if strVal, ok := val.(string); ok {")
-			g.P("            protoReq.", field.GoName, " = strVal")
-			g.P("        }")
-			g.P("    }")
+			g.P("if val, ok := req.Params.Arguments[\"", fieldName, "\"]; ok {")
+			g.P("if strVal, ok := val.(string); ok {")
+			g.P("protoReq.", field.GoName, " = strVal")
+			g.P("}")
+			g.P("}")
 		case "message":
-			g.P("    if val, ok := req.Params.Arguments[\"", fieldName, "\"]; ok {")
-			g.P("        if objVal, ok := val.(map[string]any); ok {")
-			g.P("            msgVal := &", g.QualifiedGoIdent(field.Message.GoIdent), "{}")
+			g.P("if val, ok := req.Params.Arguments[\"", fieldName, "\"]; ok {")
+			g.P("if objVal, ok := val.(map[string]any); ok {")
+			g.P("msgVal := &", g.QualifiedGoIdent(field.Message.GoIdent), "{}")
 
 			// Process nested message fields
 			for _, msgField := range field.Message.Fields {
 				msgFieldName := string(msgField.Desc.Name())
-				g.P("            if fieldVal, ok := objVal[\"", msgFieldName, "\"]; ok {")
+				g.P("if fieldVal, ok := objVal[\"", msgFieldName, "\"]; ok {")
 				generateFieldAssignment(g, msgField, "msgVal", "fieldVal")
-				g.P("            }")
+				g.P("}")
 			}
 
-			g.P("            protoReq.", field.GoName, " = msgVal")
-			g.P("        }")
-			g.P("    }")
+			g.P("protoReq.", field.GoName, " = msgVal")
+			g.P("}")
+			g.P("}")
 		// Add cases for other types (int32, int64, bool, etc.)
 		case "int32", "int64":
-			g.P("    if val, ok := req.Params.Arguments[\"", fieldName, "\"]; ok {")
-			g.P("        if numVal, ok := val.(float64); ok {") // JSON numbers come as float64
+			g.P("if val, ok := req.Params.Arguments[\"", fieldName, "\"]; ok {")
+			g.P("if numVal, ok := val.(float64); ok {") // JSON numbers come as float64
 			if field.Desc.Kind().String() == "int32" {
-				g.P("            protoReq.", field.GoName, " = int32(numVal)")
+				g.P("protoReq.", field.GoName, " = int32(numVal)")
 			} else {
-				g.P("            protoReq.", field.GoName, " = int64(numVal)")
+				g.P("protoReq.", field.GoName, " = int64(numVal)")
 			}
-			g.P("        }")
-			g.P("    }")
+			g.P("}")
+			g.P("}")
 		case "bool":
-			g.P("    if val, ok := req.Params.Arguments[\"", fieldName, "\"]; ok {")
-			g.P("        if boolVal, ok := val.(bool); ok {")
-			g.P("            protoReq.", field.GoName, " = boolVal")
-			g.P("        }")
-			g.P("    }")
+			g.P("if val, ok := req.Params.Arguments[\"", fieldName, "\"]; ok {")
+			g.P("if boolVal, ok := val.(bool); ok {")
+			g.P("protoReq.", field.GoName, " = boolVal")
+			g.P("}")
+			g.P("}")
 		}
 	}
 
 	// Call the client method
-	g.P("    // Call the client method")
-	g.P("    resp, err := s.", clientName, ".", method.GoName, "(ctx, protoReq)")
-	g.P("    if err != nil {")
-	g.P("        // Return error as a CallToolResult with IsError=true")
-	g.P("        return &", mcpPackage.Ident("CallToolResult"), "{")
-	g.P("            Content: []", mcpPackage.Ident("Content"), "{")
-	g.P("                &", mcpPackage.Ident("TextContent"), "{")
-	g.P("                    Text: err.Error(),")
-	g.P("                },")
-	g.P("            },")
-	g.P("            IsError: true,")
-	g.P("        }, nil")
-	g.P("    }")
+	g.P("// Call the client method")
+	g.P("resp, err := s.", clientName, ".", method.GoName, "(ctx, protoReq)")
+	g.P("if err != nil {")
+	g.P("// Return error as a CallToolResult with IsError=true")
+	g.P("return &", mcpPackage.Ident("CallToolResult"), "{")
+	g.P("Content: []", mcpPackage.Ident("Content"), "{")
+	g.P("&", mcpPackage.Ident("TextContent"), "{")
+	g.P("Text: err.Error(),")
+	g.P("},")
+	g.P("},")
+	g.P("IsError: true,")
+	g.P("}, nil")
+	g.P("}")
 
 	// Create and return successful result
-	g.P("    // Create successful result")
-	g.P("    // Convert response to JSON")
-	g.P("    respContent := make(map[string]any)")
+	g.P("// Create successful result")
+	g.P("// Convert response to JSON")
+	g.P("respContent := make(map[string]any)")
 
 	// Add response fields
 	if len(method.Output.Fields) > 0 {
 		for _, field := range method.Output.Fields {
 			fieldName := string(field.Desc.Name())
-			g.P("    respContent[\"", fieldName, "\"] = resp.", field.GoName)
+			g.P("respContent[\"", fieldName, "\"] = resp.", field.GoName)
 		}
 	}
 
-	g.P("    // Create and return the CallToolResult")
-	g.P("    jsonContent, err := json.Marshal(respContent)")
-	g.P("    if err != nil {")
-	g.P("        return mcp.NewToolResultErrorFromErr(\"error marshaling\", err), nil")
-	g.P("    }")
-	g.P("    return &", mcpPackage.Ident("CallToolResult"), "{")
-	g.P("        Content: []", mcpPackage.Ident("Content"), "{")
-	g.P("            &", mcpPackage.Ident("TextContent"), "{")
-	g.P("                Text:        string(jsonContent),")
-	g.P("                Type: \"text\",")
-	g.P("            },")
-	g.P("        },")
-	g.P("        IsError: false,")
-	g.P("    }, nil")
+	g.P("// Create and return the CallToolResult")
+	g.P("jsonContent, err := json.Marshal(respContent)")
+	g.P("if err != nil {")
+	g.P("return mcp.NewToolResultErrorFromErr(\"error marshaling\", err), nil")
+	g.P("}")
+	g.P("return &", mcpPackage.Ident("CallToolResult"), "{")
+	g.P("Content: []", mcpPackage.Ident("Content"), "{")
+	g.P("&", mcpPackage.Ident("TextContent"), "{")
+	g.P("Text:        string(jsonContent),")
+	g.P("Type: \"text\",")
+	g.P("},")
+	g.P("},")
+	g.P("IsError: false,")
+	g.P("}, nil")
 	g.P("}")
 }
 
@@ -299,159 +277,159 @@ func generateFieldAssignment(g *protogen.GeneratedFile, field *protogen.Field, v
 
 	switch field.Desc.Kind().String() {
 	case "string":
-		g.P("                if strVal, ok := ", valName, ".(string); ok {")
+		g.P("if strVal, ok := ", valName, ".(string); ok {")
 		if isOptional {
-			g.P("                    ", varName, ".", field.GoName, " = &strVal")
+			g.P(varName, ".", field.GoName, " = &strVal")
 		} else {
-			g.P("                    ", varName, ".", field.GoName, " = strVal")
+			g.P(varName, ".", field.GoName, " = strVal")
 		}
-		g.P("                }")
+		g.P("}")
 	case "int32":
-		g.P("                if numVal, ok := ", valName, ".(int32); ok {")
+		g.P("if numVal, ok := ", valName, ".(int32); ok {")
 		if isOptional {
-			g.P("                    ", varName, ".", field.GoName, " = &numVal")
+			g.P(varName, ".", field.GoName, " = &numVal")
 		} else {
-			g.P("                    ", varName, ".", field.GoName, " = numVal")
+			g.P(varName, ".", field.GoName, " = numVal")
 		}
-		g.P("                }")
+		g.P("}")
 	case "int64":
-		g.P("                if numVal, ok := ", valName, ".(int64); ok {")
+		g.P("if numVal, ok := ", valName, ".(int64); ok {")
 		if isOptional {
-			g.P("                    ", varName, ".", field.GoName, " = &val")
+			g.P(varName, ".", field.GoName, " = &val")
 		} else {
-			g.P("                    ", varName, ".", field.GoName, " = numVal")
+			g.P(varName, ".", field.GoName, " = numVal")
 		}
-		g.P("                }")
+		g.P("}")
 	case "bool":
-		g.P("                if boolVal, ok := ", valName, ".(bool); ok {")
+		g.P("if boolVal, ok := ", valName, ".(bool); ok {")
 		if isOptional {
-			g.P("                    ", varName, ".", field.GoName, " = &boolVal")
+			g.P(varName, ".", field.GoName, " = &boolVal")
 		} else {
-			g.P("                    ", varName, ".", field.GoName, " = boolVal")
+			g.P(varName, ".", field.GoName, " = boolVal")
 		}
-		g.P("                }")
+		g.P("}")
 	case "double":
-		g.P("                if numVal, ok := ", valName, ".(float64); ok {")
+		g.P("if numVal, ok := ", valName, ".(float64); ok {")
 		if isOptional {
-			g.P("                    ", varName, ".", field.GoName, " = &numVal")
+			g.P(varName, ".", field.GoName, " = &numVal")
 		} else {
-			g.P("                    ", varName, ".", field.GoName, " = numVal")
+			g.P(varName, ".", field.GoName, " = numVal")
 		}
-		g.P("                }")
+		g.P("}")
 	case "float":
-		g.P("                if numVal, ok := ", valName, ".(float32); ok {")
+		g.P("if numVal, ok := ", valName, ".(float32); ok {")
 		if isOptional {
-			g.P("                    ", varName, ".", field.GoName, " = &numVal")
+			g.P(varName, ".", field.GoName, " = &numVal")
 		} else {
-			g.P("                    ", varName, ".", field.GoName, " = numVal")
+			g.P(varName, ".", field.GoName, " = numVal")
 		}
-		g.P("                }")
+		g.P("}")
 	case "uint32":
-		g.P("                if numVal, ok := ", valName, ".(uint32); ok {")
+		g.P("if numVal, ok := ", valName, ".(uint32); ok {")
 		if isOptional {
-			g.P("                    ", varName, ".", field.GoName, " = &numVal")
+			g.P(varName, ".", field.GoName, " = &numVal")
 		} else {
-			g.P("                    ", varName, ".", field.GoName, " = numVal")
+			g.P(varName, ".", field.GoName, " = numVal")
 		}
-		g.P("                }")
+		g.P("}")
 	case "uint64":
-		g.P("                if numVal, ok := ", valName, ".(uint64); ok {")
+		g.P("if numVal, ok := ", valName, ".(uint64); ok {")
 		if isOptional {
-			g.P("                    ", varName, ".", field.GoName, " = &numVal")
+			g.P(varName, ".", field.GoName, " = &numVal")
 		} else {
-			g.P("                    ", varName, ".", field.GoName, " = numVal")
+			g.P(varName, ".", field.GoName, " = numVal")
 		}
-		g.P("                }")
+		g.P("}")
 	case "sint32":
-		g.P("                if numVal, ok := ", valName, ".(int32); ok {")
+		g.P("if numVal, ok := ", valName, ".(int32); ok {")
 		if isOptional {
-			g.P("                    ", varName, ".", field.GoName, " = &numVal")
+			g.P(varName, ".", field.GoName, " = &numVal")
 		} else {
-			g.P("                    ", varName, ".", field.GoName, " = numVal")
+			g.P(varName, ".", field.GoName, " = numVal")
 		}
-		g.P("                }")
+		g.P("}")
 
 	case "sfixed32":
-		g.P("                if numVal, ok := ", valName, ".(int32); ok {")
+		g.P("if numVal, ok := ", valName, ".(int32); ok {")
 		if isOptional {
-			g.P("                    ", varName, ".", field.GoName, " = &numVal")
+			g.P(varName, ".", field.GoName, " = &numVal")
 		} else {
-			g.P("                    ", varName, ".", field.GoName, " = numVal")
+			g.P(varName, ".", field.GoName, " = numVal")
 		}
-		g.P("                }")
+		g.P("}")
 	case "sint64":
-		g.P("                if numVal, ok := ", valName, ".(int64); ok {")
+		g.P("if numVal, ok := ", valName, ".(int64); ok {")
 		if isOptional {
-			g.P("                    ", varName, ".", field.GoName, " = &numVal")
+			g.P(varName, ".", field.GoName, " = &numVal")
 		} else {
-			g.P("                    ", varName, ".", field.GoName, " = numVal")
+			g.P(varName, ".", field.GoName, " = numVal")
 		}
-		g.P("                }")
+		g.P("}")
 	case "sfixed64":
-		g.P("                if numVal, ok := ", valName, ".(int64); ok {")
+		g.P("if numVal, ok := ", valName, ".(int64); ok {")
 		if isOptional {
-			g.P("                    ", varName, ".", field.GoName, " = &numVal")
+			g.P(varName, ".", field.GoName, " = &numVal")
 		} else {
-			g.P("                    ", varName, ".", field.GoName, " = numVal")
+			g.P(varName, ".", field.GoName, " = numVal")
 		}
-		g.P("                }")
+		g.P("}")
 	case "fixed32":
-		g.P("                if numVal, ok := ", valName, ".(uint32); ok {")
+		g.P("if numVal, ok := ", valName, ".(uint32); ok {")
 		if isOptional {
-			g.P("                    ", varName, ".", field.GoName, " = &numVal")
+			g.P(varName, ".", field.GoName, " = &numVal")
 		} else {
-			g.P("                    ", varName, ".", field.GoName, " = numVal")
+			g.P(varName, ".", field.GoName, " = numVal")
 		}
-		g.P("                }")
+		g.P("}")
 	case "fixed64":
-		g.P("                if numVal, ok := ", valName, ".(uint64); ok {")
+		g.P("if numVal, ok := ", valName, ".(uint64); ok {")
 		if isOptional {
-			g.P("                    ", varName, ".", field.GoName, " = &numVal")
+			g.P(varName, ".", field.GoName, " = &numVal")
 		} else {
-			g.P("                    ", varName, ".", field.GoName, " = numVal")
+			g.P(varName, ".", field.GoName, " = numVal")
 		}
-		g.P("                }")
+		g.P("}")
 	case "bytes":
-		g.P("                if bytesVal, ok := ", valName, ".([]byte); ok {")
+		g.P("if bytesVal, ok := ", valName, ".([]byte); ok {")
 		if isOptional {
-			g.P("                    ", varName, ".", field.GoName, " = &bytesVal")
+			g.P(varName, ".", field.GoName, " = &bytesVal")
 		} else {
-			g.P("                    ", varName, ".", field.GoName, " = bytesVal")
+			g.P(varName, ".", field.GoName, " = bytesVal")
 		}
-		g.P("                }")
+		g.P("}")
 	case "message":
-		g.P("                if objVal, ok := ", valName, ".(map[string]any); ok {")
-		g.P("                    msgVal := &", g.QualifiedGoIdent(field.Message.GoIdent), "{}")
-		g.P("                    // Process nested fields")
+		g.P("if objVal, ok := ", valName, ".(map[string]any); ok {")
+		g.P("msgVal := &", g.QualifiedGoIdent(field.Message.GoIdent), "{}")
+		g.P("// Process nested fields")
 		for _, nestedField := range field.Message.Fields {
 			nestedFieldName := string(nestedField.Desc.Name())
-			g.P("                    if fieldVal, ok := objVal[\"", nestedFieldName, "\"]; ok {")
-			g.P("                        // Recursive field assignment")
+			g.P("if fieldVal, ok := objVal[\"", nestedFieldName, "\"]; ok {")
+			g.P("// Recursive field assignment")
 			generateFieldAssignment(g, nestedField, "msgVal", "fieldVal")
-			g.P("                    }")
+			g.P("}")
 		}
-		g.P("                    ", varName, ".", field.GoName, " = msgVal")
-		g.P("                }")
+		g.P(varName, ".", field.GoName, " = msgVal")
+		g.P("}")
 	case "enum":
-		g.P("                if numVal, ok := ", valName, ".(float64); ok {")
+		g.P("if numVal, ok := ", valName, ".(float64); ok {")
 		if isOptional {
-			g.P("                    val := ", g.QualifiedGoIdent(field.Enum.GoIdent), "(int32(numVal))")
-			g.P("                    ", varName, ".", field.GoName, " = &val")
+			g.P("val := ", g.QualifiedGoIdent(field.Enum.GoIdent), "(int32(numVal))")
+			g.P(varName, ".", field.GoName, " = &val")
 		} else {
-			g.P("                    ", varName, ".", field.GoName, " = ", g.QualifiedGoIdent(field.Enum.GoIdent), "(int32(numVal))")
+			g.P(varName, ".", field.GoName, " = ", g.QualifiedGoIdent(field.Enum.GoIdent), "(int32(numVal))")
 		}
-		g.P("                } else if strVal, ok := ", valName, ".(string); ok {")
-		g.P("                    // Try to convert string enum value if provided as string")
+		g.P("} else if strVal, ok := ", valName, ".(string); ok {")
+		g.P("// Try to convert string enum value if provided as string")
 		if isOptional {
-			g.P("                    val := ", g.QualifiedGoIdent(field.Enum.GoIdent), "(", g.QualifiedGoIdent(field.Enum.GoIdent), "_value[strVal])")
-			g.P("                    ", varName, ".", field.GoName, " = &val")
+			g.P("val := ", g.QualifiedGoIdent(field.Enum.GoIdent), "(", g.QualifiedGoIdent(field.Enum.GoIdent), "_value[strVal])")
+			g.P(varName, ".", field.GoName, " = &val")
 		} else {
-			g.P("                    val := ", g.QualifiedGoIdent(field.Enum.GoIdent), "_value[strVal]")
-			g.P("                    ", varName, ".", field.GoName, " = ", g.QualifiedGoIdent(field.Enum.GoIdent), "(val)")
+			g.P("val := ", g.QualifiedGoIdent(field.Enum.GoIdent), "_value[strVal]")
+			g.P(varName, ".", field.GoName, " = ", g.QualifiedGoIdent(field.Enum.GoIdent), "(val)")
 		}
-		g.P("                }")
+		g.P("}")
 	default:
-		g.P("                // Unsupported type: ", field.Desc.Kind().String())
+		g.P("// Unsupported type: ", field.Desc.Kind().String())
 	}
 }
 
@@ -470,12 +448,6 @@ func generateMcpServerStruct(g *protogen.GeneratedFile, mcpServerName string, cl
 	g.P()
 }
 
-/*
-	func (s *vibeServiceMCPServer) RegisterDefaultTools() {
-		s.MCPServer.AddTool(s.SetVibeTool(), s.SetVibeHandler)
-		s.MCPServer.AddTool(s.GetVibeTool(), s.GetVibeHandler)
-	}
-*/
 func generateDefaultToolsRegistration(g *protogen.GeneratedFile, methods []*protogen.Method, mcpServerName string) {
 	g.P("func (s *", unexport(mcpServerName), ") RegisterDefaultTools() {")
 	for _, method := range methods {
