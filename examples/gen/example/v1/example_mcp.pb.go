@@ -336,8 +336,207 @@ func (s *vibeServiceMCPServer) SetVibeDetailsTool() mcp.Tool {
 	return tool
 }
 
+func (s *vibeServiceMCPServer) SetVibeArrayHandler(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	// Create request message from parameters
+	protoReq := &SetVibeArrayRequest{}
+	// Extract vibe_array
+	if val, ok := req.Params.Arguments["vibe_array"]; ok {
+		if objVal, ok := val.(map[string]any); ok {
+			msgVal := &VibeArray{}
+			if fieldVal, ok := objVal["vibe_double"]; ok {
+				if numVal, ok := fieldVal.(float64); ok {
+					msgVal.VibeDouble = numVal
+				}
+			}
+			if fieldVal, ok := objVal["vibe_float"]; ok {
+				if numVal, ok := fieldVal.(float32); ok {
+					msgVal.VibeFloat = numVal
+				}
+			}
+			if fieldVal, ok := objVal["vibe_int32"]; ok {
+				if numVal, ok := fieldVal.(int32); ok {
+					msgVal.VibeInt32 = numVal
+				}
+			}
+			if fieldVal, ok := objVal["vibe_int64"]; ok {
+				if numVal, ok := fieldVal.(int64); ok {
+					msgVal.VibeInt64 = numVal
+				}
+			}
+			if fieldVal, ok := objVal["vibe_uint32"]; ok {
+				if numVal, ok := fieldVal.(uint32); ok {
+					msgVal.VibeUint32 = numVal
+				}
+			}
+			if fieldVal, ok := objVal["vibe_uint64"]; ok {
+				if numVal, ok := fieldVal.(uint64); ok {
+					msgVal.VibeUint64 = numVal
+				}
+			}
+			if fieldVal, ok := objVal["vibe_sint32"]; ok {
+				if numVal, ok := fieldVal.(int32); ok {
+					msgVal.VibeSint32 = numVal
+				}
+			}
+			if fieldVal, ok := objVal["vibe_sint64"]; ok {
+				if numVal, ok := fieldVal.(int64); ok {
+					msgVal.VibeSint64 = numVal
+				}
+			}
+			if fieldVal, ok := objVal["vibe_fixed32"]; ok {
+				if numVal, ok := fieldVal.(uint32); ok {
+					msgVal.VibeFixed32 = numVal
+				}
+			}
+			if fieldVal, ok := objVal["vibe_fixed64"]; ok {
+				if numVal, ok := fieldVal.(uint64); ok {
+					msgVal.VibeFixed64 = numVal
+				}
+			}
+			if fieldVal, ok := objVal["vibe_sfixed32"]; ok {
+				if numVal, ok := fieldVal.(int32); ok {
+					msgVal.VibeSfixed32 = numVal
+				}
+			}
+			if fieldVal, ok := objVal["vibe_sfixed64"]; ok {
+				if numVal, ok := fieldVal.(int64); ok {
+					msgVal.VibeSfixed64 = numVal
+				}
+			}
+			if fieldVal, ok := objVal["vibe_bool"]; ok {
+				if boolVal, ok := fieldVal.(bool); ok {
+					msgVal.VibeBool = boolVal
+				}
+			}
+			if fieldVal, ok := objVal["vibe_bytes"]; ok {
+				if bytesVal, ok := fieldVal.([]byte); ok {
+					msgVal.VibeBytes = bytesVal
+				}
+			}
+			protoReq.VibeArray = msgVal
+		}
+	}
+	// Call the client method
+	resp, err := s.VibeServiceClient.SetVibeArray(ctx, protoReq)
+	if err != nil {
+		// Return error as a CallToolResult with IsError=true
+		return &mcp.CallToolResult{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: err.Error(),
+				},
+			},
+			IsError: true,
+		}, nil
+	}
+	// Create successful result
+	// Convert response to JSON
+	respContent := make(map[string]any)
+	respContent["vibe_array"] = resp.VibeArray
+	// Create and return the CallToolResult
+	jsonContent, err := json.Marshal(respContent)
+	if err != nil {
+		return mcp.NewToolResultErrorFromErr("error marshaling", err), nil
+	}
+	return &mcp.CallToolResult{
+		Content: []mcp.Content{
+			&mcp.TextContent{
+				Text: string(jsonContent),
+				Type: "text",
+			},
+		},
+		IsError: false,
+	}, nil
+}
+
+func (s *vibeServiceMCPServer) SetVibeArrayTool() mcp.Tool {
+	tool := mcp.NewTool(
+		"SetVibeArray", mcp.WithDescription("Set the vibe arrays"),
+		mcp.WithObject(
+			"vibe_array",
+			mcp.Required(),
+			mcp.Description("The details of the vibe array"),
+			mcp.Properties(map[string]any{
+				"vibe_double": map[string]any{
+					"type":        "number",
+					"description": "The details of the vibe double array",
+					"required":    true,
+				},
+				"vibe_float": map[string]any{
+					"type":        "number",
+					"description": "the details of the vibe float array",
+					"required":    true,
+				},
+				"vibe_int32": map[string]any{
+					"type":        "number",
+					"description": "The details of the vibe int32 array",
+					"required":    true,
+				},
+				"vibe_int64": map[string]any{
+					"type":        "number",
+					"description": "The details of the vibe int64 array",
+					"required":    true,
+				},
+				"vibe_uint32": map[string]any{
+					"type":        "number",
+					"description": "The details of the vibe uint32 array",
+					"required":    true,
+				},
+				"vibe_uint64": map[string]any{
+					"type":        "number",
+					"description": "The details of the vibe uint64 array",
+					"required":    true,
+				},
+				"vibe_sint32": map[string]any{
+					"type":        "number",
+					"description": "The details of the vibe sint32 array",
+					"required":    true,
+				},
+				"vibe_sint64": map[string]any{
+					"type":        "number",
+					"description": "The details of the vibe sint64 array",
+					"required":    true,
+				},
+				"vibe_fixed32": map[string]any{
+					"type":        "number",
+					"description": "The details of the vibe fixed32 array",
+					"required":    true,
+				},
+				"vibe_fixed64": map[string]any{
+					"type":        "number",
+					"description": "The details of the vibe fixed64 array",
+					"required":    true,
+				},
+				"vibe_sfixed32": map[string]any{
+					"type":        "number",
+					"description": "The details of the vibe sfixed32 array",
+					"required":    true,
+				},
+				"vibe_sfixed64": map[string]any{
+					"type":        "number",
+					"description": "The details of the vibe sfixed64 array",
+					"required":    true,
+				},
+				"vibe_bool": map[string]any{
+					"type":        "boolean",
+					"description": "The details of the vibe bool array",
+					"required":    true,
+				},
+				"vibe_bytes": map[string]any{
+					"type":        "string",
+					"description": "the details of the vibe bytes array",
+					"required":    true,
+					"format":      "byte",
+				},
+			}),
+		),
+	)
+	return tool
+}
+
 func (s *vibeServiceMCPServer) RegisterDefaultTools() {
 	s.MCPServer.AddTool(s.SetVibeTool(), s.SetVibeHandler)
 	s.MCPServer.AddTool(s.GetVibeTool(), s.GetVibeHandler)
 	s.MCPServer.AddTool(s.SetVibeDetailsTool(), s.SetVibeDetailsHandler)
+	s.MCPServer.AddTool(s.SetVibeArrayTool(), s.SetVibeArrayHandler)
 }

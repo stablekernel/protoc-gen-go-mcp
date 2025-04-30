@@ -22,6 +22,7 @@ const (
 	VibeService_SetVibe_FullMethodName        = "/examples.v1.VibeService/SetVibe"
 	VibeService_GetVibe_FullMethodName        = "/examples.v1.VibeService/GetVibe"
 	VibeService_SetVibeDetails_FullMethodName = "/examples.v1.VibeService/SetVibeDetails"
+	VibeService_SetVibeArray_FullMethodName   = "/examples.v1.VibeService/SetVibeArray"
 )
 
 // VibeServiceClient is the client API for VibeService service.
@@ -35,6 +36,8 @@ type VibeServiceClient interface {
 	GetVibe(ctx context.Context, in *GetVibeRequest, opts ...grpc.CallOption) (*GetVibeResponse, error)
 	// Set vibe details
 	SetVibeDetails(ctx context.Context, in *SetVibeDetailsRequest, opts ...grpc.CallOption) (*SetVibeResponse, error)
+	// Set the vibe arrays
+	SetVibeArray(ctx context.Context, in *SetVibeArrayRequest, opts ...grpc.CallOption) (*SetVibeArrayResponse, error)
 }
 
 type vibeServiceClient struct {
@@ -75,6 +78,16 @@ func (c *vibeServiceClient) SetVibeDetails(ctx context.Context, in *SetVibeDetai
 	return out, nil
 }
 
+func (c *vibeServiceClient) SetVibeArray(ctx context.Context, in *SetVibeArrayRequest, opts ...grpc.CallOption) (*SetVibeArrayResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetVibeArrayResponse)
+	err := c.cc.Invoke(ctx, VibeService_SetVibeArray_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // VibeServiceServer is the server API for VibeService service.
 // All implementations must embed UnimplementedVibeServiceServer
 // for forward compatibility.
@@ -86,6 +99,8 @@ type VibeServiceServer interface {
 	GetVibe(context.Context, *GetVibeRequest) (*GetVibeResponse, error)
 	// Set vibe details
 	SetVibeDetails(context.Context, *SetVibeDetailsRequest) (*SetVibeResponse, error)
+	// Set the vibe arrays
+	SetVibeArray(context.Context, *SetVibeArrayRequest) (*SetVibeArrayResponse, error)
 	mustEmbedUnimplementedVibeServiceServer()
 }
 
@@ -104,6 +119,9 @@ func (UnimplementedVibeServiceServer) GetVibe(context.Context, *GetVibeRequest) 
 }
 func (UnimplementedVibeServiceServer) SetVibeDetails(context.Context, *SetVibeDetailsRequest) (*SetVibeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetVibeDetails not implemented")
+}
+func (UnimplementedVibeServiceServer) SetVibeArray(context.Context, *SetVibeArrayRequest) (*SetVibeArrayResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetVibeArray not implemented")
 }
 func (UnimplementedVibeServiceServer) mustEmbedUnimplementedVibeServiceServer() {}
 func (UnimplementedVibeServiceServer) testEmbeddedByValue()                     {}
@@ -180,6 +198,24 @@ func _VibeService_SetVibeDetails_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _VibeService_SetVibeArray_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetVibeArrayRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VibeServiceServer).SetVibeArray(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: VibeService_SetVibeArray_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VibeServiceServer).SetVibeArray(ctx, req.(*SetVibeArrayRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // VibeService_ServiceDesc is the grpc.ServiceDesc for VibeService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -198,6 +234,10 @@ var VibeService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetVibeDetails",
 			Handler:    _VibeService_SetVibeDetails_Handler,
+		},
+		{
+			MethodName: "SetVibeArray",
+			Handler:    _VibeService_SetVibeArray_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
