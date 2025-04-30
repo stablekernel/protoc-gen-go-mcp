@@ -69,33 +69,33 @@ message VibeScalar {
 // The vibe array message
 message VibeArray {
   // The details of the vibe double array
-  repeated double vibe_double = 2;
+  repeated double vibe_doubles = 2;
   // the details of the vibe float array
-  repeated float vibe_float = 3;
+  repeated float vibe_floats = 3;
   // The details of the vibe int32 array
-  repeated int32 vibe_int32 = 4;
+  repeated int32 vibe_int32s = 4;
   // The details of the vibe int64 array
-  repeated int64 vibe_int64 = 5;
+  repeated int64 vibe_int64s = 5;
   // The details of the vibe uint32 array
-  repeated uint32 vibe_uint32 = 6;
+  repeated uint32 vibe_uint32s = 6;
   // The details of the vibe uint64 array
-  repeated uint64 vibe_uint64 = 7;
+  repeated uint64 vibe_uint64s = 7;
   // The details of the vibe sint32 array
-  repeated sint32 vibe_sint32 = 8;
+  repeated sint32 vibe_sint32s = 8;
   // The details of the vibe sint64 array
-  repeated sint64 vibe_sint64 = 9;
+  repeated sint64 vibe_sint64s = 9;
   // The details of the vibe fixed32 array
-  repeated fixed32 vibe_fixed32 = 10;
+  repeated fixed32 vibe_fixed32s = 10;
   // The details of the vibe fixed64 array
-  repeated fixed64 vibe_fixed64 = 11;
+  repeated fixed64 vibe_fixed64s = 11;
   // The details of the vibe sfixed32 array
-  repeated sfixed32 vibe_sfixed32 = 12;
+  repeated sfixed32 vibe_sfixed32s = 12;
   // The details of the vibe sfixed64 array
-  repeated sfixed64 vibe_sfixed64 = 13;
+  repeated sfixed64 vibe_sfixed64s = 13;
   // The details of the vibe bool array
-  repeated bool vibe_bool = 14;
+  repeated bool vibe_bools = 14;
   // the details of the vibe bytes array
-  repeated bytes vibe_bytes = 15;
+  repeated bytes vibe_byteses = 15;
   // The details of the vibe scalar array
 }
 
