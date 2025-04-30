@@ -98,19 +98,6 @@ func generateMcpServerHandlers(g *protogen.GeneratedFile, service *protogen.Serv
 	generateDefaultToolsRegistration(g, methods, mcpServerName)
 }
 
-/*
-	func (s *vibeServiceMCPServer) SetVibeTool() mcp.Tool {
-		tool := mcp.NewTool(
-			"SetVibe", mcp.WithDescription("Set the Vibe"),
-			mcp.WithString(
-				"vibe",
-				mcp.Required(),
-				mcp.Description("The vibe to set on the server"),
-			),
-		)
-		return tool
-	}
-*/
 func generateMCPTool(g *protogen.GeneratedFile, method *protogen.Method, mcpServerName string) {
 	g.P("func (s *", unexport(mcpServerName), ") ", method.GoName, "Tool() (", mcpPackage.Ident("Tool"), ") {")
 
@@ -130,15 +117,6 @@ func generateMCPTool(g *protogen.GeneratedFile, method *protogen.Method, mcpServ
 	g.P("}")
 }
 
-/*
-mcp.WithString(
-
-	"vibe",
-	mcp.Required(),
-	mcp.Description("The vibe to set on the server"),
-
-),
-*/
 func generateMCPToolField(g *protogen.GeneratedFile, field *protogen.Field) {
 	switch field.Desc.Kind().String() {
 	case "string":
@@ -470,12 +448,6 @@ func generateMcpServerStruct(g *protogen.GeneratedFile, mcpServerName string, cl
 	g.P()
 }
 
-/*
-	func (s *vibeServiceMCPServer) RegisterDefaultTools() {
-		s.MCPServer.AddTool(s.SetVibeTool(), s.SetVibeHandler)
-		s.MCPServer.AddTool(s.GetVibeTool(), s.GetVibeHandler)
-	}
-*/
 func generateDefaultToolsRegistration(g *protogen.GeneratedFile, methods []*protogen.Method, mcpServerName string) {
 	g.P("func (s *", unexport(mcpServerName), ") RegisterDefaultTools() {")
 	for _, method := range methods {
