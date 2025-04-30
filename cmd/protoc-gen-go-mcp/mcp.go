@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	"google.golang.org/protobuf/compiler/protogen"
@@ -19,6 +18,7 @@ const grpcPackage = protogen.GoImportPath("google.golang.org/grpc")
 const contextPackage = protogen.GoImportPath("context")
 const mcpPackage = protogen.GoImportPath("github.com/mark3labs/mcp-go/mcp")
 const mcpServerPackage = protogen.GoImportPath("github.com/mark3labs/mcp-go/server")
+const jsonPackage = protogen.GoImportPath("encoding/json")
 
 // generateFile generates a _grpc.pb.go file containing gRPC service definitions.
 func generateFile(gen *protogen.Plugin, file *protogen.File) *protogen.GeneratedFile {
@@ -26,7 +26,6 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 		return nil
 	}
 	filename := file.GeneratedFilenamePrefix + "_mcp.pb.go"
-	log.Println(filename)
 	g := gen.NewGeneratedFile(filename, file.GoImportPath)
 	// Attach all comments associated with the syntax field.
 	genLeadingComments(g, file.Desc.SourceLocations().ByPath(protoreflect.SourcePath{fileDescriptorProtoSyntaxFieldNumber}))
@@ -141,7 +140,6 @@ mcp.WithString(
 ),
 */
 func generateMCPToolField(g *protogen.GeneratedFile, field *protogen.Field) {
-	log.Println(field.Desc.Kind().String())
 	switch field.Desc.Kind().String() {
 	case "string":
 		g.P("mcp.WithString(")
@@ -160,9 +158,8 @@ func generateMCPToolField(g *protogen.GeneratedFile, field *protogen.Field) {
 			g.P("mcp.Required(),")
 		}
 		g.P("mcp.Description(\"", processCommentToString(field.Comments.Leading), "\"),")
-		g.P("mcp.Properties(map[string]interface{}{")
+		g.P("mcp.Properties(map[string]any{")
 		for _, messageField := range field.Message.Fields {
-			log.Println(messageField)
 			generateMCPPropertyForField(g, messageField)
 		}
 		g.P("}),")
@@ -171,7 +168,7 @@ func generateMCPToolField(g *protogen.GeneratedFile, field *protogen.Field) {
 }
 
 func generateMCPPropertyForField(g *protogen.GeneratedFile, field *protogen.Field) {
-	g.P("\"", field.Desc.Name(), "\": map[string]interface{}{")
+	g.P("\"", field.Desc.Name(), "\": map[string]any{")
 	typeName := field.Desc.Kind().String()
 	switch field.Desc.Kind().String() {
 	case "double", "float", "int32", "int64", "uint32", "uint64", "sint32", "sint64", "fixed32", "fixed64", "sfixed32", "sfixed64":
@@ -195,10 +192,267 @@ func generateMCPPropertyForField(g *protogen.GeneratedFile, field *protogen.Fiel
 }
 
 func generateHandler(g *protogen.GeneratedFile, method *protogen.Method, mcpServerName string, clientName string) {
+	g.QualifiedGoIdent(jsonPackage.Ident("Marshal"))
+
 	g.P("func (s *", unexport(mcpServerName), ") ", method.GoName, "Handler(ctx ", contextPackage.Ident("Context"), ", req ", mcpPackage.Ident("CallToolRequest"), ") (", QualifiedGoIdentPointer(g, mcpPackage.Ident("CallToolResult")), ", error) {")
-	g.P("// TODO: Implement the handler for ", method.GoName)
-	g.P("return nil, nil")
+
+	// Create request message
+	g.P("    // Create request message from parameters")
+	g.P("    protoReq := &", g.QualifiedGoIdent(method.Input.GoIdent), "{}")
+
+	// Process each field in the input message
+	for _, field := range method.Input.Fields {
+		// Get parameter from request parameters
+		fieldName := string(field.Desc.Name())
+		g.P("    // Extract ", fieldName)
+
+		switch field.Desc.Kind().String() {
+		case "string":
+			g.P("    if val, ok := req.Params.Arguments[\"", fieldName, "\"]; ok {")
+			g.P("        if strVal, ok := val.(string); ok {")
+			g.P("            protoReq.", field.GoName, " = strVal")
+			g.P("        }")
+			g.P("    }")
+		case "message":
+			g.P("    if val, ok := req.Params.Arguments[\"", fieldName, "\"]; ok {")
+			g.P("        if objVal, ok := val.(map[string]any); ok {")
+			g.P("            msgVal := &", g.QualifiedGoIdent(field.Message.GoIdent), "{}")
+
+			// Process nested message fields
+			for _, msgField := range field.Message.Fields {
+				msgFieldName := string(msgField.Desc.Name())
+				g.P("            if fieldVal, ok := objVal[\"", msgFieldName, "\"]; ok {")
+				generateFieldAssignment(g, msgField, "msgVal", "fieldVal")
+				g.P("            }")
+			}
+
+			g.P("            protoReq.", field.GoName, " = msgVal")
+			g.P("        }")
+			g.P("    }")
+		// Add cases for other types (int32, int64, bool, etc.)
+		case "int32", "int64":
+			g.P("    if val, ok := req.Params.Arguments[\"", fieldName, "\"]; ok {")
+			g.P("        if numVal, ok := val.(float64); ok {") // JSON numbers come as float64
+			if field.Desc.Kind().String() == "int32" {
+				g.P("            protoReq.", field.GoName, " = int32(numVal)")
+			} else {
+				g.P("            protoReq.", field.GoName, " = int64(numVal)")
+			}
+			g.P("        }")
+			g.P("    }")
+		case "bool":
+			g.P("    if val, ok := req.Params.Arguments[\"", fieldName, "\"]; ok {")
+			g.P("        if boolVal, ok := val.(bool); ok {")
+			g.P("            protoReq.", field.GoName, " = boolVal")
+			g.P("        }")
+			g.P("    }")
+		}
+	}
+
+	// Call the client method
+	g.P("    // Call the client method")
+	g.P("    resp, err := s.", clientName, ".", method.GoName, "(ctx, protoReq)")
+	g.P("    if err != nil {")
+	g.P("        // Return error as a CallToolResult with IsError=true")
+	g.P("        return &", mcpPackage.Ident("CallToolResult"), "{")
+	g.P("            Content: []", mcpPackage.Ident("Content"), "{")
+	g.P("                &", mcpPackage.Ident("TextContent"), "{")
+	g.P("                    Text: err.Error(),")
+	g.P("                },")
+	g.P("            },")
+	g.P("            IsError: true,")
+	g.P("        }, nil")
+	g.P("    }")
+
+	// Create and return successful result
+	g.P("    // Create successful result")
+	g.P("    // Convert response to JSON")
+	g.P("    respContent := make(map[string]any)")
+
+	// Add response fields
+	if len(method.Output.Fields) > 0 {
+		for _, field := range method.Output.Fields {
+			fieldName := string(field.Desc.Name())
+			g.P("    respContent[\"", fieldName, "\"] = resp.", field.GoName)
+		}
+	}
+
+	g.P("    // Create and return the CallToolResult")
+	g.P("    jsonContent, err := json.Marshal(respContent)")
+	g.P("    if err != nil {")
+	g.P("        return mcp.NewToolResultErrorFromErr(\"error marshaling\", err), nil")
+	g.P("    }")
+	g.P("    return &", mcpPackage.Ident("CallToolResult"), "{")
+	g.P("        Content: []", mcpPackage.Ident("Content"), "{")
+	g.P("            &", mcpPackage.Ident("TextContent"), "{")
+	g.P("                Text:        string(jsonContent),")
+	g.P("                Type: \"text\",")
+	g.P("            },")
+	g.P("        },")
+	g.P("        IsError: false,")
+	g.P("    }, nil")
 	g.P("}")
+}
+
+func generateFieldAssignment(g *protogen.GeneratedFile, field *protogen.Field, varName string, valName string) {
+	isOptional := field.Desc.HasOptionalKeyword()
+
+	switch field.Desc.Kind().String() {
+	case "string":
+		g.P("                if strVal, ok := ", valName, ".(string); ok {")
+		if isOptional {
+			g.P("                    ", varName, ".", field.GoName, " = &strVal")
+		} else {
+			g.P("                    ", varName, ".", field.GoName, " = strVal")
+		}
+		g.P("                }")
+	case "int32":
+		g.P("                if numVal, ok := ", valName, ".(int32); ok {")
+		if isOptional {
+			g.P("                    ", varName, ".", field.GoName, " = &numVal")
+		} else {
+			g.P("                    ", varName, ".", field.GoName, " = numVal")
+		}
+		g.P("                }")
+	case "int64":
+		g.P("                if numVal, ok := ", valName, ".(int64); ok {")
+		if isOptional {
+			g.P("                    ", varName, ".", field.GoName, " = &val")
+		} else {
+			g.P("                    ", varName, ".", field.GoName, " = numVal")
+		}
+		g.P("                }")
+	case "bool":
+		g.P("                if boolVal, ok := ", valName, ".(bool); ok {")
+		if isOptional {
+			g.P("                    ", varName, ".", field.GoName, " = &boolVal")
+		} else {
+			g.P("                    ", varName, ".", field.GoName, " = boolVal")
+		}
+		g.P("                }")
+	case "double":
+		g.P("                if numVal, ok := ", valName, ".(float64); ok {")
+		if isOptional {
+			g.P("                    ", varName, ".", field.GoName, " = &numVal")
+		} else {
+			g.P("                    ", varName, ".", field.GoName, " = numVal")
+		}
+		g.P("                }")
+	case "float":
+		g.P("                if numVal, ok := ", valName, ".(float32); ok {")
+		if isOptional {
+			g.P("                    ", varName, ".", field.GoName, " = &numVal")
+		} else {
+			g.P("                    ", varName, ".", field.GoName, " = numVal")
+		}
+		g.P("                }")
+	case "uint32":
+		g.P("                if numVal, ok := ", valName, ".(uint32); ok {")
+		if isOptional {
+			g.P("                    ", varName, ".", field.GoName, " = &numVal")
+		} else {
+			g.P("                    ", varName, ".", field.GoName, " = numVal")
+		}
+		g.P("                }")
+	case "uint64":
+		g.P("                if numVal, ok := ", valName, ".(uint64); ok {")
+		if isOptional {
+			g.P("                    ", varName, ".", field.GoName, " = &numVal")
+		} else {
+			g.P("                    ", varName, ".", field.GoName, " = numVal")
+		}
+		g.P("                }")
+	case "sint32":
+		g.P("                if numVal, ok := ", valName, ".(int32); ok {")
+		if isOptional {
+			g.P("                    ", varName, ".", field.GoName, " = &numVal")
+		} else {
+			g.P("                    ", varName, ".", field.GoName, " = numVal")
+		}
+		g.P("                }")
+
+	case "sfixed32":
+		g.P("                if numVal, ok := ", valName, ".(int32); ok {")
+		if isOptional {
+			g.P("                    ", varName, ".", field.GoName, " = &numVal")
+		} else {
+			g.P("                    ", varName, ".", field.GoName, " = numVal")
+		}
+		g.P("                }")
+	case "sint64":
+		g.P("                if numVal, ok := ", valName, ".(int64); ok {")
+		if isOptional {
+			g.P("                    ", varName, ".", field.GoName, " = &numVal")
+		} else {
+			g.P("                    ", varName, ".", field.GoName, " = numVal")
+		}
+		g.P("                }")
+	case "sfixed64":
+		g.P("                if numVal, ok := ", valName, ".(int64); ok {")
+		if isOptional {
+			g.P("                    ", varName, ".", field.GoName, " = &numVal")
+		} else {
+			g.P("                    ", varName, ".", field.GoName, " = numVal")
+		}
+		g.P("                }")
+	case "fixed32":
+		g.P("                if numVal, ok := ", valName, ".(uint32); ok {")
+		if isOptional {
+			g.P("                    ", varName, ".", field.GoName, " = &numVal")
+		} else {
+			g.P("                    ", varName, ".", field.GoName, " = numVal")
+		}
+		g.P("                }")
+	case "fixed64":
+		g.P("                if numVal, ok := ", valName, ".(uint64); ok {")
+		if isOptional {
+			g.P("                    ", varName, ".", field.GoName, " = &numVal")
+		} else {
+			g.P("                    ", varName, ".", field.GoName, " = numVal")
+		}
+		g.P("                }")
+	case "bytes":
+		g.P("                if bytesVal, ok := ", valName, ".([]byte); ok {")
+		if isOptional {
+			g.P("                    ", varName, ".", field.GoName, " = &bytesVal")
+		} else {
+			g.P("                    ", varName, ".", field.GoName, " = bytesVal")
+		}
+		g.P("                }")
+	case "message":
+		g.P("                if objVal, ok := ", valName, ".(map[string]any); ok {")
+		g.P("                    msgVal := &", g.QualifiedGoIdent(field.Message.GoIdent), "{}")
+		g.P("                    // Process nested fields")
+		for _, nestedField := range field.Message.Fields {
+			nestedFieldName := string(nestedField.Desc.Name())
+			g.P("                    if fieldVal, ok := objVal[\"", nestedFieldName, "\"]; ok {")
+			g.P("                        // Recursive field assignment")
+			generateFieldAssignment(g, nestedField, "msgVal", "fieldVal")
+			g.P("                    }")
+		}
+		g.P("                    ", varName, ".", field.GoName, " = msgVal")
+		g.P("                }")
+	case "enum":
+		g.P("                if numVal, ok := ", valName, ".(float64); ok {")
+		if isOptional {
+			g.P("                    val := ", g.QualifiedGoIdent(field.Enum.GoIdent), "(int32(numVal))")
+			g.P("                    ", varName, ".", field.GoName, " = &val")
+		} else {
+			g.P("                    ", varName, ".", field.GoName, " = ", g.QualifiedGoIdent(field.Enum.GoIdent), "(int32(numVal))")
+		}
+		g.P("                } else if strVal, ok := ", valName, ".(string); ok {")
+		g.P("                    // Try to convert string enum value if provided as string")
+		if isOptional {
+			g.P("                    val := ", g.QualifiedGoIdent(field.Enum.GoIdent), "(", g.QualifiedGoIdent(field.Enum.GoIdent), "_value[strVal])")
+			g.P("                    ", varName, ".", field.GoName, " = &val")
+		} else {
+			g.P("                    val := ", g.QualifiedGoIdent(field.Enum.GoIdent), "_value[strVal]")
+			g.P("                    ", varName, ".", field.GoName, " = ", g.QualifiedGoIdent(field.Enum.GoIdent), "(val)")
+		}
+		g.P("                }")
+	default:
+		g.P("                // Unsupported type: ", field.Desc.Kind().String())
+	}
 }
 
 // TODO: this needs some love, multiline strings are handled not so well, leading trailing spaces, etc
@@ -240,7 +494,9 @@ func QualifiedGoIdentPointer(g *protogen.GeneratedFile, ident protogen.GoIdent) 
 	return "*" + g.QualifiedGoIdent(ident)
 }
 
-func unexport(s string) string { return strings.ToLower(s[:1]) + s[1:] }
+func unexport(s string) string {
+	return strings.ToLower(s[:1]) + s[1:]
+}
 
 func protocVersion(gen *protogen.Plugin) string {
 	v := gen.Request.GetCompilerVersion()
