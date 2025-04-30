@@ -197,8 +197,8 @@ func generateHandler(g *protogen.GeneratedFile, method *protogen.Method, mcpServ
 	g.P("func (s *", unexport(mcpServerName), ") ", method.GoName, "Handler(ctx ", contextPackage.Ident("Context"), ", req ", mcpPackage.Ident("CallToolRequest"), ") (", QualifiedGoIdentPointer(g, mcpPackage.Ident("CallToolResult")), ", error) {")
 
 	// Create request message
-	g.P("    // Create request message from parameters")
-	g.P("    protoReq := &", g.QualifiedGoIdent(method.Input.GoIdent), "{}")
+	g.P("// Create request message from parameters")
+	g.P("protoReq := &", g.QualifiedGoIdent(method.Input.GoIdent), "{}")
 
 	// Process each field in the input message
 	for _, field := range method.Input.Fields {
