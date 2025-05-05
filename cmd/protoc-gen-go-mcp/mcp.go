@@ -142,6 +142,8 @@ func generateMCPToolField(g *protogen.GeneratedFile, field *protogen.Field) {
 		}
 		g.P("}),")
 		g.P("),")
+	default:
+		g.P("// Unsupported field type: ", field.Desc.Kind().String(), " for field: ", field.Desc.Name())
 	}
 }
 
@@ -155,6 +157,9 @@ func generateMCPPropertyForField(g *protogen.GeneratedFile, field *protogen.Fiel
 		typeName = "boolean"
 	case "bytes":
 		typeName = "string"
+	}
+	if field.Desc.IsList() {
+		typeName = "array"
 	}
 	g.P("\"type\": \"", typeName, "\",")
 	g.P("\"description\": \"", processCommentToString(field.Comments.Leading), "\",")
@@ -182,48 +187,61 @@ func generateHandler(g *protogen.GeneratedFile, method *protogen.Method, mcpServ
 	for _, field := range method.Input.Fields {
 		// Get parameter from request parameters
 		fieldName := string(field.Desc.Name())
-		g.P("    // Extract ", fieldName)
+		g.P("// Extract ", fieldName)
 
 		switch field.Desc.Kind().String() {
 		case "string":
-			g.P("if val, ok := req.Params.Arguments[\"", fieldName, "\"]; ok {")
-			g.P("if strVal, ok := val.(string); ok {")
-			g.P("protoReq.", field.GoName, " = strVal")
-			g.P("}")
-			g.P("}")
-		case "message":
-			g.P("if val, ok := req.Params.Arguments[\"", fieldName, "\"]; ok {")
-			g.P("if objVal, ok := val.(map[string]any); ok {")
-			g.P("msgVal := &", g.QualifiedGoIdent(field.Message.GoIdent), "{}")
+			if field.Desc.IsList() {
 
-			// Process nested message fields
-			for _, msgField := range field.Message.Fields {
-				msgFieldName := string(msgField.Desc.Name())
-				g.P("if fieldVal, ok := objVal[\"", msgFieldName, "\"]; ok {")
-				generateFieldAssignment(g, msgField, "msgVal", "fieldVal")
+			} else {
+				g.P("if val, ok := req.Params.Arguments[\"", fieldName, "\"]; ok {")
+				g.P("if strVal, ok := val.(string); ok {")
+				g.P("protoReq.", field.GoName, " = strVal")
+				g.P("}")
 				g.P("}")
 			}
+		case "message":
+			if field.Desc.IsList() {
 
-			g.P("protoReq.", field.GoName, " = msgVal")
-			g.P("}")
-			g.P("}")
+			} else {
+				g.P("if val, ok := req.Params.Arguments[\"", fieldName, "\"]; ok {")
+				g.P("if objVal, ok := val.(map[string]any); ok {")
+				g.P("msgVal := &", g.QualifiedGoIdent(field.Message.GoIdent), "{}")
+
+				// Process nested message fields
+				for _, msgField := range field.Message.Fields {
+					generateFieldAssignment(g, msgField, "msgVal", "fieldVal")
+				}
+
+				g.P("protoReq.", field.GoName, " = msgVal")
+				g.P("}")
+				g.P("}")
+			}
 		// Add cases for other types (int32, int64, bool, etc.)
 		case "int32", "int64":
-			g.P("if val, ok := req.Params.Arguments[\"", fieldName, "\"]; ok {")
-			g.P("if numVal, ok := val.(float64); ok {") // JSON numbers come as float64
-			if field.Desc.Kind().String() == "int32" {
-				g.P("protoReq.", field.GoName, " = int32(numVal)")
+			if field.Desc.IsList() {
+
 			} else {
-				g.P("protoReq.", field.GoName, " = int64(numVal)")
+				g.P("if val, ok := req.Params.Arguments[\"", fieldName, "\"]; ok {")
+				g.P("if numVal, ok := val.(float64); ok {") // JSON numbers come as float64
+				if field.Desc.Kind().String() == "int32" {
+					g.P("protoReq.", field.GoName, " = int32(numVal)")
+				} else {
+					g.P("protoReq.", field.GoName, " = int64(numVal)")
+				}
+				g.P("}")
+				g.P("}")
 			}
-			g.P("}")
-			g.P("}")
 		case "bool":
-			g.P("if val, ok := req.Params.Arguments[\"", fieldName, "\"]; ok {")
-			g.P("if boolVal, ok := val.(bool); ok {")
-			g.P("protoReq.", field.GoName, " = boolVal")
-			g.P("}")
-			g.P("}")
+			if field.Desc.IsList() {
+
+			} else {
+				g.P("if val, ok := req.Params.Arguments[\"", fieldName, "\"]; ok {")
+				g.P("if boolVal, ok := val.(bool); ok {")
+				g.P("protoReq.", field.GoName, " = boolVal")
+				g.P("}")
+				g.P("}")
+			}
 		}
 	}
 
@@ -274,163 +292,166 @@ func generateHandler(g *protogen.GeneratedFile, method *protogen.Method, mcpServ
 
 func generateFieldAssignment(g *protogen.GeneratedFile, field *protogen.Field, varName string, valName string) {
 	isOptional := field.Desc.HasOptionalKeyword()
+	isList := field.Desc.IsList()
 
+	msgFieldName := string(field.Desc.Name())
+	g.P("if fieldVal, ok := objVal[\"", msgFieldName, "\"]; ok {")
+	castType := ""
 	switch field.Desc.Kind().String() {
 	case "string":
-		g.P("if strVal, ok := ", valName, ".(string); ok {")
-		if isOptional {
-			g.P(varName, ".", field.GoName, " = &strVal")
+		if isList {
+			castType = "[]string"
 		} else {
-			g.P(varName, ".", field.GoName, " = strVal")
+			castType = "string"
 		}
-		g.P("}")
+		generateValAssignmentWithCast(g, field, varName, valName, isOptional, castType)
 	case "int32":
-		g.P("if numVal, ok := ", valName, ".(int32); ok {")
-		if isOptional {
-			g.P(varName, ".", field.GoName, " = &numVal")
+		if isList {
+			castType = "[]int32"
 		} else {
-			g.P(varName, ".", field.GoName, " = numVal")
+			castType = "int32"
 		}
-		g.P("}")
+		generateValAssignmentWithCast(g, field, varName, valName, isOptional, castType)
 	case "int64":
-		g.P("if numVal, ok := ", valName, ".(int64); ok {")
-		if isOptional {
-			g.P(varName, ".", field.GoName, " = &val")
+		if isList {
+			castType = "[]int64"
 		} else {
-			g.P(varName, ".", field.GoName, " = numVal")
+			castType = "int64"
 		}
-		g.P("}")
+		generateValAssignmentWithCast(g, field, varName, valName, isOptional, castType)
 	case "bool":
-		g.P("if boolVal, ok := ", valName, ".(bool); ok {")
-		if isOptional {
-			g.P(varName, ".", field.GoName, " = &boolVal")
+		if isList {
+			castType = "[]bool"
 		} else {
-			g.P(varName, ".", field.GoName, " = boolVal")
+			castType = "bool"
 		}
-		g.P("}")
+		generateValAssignmentWithCast(g, field, varName, valName, isOptional, castType)
 	case "double":
-		g.P("if numVal, ok := ", valName, ".(float64); ok {")
-		if isOptional {
-			g.P(varName, ".", field.GoName, " = &numVal")
+		if isList {
+			castType = "[]float64"
 		} else {
-			g.P(varName, ".", field.GoName, " = numVal")
+			castType = "float64"
 		}
-		g.P("}")
+		generateValAssignmentWithCast(g, field, varName, valName, isOptional, castType)
 	case "float":
-		g.P("if numVal, ok := ", valName, ".(float32); ok {")
-		if isOptional {
-			g.P(varName, ".", field.GoName, " = &numVal")
+		if isList {
+			castType = "[]float32"
 		} else {
-			g.P(varName, ".", field.GoName, " = numVal")
+			castType = "float32"
 		}
-		g.P("}")
+		generateValAssignmentWithCast(g, field, varName, valName, isOptional, castType)
 	case "uint32":
-		g.P("if numVal, ok := ", valName, ".(uint32); ok {")
-		if isOptional {
-			g.P(varName, ".", field.GoName, " = &numVal")
+		if isList {
+			castType = "[]uint32"
 		} else {
-			g.P(varName, ".", field.GoName, " = numVal")
+			castType = "uint32"
 		}
-		g.P("}")
+		generateValAssignmentWithCast(g, field, varName, valName, isOptional, castType)
 	case "uint64":
-		g.P("if numVal, ok := ", valName, ".(uint64); ok {")
-		if isOptional {
-			g.P(varName, ".", field.GoName, " = &numVal")
+		if isList {
+			castType = "[]uint64"
 		} else {
-			g.P(varName, ".", field.GoName, " = numVal")
+			castType = "uint64"
 		}
-		g.P("}")
+		generateValAssignmentWithCast(g, field, varName, valName, isOptional, castType)
 	case "sint32":
-		g.P("if numVal, ok := ", valName, ".(int32); ok {")
-		if isOptional {
-			g.P(varName, ".", field.GoName, " = &numVal")
+		if isList {
+			castType = "[]int32"
 		} else {
-			g.P(varName, ".", field.GoName, " = numVal")
+			castType = "int32"
 		}
-		g.P("}")
-
+		generateValAssignmentWithCast(g, field, varName, valName, isOptional, castType)
 	case "sfixed32":
-		g.P("if numVal, ok := ", valName, ".(int32); ok {")
-		if isOptional {
-			g.P(varName, ".", field.GoName, " = &numVal")
+		if isList {
+			castType = "[]int32"
 		} else {
-			g.P(varName, ".", field.GoName, " = numVal")
+			castType = "int32"
 		}
-		g.P("}")
+		generateValAssignmentWithCast(g, field, varName, valName, isOptional, castType)
 	case "sint64":
-		g.P("if numVal, ok := ", valName, ".(int64); ok {")
-		if isOptional {
-			g.P(varName, ".", field.GoName, " = &numVal")
+		if isList {
+			castType = "[]int64"
 		} else {
-			g.P(varName, ".", field.GoName, " = numVal")
+			castType = "int64"
 		}
-		g.P("}")
+		generateValAssignmentWithCast(g, field, varName, valName, isOptional, castType)
 	case "sfixed64":
-		g.P("if numVal, ok := ", valName, ".(int64); ok {")
-		if isOptional {
-			g.P(varName, ".", field.GoName, " = &numVal")
+		if isList {
+			castType = "[]int64"
 		} else {
-			g.P(varName, ".", field.GoName, " = numVal")
+			castType = "int64"
 		}
-		g.P("}")
+		generateValAssignmentWithCast(g, field, varName, valName, isOptional, castType)
 	case "fixed32":
-		g.P("if numVal, ok := ", valName, ".(uint32); ok {")
-		if isOptional {
-			g.P(varName, ".", field.GoName, " = &numVal")
+		if isList {
+			castType = "[]uint32"
 		} else {
-			g.P(varName, ".", field.GoName, " = numVal")
+			castType = "uint32"
 		}
-		g.P("}")
+		generateValAssignmentWithCast(g, field, varName, valName, isOptional, castType)
 	case "fixed64":
-		g.P("if numVal, ok := ", valName, ".(uint64); ok {")
-		if isOptional {
-			g.P(varName, ".", field.GoName, " = &numVal")
+		if isList {
+			castType = "[]uint64"
 		} else {
-			g.P(varName, ".", field.GoName, " = numVal")
+			castType = "uint64"
 		}
-		g.P("}")
+		generateValAssignmentWithCast(g, field, varName, valName, isOptional, castType)
 	case "bytes":
-		g.P("if bytesVal, ok := ", valName, ".([]byte); ok {")
-		if isOptional {
-			g.P(varName, ".", field.GoName, " = &bytesVal")
+		if isList {
+			castType = "[][]byte"
 		} else {
-			g.P(varName, ".", field.GoName, " = bytesVal")
+			castType = "[]byte"
 		}
-		g.P("}")
+		generateValAssignmentWithCast(g, field, varName, valName, isOptional, castType)
 	case "message":
-		g.P("if objVal, ok := ", valName, ".(map[string]any); ok {")
-		g.P("msgVal := &", g.QualifiedGoIdent(field.Message.GoIdent), "{}")
-		g.P("// Process nested fields")
-		for _, nestedField := range field.Message.Fields {
-			nestedFieldName := string(nestedField.Desc.Name())
-			g.P("if fieldVal, ok := objVal[\"", nestedFieldName, "\"]; ok {")
-			g.P("// Recursive field assignment")
-			generateFieldAssignment(g, nestedField, "msgVal", "fieldVal")
+		if isList {
+			// TODO: Handle list of messages
+		} else {
+			g.P("if objVal, ok := ", valName, ".(map[string]any); ok {")
+			g.P("msgVal := &", g.QualifiedGoIdent(field.Message.GoIdent), "{}")
+			g.P("// Process nested fields")
+			for _, nestedField := range field.Message.Fields {
+				generateFieldAssignment(g, nestedField, "msgVal", "fieldVal")
+			}
+			g.P(varName, ".", field.GoName, " = msgVal")
 			g.P("}")
 		}
-		g.P(varName, ".", field.GoName, " = msgVal")
-		g.P("}")
 	case "enum":
-		g.P("if numVal, ok := ", valName, ".(float64); ok {")
-		if isOptional {
-			g.P("val := ", g.QualifiedGoIdent(field.Enum.GoIdent), "(int32(numVal))")
-			g.P(varName, ".", field.GoName, " = &val")
+		if isList {
+			//TODO: Handle list of enums
 		} else {
-			g.P(varName, ".", field.GoName, " = ", g.QualifiedGoIdent(field.Enum.GoIdent), "(int32(numVal))")
+			g.P("if numVal, ok := ", valName, ".(float64); ok {")
+			if isOptional {
+				g.P("val := ", g.QualifiedGoIdent(field.Enum.GoIdent), "(int32(numVal))")
+				g.P(varName, ".", field.GoName, " = &val")
+			} else {
+				g.P(varName, ".", field.GoName, " = ", g.QualifiedGoIdent(field.Enum.GoIdent), "(int32(numVal))")
+			}
+			g.P("} else if strVal, ok := ", valName, ".(string); ok {")
+			g.P("// Try to convert string enum value if provided as string")
+			if isOptional {
+				g.P("val := ", g.QualifiedGoIdent(field.Enum.GoIdent), "(", g.QualifiedGoIdent(field.Enum.GoIdent), "_value[strVal])")
+				g.P(varName, ".", field.GoName, " = &val")
+			} else {
+				g.P("val := ", g.QualifiedGoIdent(field.Enum.GoIdent), "_value[strVal]")
+				g.P(varName, ".", field.GoName, " = ", g.QualifiedGoIdent(field.Enum.GoIdent), "(val)")
+			}
+			g.P("}")
 		}
-		g.P("} else if strVal, ok := ", valName, ".(string); ok {")
-		g.P("// Try to convert string enum value if provided as string")
-		if isOptional {
-			g.P("val := ", g.QualifiedGoIdent(field.Enum.GoIdent), "(", g.QualifiedGoIdent(field.Enum.GoIdent), "_value[strVal])")
-			g.P(varName, ".", field.GoName, " = &val")
-		} else {
-			g.P("val := ", g.QualifiedGoIdent(field.Enum.GoIdent), "_value[strVal]")
-			g.P(varName, ".", field.GoName, " = ", g.QualifiedGoIdent(field.Enum.GoIdent), "(val)")
-		}
-		g.P("}")
 	default:
 		g.P("// Unsupported type: ", field.Desc.Kind().String())
 	}
+	g.P("}")
+}
+
+func generateValAssignmentWithCast(g *protogen.GeneratedFile, field *protogen.Field, varName string, valName string, isOptional bool, castType string) {
+	g.P("if numVal, ok := ", valName, ".(", castType, "); ok {")
+	if isOptional {
+		g.P(varName, ".", field.GoName, " = &numVal")
+	} else {
+		g.P(varName, ".", field.GoName, " = numVal")
+	}
+	g.P("}")
 }
 
 // TODO: this needs some love, multiline strings are handled not so well, leading trailing spaces, etc
