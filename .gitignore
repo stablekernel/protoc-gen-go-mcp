@@ -1,1 +1,5 @@
-.idea
+bin/
+tmp/
+.DS_Store
+*.log
+*.out

@@ -440,6 +440,10 @@ func processCommentToString(comments protogen.Comments) string {
 }
 
 func generateMcpServerStruct(g *protogen.GeneratedFile, mcpServerName string, clientName string) {
+	if mcpServerName == "" || clientName == "" {
+		panic("mcpServerName or clientName is empty")
+	}
+
 	g.P("type ", unexport(mcpServerName), " struct {")
 	g.P(clientName)
 	g.P()
@@ -467,18 +471,26 @@ func QualifiedGoIdentPointer(g *protogen.GeneratedFile, ident protogen.GoIdent) 
 }
 
 func unexport(s string) string {
+	if len(s) <= 1 {
+		return strings.ToLower(s)
+	}
+
 	return strings.ToLower(s[:1]) + s[1:]
 }
 
 func protocVersion(gen *protogen.Plugin) string {
 	v := gen.Request.GetCompilerVersion()
+
 	if v == nil {
 		return "(unknown)"
 	}
+
 	var suffix string
+
 	if s := v.GetSuffix(); s != "" {
 		suffix = "-" + s
 	}
+
 	return fmt.Sprintf("v%d.%d.%d%s", v.GetMajor(), v.GetMinor(), v.GetPatch(), suffix)
 }
 
@@ -486,6 +498,7 @@ func genLeadingComments(g *protogen.GeneratedFile, loc protoreflect.SourceLocati
 	for _, s := range loc.LeadingDetachedComments {
 		g.P(protogen.Comments(s))
 	}
+
 	if s := loc.LeadingComments; s != "" {
 		g.P(protogen.Comments(s))
 	}
