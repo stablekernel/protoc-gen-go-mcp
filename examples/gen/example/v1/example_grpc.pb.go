@@ -23,6 +23,7 @@ const (
 	VibeService_GetVibe_FullMethodName        = "/examples.v1.VibeService/GetVibe"
 	VibeService_SetVibeDetails_FullMethodName = "/examples.v1.VibeService/SetVibeDetails"
 	VibeService_SetVibeArray_FullMethodName   = "/examples.v1.VibeService/SetVibeArray"
+	VibeService_SetVibeObjects_FullMethodName = "/examples.v1.VibeService/SetVibeObjects"
 )
 
 // VibeServiceClient is the client API for VibeService service.
@@ -38,6 +39,8 @@ type VibeServiceClient interface {
 	SetVibeDetails(ctx context.Context, in *SetVibeDetailsRequest, opts ...grpc.CallOption) (*SetVibeResponse, error)
 	// Set the vibe arrays
 	SetVibeArray(ctx context.Context, in *SetVibeArrayRequest, opts ...grpc.CallOption) (*SetVibeArrayResponse, error)
+	// Set multiple vibe objects
+	SetVibeObjects(ctx context.Context, in *SetVibeObjectsRequest, opts ...grpc.CallOption) (*SetVibeObjectsResponse, error)
 }
 
 type vibeServiceClient struct {
@@ -88,6 +91,16 @@ func (c *vibeServiceClient) SetVibeArray(ctx context.Context, in *SetVibeArrayRe
 	return out, nil
 }
 
+func (c *vibeServiceClient) SetVibeObjects(ctx context.Context, in *SetVibeObjectsRequest, opts ...grpc.CallOption) (*SetVibeObjectsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetVibeObjectsResponse)
+	err := c.cc.Invoke(ctx, VibeService_SetVibeObjects_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // VibeServiceServer is the server API for VibeService service.
 // All implementations must embed UnimplementedVibeServiceServer
 // for forward compatibility.
@@ -101,6 +114,8 @@ type VibeServiceServer interface {
 	SetVibeDetails(context.Context, *SetVibeDetailsRequest) (*SetVibeResponse, error)
 	// Set the vibe arrays
 	SetVibeArray(context.Context, *SetVibeArrayRequest) (*SetVibeArrayResponse, error)
+	// Set multiple vibe objects
+	SetVibeObjects(context.Context, *SetVibeObjectsRequest) (*SetVibeObjectsResponse, error)
 	mustEmbedUnimplementedVibeServiceServer()
 }
 
@@ -122,6 +137,9 @@ func (UnimplementedVibeServiceServer) SetVibeDetails(context.Context, *SetVibeDe
 }
 func (UnimplementedVibeServiceServer) SetVibeArray(context.Context, *SetVibeArrayRequest) (*SetVibeArrayResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetVibeArray not implemented")
+}
+func (UnimplementedVibeServiceServer) SetVibeObjects(context.Context, *SetVibeObjectsRequest) (*SetVibeObjectsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetVibeObjects not implemented")
 }
 func (UnimplementedVibeServiceServer) mustEmbedUnimplementedVibeServiceServer() {}
 func (UnimplementedVibeServiceServer) testEmbeddedByValue()                     {}
@@ -216,6 +234,24 @@ func _VibeService_SetVibeArray_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _VibeService_SetVibeObjects_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetVibeObjectsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VibeServiceServer).SetVibeObjects(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: VibeService_SetVibeObjects_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VibeServiceServer).SetVibeObjects(ctx, req.(*SetVibeObjectsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // VibeService_ServiceDesc is the grpc.ServiceDesc for VibeService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -238,6 +274,10 @@ var VibeService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetVibeArray",
 			Handler:    _VibeService_SetVibeArray_Handler,
+		},
+		{
+			MethodName: "SetVibeObjects",
+			Handler:    _VibeService_SetVibeObjects_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

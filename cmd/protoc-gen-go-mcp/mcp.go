@@ -109,42 +109,26 @@ func generateMCPTool(g *protogen.GeneratedFile, method *protogen.Method, mcpServ
 	}
 	g.P("tool := mcp.NewTool(")
 	g.P("\"", method.GoName, "\", mcp.WithDescription(\"", methodDescription, "\"),")
-	for _, field := range method.Input.Fields {
-		generateMCPToolField(g, field)
+	if method.Input != nil {
+		if len(method.Input.Fields) > 0 {
+			generateMCPToolField(g, method.Input)
+		}
 	}
 	g.P(")")
 	g.P("return tool")
 	g.P("}")
 }
 
-func generateMCPToolField(g *protogen.GeneratedFile, field *protogen.Field) {
-	switch field.Desc.Kind().String() {
-	case "string":
-		g.P("mcp.WithString(")
-		g.P("\"", field.Desc.Name(), "\",")
-		if field.Desc.HasOptionalKeyword() {
-		} else {
-			g.P("mcp.Required(),")
-		}
-		g.P("mcp.Description(\"", processCommentToString(field.Comments.Leading), "\"),")
-		g.P("),")
-	case "message":
-		g.P("mcp.WithObject(")
-		g.P("\"", field.Desc.Name(), "\",")
-		if field.Desc.HasOptionalKeyword() {
-		} else {
-			g.P("mcp.Required(),")
-		}
-		g.P("mcp.Description(\"", processCommentToString(field.Comments.Leading), "\"),")
-		g.P("mcp.Properties(map[string]any{")
-		for _, messageField := range field.Message.Fields {
-			generateMCPPropertyForField(g, messageField)
-		}
-		g.P("}),")
-		g.P("),")
-	default:
-		g.P("// Unsupported field type: ", field.Desc.Kind().String(), " for field: ", field.Desc.Name())
+func generateMCPToolField(g *protogen.GeneratedFile, input *protogen.Message) {
+	g.P("mcp.WithObject(")
+	g.P("\"", input.Desc.Name(), "\",")
+	g.P("mcp.Description(\"", processCommentToString(input.Comments.Leading), "\"),")
+	g.P("mcp.Properties(map[string]any{")
+	for _, messageField := range input.Fields {
+		generateMCPPropertyForField(g, messageField)
 	}
+	g.P("}),")
+	g.P("),")
 }
 
 func generateMCPPropertyForField(g *protogen.GeneratedFile, field *protogen.Field) {
