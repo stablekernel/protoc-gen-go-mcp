@@ -102,6 +102,7 @@ func (s *vibeServiceMCPServer) RegisterDefaultTools() {
 
 #### Topeka
 [Topeka](https://topeka.ai) is an open source project that provides code-generators for [Model-Context-Protocol (MCP)](https://modelcontextprotocol.io/introduction).
+
 It is designed to facilitate the usage of MCP seamlessly against existing gRPC based applications. This is done via
 leveraging code generation using the [protoc compiler](https://grpc.io/docs/protoc-installation/) and installing the relevant Topeka plugin.
 
