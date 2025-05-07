@@ -101,7 +101,7 @@ func (s *vibeServiceMCPServer) RegisterDefaultTools() {
 ```
 
 #### Topeka
-[Topeka](topeka.ai) is an open source project that provides code-generators for [Model-Context-Protocol (MCP)](https://modelcontextprotocol.io/introduction).
+[Topeka](https://topeka.ai) is an open source project that provides code-generators for [Model-Context-Protocol (MCP)](https://modelcontextprotocol.io/introduction).
 It is designed to facilitate the usage of MCP seamlessly against existing gRPC based applications. This is done via
 leveraging code generation using the [protoc compiler](https://grpc.io/docs/protoc-installation/) and installing the relevant Topeka plugin.
 
@@ -110,6 +110,6 @@ applied to the generated servers, not the plugins themselves, which do not provi
 while maintaining stable MCP server APIs.
 
 #### Maintainers
-[Stable Kernel](stablekernel.com) is the primary maintainer of this project and sponsor of the plugins, though we welcome outside contributions.
+[Stable Kernel](https://stablekernel.com) is the primary maintainer of this project and sponsor of the plugins, though we welcome outside contributions.
 
-[Stable Kernel](stablekernel.com) is a digital transformation company building solutions that power LLM enablement for growing businesses. We have a track record of helping our partners solve their biggest challenges on their digital journey, whether they need insights or implementation. Every day, millions of people rely on software that we developed, and our custom software development and technology services have been trusted by some of the most innovative Fortune 500 companies in the world. 
+[Stable Kernel](https://stablekernel.com) is a digital transformation company building solutions that power LLM enablement for growing businesses. We have a track record of helping our partners solve their biggest challenges on their digital journey, whether they need insights or implementation. Every day, millions of people rely on software that we developed, and our custom software development and technology services have been trusted by some of the most innovative Fortune 500 companies in the world. 
