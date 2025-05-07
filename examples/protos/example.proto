@@ -4,6 +4,7 @@ package examples.v1;
 
 option go_package = "examples/gen/example/v1;examplev1";
 
+// The request to set the vibe of the server
 message SetVibeRequest {
   //The vibe of the server to be set
   string vibe = 1;
@@ -15,6 +16,7 @@ message SetVibeResponse {
   string vibe = 2;
 }
 
+// The request to get the vibe of the server
 message GetVibeRequest {}
 
 // What the server is currently vibing
@@ -107,6 +109,24 @@ message SetVibeDetailsRequest {
   VibeScalar vibe_scalar = 2;
 }
 
+// The vibe object of the server
+message SomeVibeObject {
+  // The vibe of the server
+  string vibe = 1;
+}
+
+// The request to set multiple vibe objects on the server
+message SetVibeObjectsRequest {
+  // The details of the vibe
+  repeated SomeVibeObject vibe_object = 1;
+}
+
+// The response to set multiple vibe objects on the server
+message SetVibeObjectsResponse {
+  // The details of the vibe
+  repeated SomeVibeObject vibe_object = 1;
+}
+
 service VibeService {
   // Set the Vibe
   rpc SetVibe(SetVibeRequest) returns (SetVibeResponse) {}
@@ -118,4 +138,7 @@ service VibeService {
   rpc SetVibeDetails(SetVibeDetailsRequest) returns (SetVibeResponse) {}
   // Set the vibe arrays
   rpc SetVibeArray(SetVibeArrayRequest) returns (SetVibeArrayResponse) {}
+
+  // Set multiple vibe objects
+  rpc SetVibeObjects(SetVibeObjectsRequest) returns (SetVibeObjectsResponse) {}
 }

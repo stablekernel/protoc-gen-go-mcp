@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"google.golang.org/protobuf/compiler/protogen"
@@ -105,46 +106,30 @@ func generateMCPTool(g *protogen.GeneratedFile, method *protogen.Method, mcpServ
 	if len(method.Comments.Leading) > 0 {
 		methodDescription = processCommentToString(method.Comments.Leading)
 	} else {
-		//TODO: Determine how we should handle this from an API perspective -- we need a comment here to ensure that there is natural language to key in on for what the API does
+		methodDescription = camelToSpace(method.GoName)
 	}
 	g.P("tool := mcp.NewTool(")
 	g.P("\"", method.GoName, "\", mcp.WithDescription(\"", methodDescription, "\"),")
-	for _, field := range method.Input.Fields {
-		generateMCPToolField(g, field)
+	if method.Input != nil {
+		if len(method.Input.Fields) > 0 {
+			generateMCPToolField(g, method.Input)
+		}
 	}
 	g.P(")")
 	g.P("return tool")
 	g.P("}")
 }
 
-func generateMCPToolField(g *protogen.GeneratedFile, field *protogen.Field) {
-	switch field.Desc.Kind().String() {
-	case "string":
-		g.P("mcp.WithString(")
-		g.P("\"", field.Desc.Name(), "\",")
-		if field.Desc.HasOptionalKeyword() {
-		} else {
-			g.P("mcp.Required(),")
-		}
-		g.P("mcp.Description(\"", processCommentToString(field.Comments.Leading), "\"),")
-		g.P("),")
-	case "message":
-		g.P("mcp.WithObject(")
-		g.P("\"", field.Desc.Name(), "\",")
-		if field.Desc.HasOptionalKeyword() {
-		} else {
-			g.P("mcp.Required(),")
-		}
-		g.P("mcp.Description(\"", processCommentToString(field.Comments.Leading), "\"),")
-		g.P("mcp.Properties(map[string]any{")
-		for _, messageField := range field.Message.Fields {
-			generateMCPPropertyForField(g, messageField)
-		}
-		g.P("}),")
-		g.P("),")
-	default:
-		g.P("// Unsupported field type: ", field.Desc.Kind().String(), " for field: ", field.Desc.Name())
+func generateMCPToolField(g *protogen.GeneratedFile, input *protogen.Message) {
+	g.P("mcp.WithObject(")
+	g.P("\"", input.Desc.Name(), "\",")
+	g.P("mcp.Description(\"", processCommentToString(input.Comments.Leading), "\"),")
+	g.P("mcp.Properties(map[string]any{")
+	for _, messageField := range input.Fields {
+		generateMCPPropertyForField(g, messageField)
 	}
+	g.P("}),")
+	g.P("),")
 }
 
 func generateMCPPropertyForField(g *protogen.GeneratedFile, field *protogen.Field) {
@@ -162,7 +147,13 @@ func generateMCPPropertyForField(g *protogen.GeneratedFile, field *protogen.Fiel
 		typeName = "array"
 	}
 	g.P("\"type\": \"", typeName, "\",")
-	g.P("\"description\": \"", processCommentToString(field.Comments.Leading), "\",")
+	description := ""
+	if field.Comments.Leading != "" {
+		description = processCommentToString(field.Comments.Leading)
+	} else {
+		description = camelToSpace(field.GoName)
+	}
+	g.P("\"description\": \"", description, "\",")
 	if field.Desc.HasOptionalKeyword() {
 		g.P("\"required\": false,")
 	} else {
@@ -510,4 +501,23 @@ func genLeadingComments(g *protogen.GeneratedFile, loc protoreflect.SourceLocati
 	if s := loc.LeadingComments; s != "" {
 		g.P(protogen.Comments(s))
 	}
+}
+
+func camelToSpace(s string) string {
+	re := regexp.MustCompile(`([a-zA-Z])([0-9])|([0-9])([a-zA-Z])|([a-z])([A-Z])`)
+	return re.ReplaceAllStringFunc(s, func(match string) string {
+		// Handle lowercase to uppercase (e.g., myValue → my Value)
+		re1 := regexp.MustCompile(`([a-z])([A-Z])`)
+		match = re1.ReplaceAllString(match, `$1 $2`)
+
+		// Handle letter to number (e.g., item123 → item 123)
+		re2 := regexp.MustCompile(`([a-zA-Z])([0-9])`)
+		match = re2.ReplaceAllString(match, `$1 $2`)
+
+		// Handle number to letter (e.g., 123item → 123 item)
+		re3 := regexp.MustCompile(`([0-9])([a-zA-Z])`)
+		match = re3.ReplaceAllString(match, `$1 $2`)
+
+		return match
+	})
 }
