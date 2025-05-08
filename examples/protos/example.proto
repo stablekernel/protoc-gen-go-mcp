@@ -66,6 +66,13 @@ message VibeScalar {
   bool vibe_bool = 14;
   // the details of the vibe bytes
   bytes vibe_bytes = 15;
+
+  enum VibeEnum {
+    VIBE_UNSET = 0;
+    VIBE_GOOD = 1;
+  }
+
+  repeated VibeEnum vibe_enum = 16;
 }
 
 // The vibe array message

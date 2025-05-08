@@ -410,7 +410,18 @@ func generateFieldAssignment(g *protogen.GeneratedFile, field *protogen.Field, v
 		}
 	case "enum":
 		if isList {
-			//TODO: Handle list of enums
+			g.P("if arrVal, ok := ", valName, ".([]any); ok {")
+			g.P("for _, item := range arrVal {")
+			g.P("if numVal, ok := item.(float64); ok {")
+			g.P("", varName, ".", field.GoName, " = append(", varName, ".", field.GoName, ", ", g.QualifiedGoIdent(field.Enum.GoIdent), "(int32(numVal)))")
+			g.P("} else if strVal, ok := item.(string); ok {")
+			g.P("// Try to convert string enum value if provided as string")
+			g.P("if val, ok := ", g.QualifiedGoIdent(field.Enum.GoIdent), "_value[strVal]; ok {")
+			g.P("", varName, ".", field.GoName, " = append(", varName, ".", field.GoName, ", ", g.QualifiedGoIdent(field.Enum.GoIdent), "(val))")
+			g.P("}")
+			g.P("}")
+			g.P("}")
+			g.P("}")
 		} else {
 			g.P("if numVal, ok := ", valName, ".(float64); ok {")
 			if isOptional {
@@ -422,11 +433,14 @@ func generateFieldAssignment(g *protogen.GeneratedFile, field *protogen.Field, v
 			g.P("} else if strVal, ok := ", valName, ".(string); ok {")
 			g.P("// Try to convert string enum value if provided as string")
 			if isOptional {
-				g.P("val := ", g.QualifiedGoIdent(field.Enum.GoIdent), "(", g.QualifiedGoIdent(field.Enum.GoIdent), "_value[strVal])")
-				g.P(varName, ".", field.GoName, " = &val")
+				g.P("if val, ok := ", g.QualifiedGoIdent(field.Enum.GoIdent), "_value[strVal]; ok {")
+				g.P("  enumVal := ", g.QualifiedGoIdent(field.Enum.GoIdent), "(val)")
+				g.P("  ", varName, ".", field.GoName, " = &enumVal")
+				g.P("}")
 			} else {
-				g.P("val := ", g.QualifiedGoIdent(field.Enum.GoIdent), "_value[strVal]")
-				g.P(varName, ".", field.GoName, " = ", g.QualifiedGoIdent(field.Enum.GoIdent), "(val)")
+				g.P("if val, ok := ", g.QualifiedGoIdent(field.Enum.GoIdent), "_value[strVal]; ok {")
+				g.P("  ", varName, ".", field.GoName, " = ", g.QualifiedGoIdent(field.Enum.GoIdent), "(val)")
+				g.P("}")
 			}
 			g.P("}")
 		}
