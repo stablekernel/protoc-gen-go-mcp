@@ -461,10 +461,14 @@ func (s *vibeServiceMCPServer) SetVibeObjectsTool() mcp.Tool {
 	return tool
 }
 
+func (s *vibeServiceMCPServer) RegisterTool(tool mcp.Tool, handler server.ToolHandlerFunc) {
+	s.MCPServer.AddTool(tool, handler)
+}
+
 func (s *vibeServiceMCPServer) RegisterDefaultTools() {
-	s.MCPServer.AddTool(s.SetVibeTool(), s.SetVibeHandler)
-	s.MCPServer.AddTool(s.GetVibeTool(), s.GetVibeHandler)
-	s.MCPServer.AddTool(s.SetVibeDetailsTool(), s.SetVibeDetailsHandler)
-	s.MCPServer.AddTool(s.SetVibeArrayTool(), s.SetVibeArrayHandler)
-	s.MCPServer.AddTool(s.SetVibeObjectsTool(), s.SetVibeObjectsHandler)
+	s.RegisterTool(s.SetVibeTool(), s.SetVibeHandler)
+	s.RegisterTool(s.GetVibeTool(), s.GetVibeHandler)
+	s.RegisterTool(s.SetVibeDetailsTool(), s.SetVibeDetailsHandler)
+	s.RegisterTool(s.SetVibeArrayTool(), s.SetVibeArrayHandler)
+	s.RegisterTool(s.SetVibeObjectsTool(), s.SetVibeObjectsHandler)
 }

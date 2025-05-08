@@ -96,6 +96,7 @@ func generateMcpServerHandlers(g *protogen.GeneratedFile, service *protogen.Serv
 		}
 	}
 	g.P()
+	generateToolRegistration(g, mcpServerName)
 	generateDefaultToolsRegistration(g, methods, mcpServerName)
 }
 
@@ -463,8 +464,15 @@ func generateMcpServerStruct(g *protogen.GeneratedFile, mcpServerName string, cl
 func generateDefaultToolsRegistration(g *protogen.GeneratedFile, methods []*protogen.Method, mcpServerName string) {
 	g.P("func (s *", unexport(mcpServerName), ") RegisterDefaultTools() {")
 	for _, method := range methods {
-		g.P("s.MCPServer.AddTool(s.", method.GoName, "Tool(), s.", method.GoName, "Handler)")
+		g.P("s.RegisterTool(s.", method.GoName, "Tool(), s.", method.GoName, "Handler)")
 	}
+	g.P("}")
+	g.P()
+}
+
+func generateToolRegistration(g *protogen.GeneratedFile, mcpServerName string) {
+	g.P("func (s *", unexport(mcpServerName), ") RegisterTool(tool ", mcpPackage.Ident("Tool"), ", handler ", mcpServerPackage.Ident("ToolHandlerFunc"), ") {")
+	g.P("s.MCPServer.AddTool(tool, handler)")
 	g.P("}")
 	g.P()
 }

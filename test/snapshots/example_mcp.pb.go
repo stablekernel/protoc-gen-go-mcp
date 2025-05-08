@@ -275,3 +275,7 @@ func (s *vibeServiceMCPServer) RegisterDefaultTools() {
 	s.MCPServer.AddTool(s.GetVibeTool(), s.GetVibeHandler)
 	s.MCPServer.AddTool(s.SetVibeDetailsTool(), s.SetVibeDetailsHandler)
 }
+
+func (s *vibeServiceMCPServer) RegisterTool(tool mcp.Tool, handler server.ToolHandlerFunc) {
+	s.MCPServer.AddTool(tool, handler)
+}
