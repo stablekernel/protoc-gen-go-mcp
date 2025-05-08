@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.0](https://github.com/stablekernel/protoc-gen-go-mcp/compare/v0.0.2...v0.1.0) (2025-05-08)
+
+
+### Features
+
+* Adds in individual tool registration  ([#61](https://github.com/stablekernel/protoc-gen-go-mcp/issues/61)) ([acb3894](https://github.com/stablekernel/protoc-gen-go-mcp/commit/acb38946840e7b71f08bcb53c845ac2ec0e5d584))
+
 ## [0.0.2](https://github.com/stablekernel/protoc-gen-go-mcp/compare/v0.0.1...v0.0.2) (2025-05-07)
 
 
