@@ -431,15 +431,14 @@ func generateFieldAssignment(g *protogen.GeneratedFile, field *protogen.Field, v
 				g.P(varName, ".", field.GoName, " = ", g.QualifiedGoIdent(field.Enum.GoIdent), "(int32(numVal))")
 			}
 			g.P("} else if strVal, ok := ", valName, ".(string); ok {")
-			g.P("// Try to convert string enum value if provided as string")
 			if isOptional {
 				g.P("if val, ok := ", g.QualifiedGoIdent(field.Enum.GoIdent), "_value[strVal]; ok {")
-				g.P("  enumVal := ", g.QualifiedGoIdent(field.Enum.GoIdent), "(val)")
-				g.P("  ", varName, ".", field.GoName, " = &enumVal")
+				g.P("enumVal := ", g.QualifiedGoIdent(field.Enum.GoIdent), "(val)")
+				g.P(varName, ".", field.GoName, " = &enumVal")
 				g.P("}")
 			} else {
 				g.P("if val, ok := ", g.QualifiedGoIdent(field.Enum.GoIdent), "_value[strVal]; ok {")
-				g.P("  ", varName, ".", field.GoName, " = ", g.QualifiedGoIdent(field.Enum.GoIdent), "(val)")
+				g.P(varName, ".", field.GoName, " = ", g.QualifiedGoIdent(field.Enum.GoIdent), "(val)")
 				g.P("}")
 			}
 			g.P("}")
