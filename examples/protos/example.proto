@@ -22,12 +22,14 @@ message GetVibeRequest {}
 // What the server is currently vibing
 message GetVibeResponse {
   string vibe = 1;
+  repeated VibeScalar vibes = 2;
 }
 
 // The vibe array request
 message SetVibeArrayRequest {
   // The details of the vibe array
   VibeArray vibe_array = 1;
+  repeated VibeArray vibe_arrays = 2;
 }
 
 // The vibe array response

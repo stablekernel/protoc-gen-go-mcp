@@ -109,6 +109,7 @@ func (s *vibeServiceMCPServer) GetVibeHandler(ctx context.Context, req mcp.CallT
 	// Convert response to JSON
 	respContent := make(map[string]any)
 	respContent["vibe"] = resp.Vibe
+	respContent["vibes"] = resp.Vibes
 	// Create and return the CallToolResult
 	jsonContent, err := json.Marshal(respContent)
 	if err != nil {
@@ -355,6 +356,7 @@ func (s *vibeServiceMCPServer) SetVibeArrayHandler(ctx context.Context, req mcp.
 			protoReq.VibeArray = msgVal
 		}
 	}
+	// Extract vibe_arrays
 	// Call the client method
 	resp, err := s.VibeServiceClient.SetVibeArray(ctx, protoReq)
 	if err != nil {
@@ -398,6 +400,11 @@ func (s *vibeServiceMCPServer) SetVibeArrayTool() mcp.Tool {
 				"vibe_array": map[string]any{
 					"type":        "message",
 					"description": "The details of the vibe array",
+					"required":    true,
+				},
+				"vibe_arrays": map[string]any{
+					"type":        "array",
+					"description": "Vibe Arrays",
 					"required":    true,
 				},
 			}),

@@ -17,6 +17,11 @@ var _ examplev1.VibeServiceServer = &vibeServiceServer{}
 func (v *vibeServiceServer) GetVibe(context.Context, *examplev1.GetVibeRequest) (*examplev1.GetVibeResponse, error) {
 	return &examplev1.GetVibeResponse{
 		Vibe: v.vibe,
+		Vibes: []*examplev1.VibeScalar{
+			{
+				VibeBytes: []byte(v.vibe),
+			},
+		},
 	}, nil
 }
 
