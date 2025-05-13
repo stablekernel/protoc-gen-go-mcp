@@ -215,6 +215,20 @@ func (s *vibeServiceMCPServer) SetVibeDetailsHandler(ctx context.Context, req mc
 					msgVal.VibeBytes = numVal
 				}
 			}
+			if fieldVal, ok := objVal["vibe_enum"]; ok {
+				if arrVal, ok := fieldVal.([]any); ok {
+					for _, item := range arrVal {
+						if numVal, ok := item.(float64); ok {
+							msgVal.VibeEnum = append(msgVal.VibeEnum, VibeScalar_VibeEnum(int32(numVal)))
+						} else if strVal, ok := item.(string); ok {
+							// Try to convert string enum value if provided as string
+							if val, ok := VibeScalar_VibeEnum_value[strVal]; ok {
+								msgVal.VibeEnum = append(msgVal.VibeEnum, VibeScalar_VibeEnum(val))
+							}
+						}
+					}
+				}
+			}
 			protoReq.VibeScalar = msgVal
 		}
 	}
