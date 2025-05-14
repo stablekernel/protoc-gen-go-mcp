@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/stablekernel/protoc-gen-go-mcp/compare/v0.1.0...v0.2.0) (2025-05-13)
+
+
+### Features
+
+* Enhance enum handling in field assignment ([#63](https://github.com/stablekernel/protoc-gen-go-mcp/issues/63)) ([6cb1b7e](https://github.com/stablekernel/protoc-gen-go-mcp/commit/6cb1b7eb2a304d77237ac4d4d6142babbf9a63ed))
+
 ## [0.1.0](https://github.com/stablekernel/protoc-gen-go-mcp/compare/v0.0.2...v0.1.0) (2025-05-08)
 
 
