@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             v5.29.3
-// source: examples/protos/example.proto
+// source: example.proto
 
 package examplev1
 
@@ -281,5 +281,5 @@ var VibeService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "examples/protos/example.proto",
+	Metadata: "example.proto",
 }
