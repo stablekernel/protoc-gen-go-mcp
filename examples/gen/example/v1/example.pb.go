@@ -21,6 +21,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// The details of the vibe string
 type VibeScalar_VibeEnum int32
 
 const (
@@ -370,7 +371,8 @@ type VibeScalar struct {
 	// The details of the vibe bool
 	VibeBool bool `protobuf:"varint,14,opt,name=vibe_bool,json=vibeBool,proto3" json:"vibe_bool,omitempty"`
 	// the details of the vibe bytes
-	VibeBytes     []byte                `protobuf:"bytes,15,opt,name=vibe_bytes,json=vibeBytes,proto3" json:"vibe_bytes,omitempty"`
+	VibeBytes []byte `protobuf:"bytes,15,opt,name=vibe_bytes,json=vibeBytes,proto3" json:"vibe_bytes,omitempty"`
+	// The details of the vibe string
 	VibeEnum      []VibeScalar_VibeEnum `protobuf:"varint,16,rep,packed,name=vibe_enum,json=vibeEnum,proto3,enum=examples.v1.VibeScalar_VibeEnum" json:"vibe_enum,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
