@@ -3,6 +3,7 @@ module protoc-gen-go-mcp
 go 1.24
 
 require (
+	github.com/magefile/mage v1.15.0
 	github.com/mark3labs/mcp-go v0.21.0
 	github.com/stretchr/testify v1.9.0
 	google.golang.org/grpc v1.71.1
