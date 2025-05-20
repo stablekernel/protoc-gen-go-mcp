@@ -14,13 +14,12 @@ import (
 
 type vibeServiceMCPServer struct {
 	VibeServiceClient
-
 	MCPServer mcp.Server
 }
 
 func NewVibeServiceMCPServer(
 	client VibeServiceClient,
-	mcpServer *server.MCPServer,
+	mcpServer *mcp.Server,
 ) *vibeServiceMCPServer {
 	return &vibeServiceMCPServer{
 		VibeServiceClient: client,

@@ -71,7 +71,7 @@ func generateMcpServerService(g *protogen.GeneratedFile, service *protogen.Servi
 
 	g.P("func ", constructorName, "(")
 	g.P("client ", clientName, ",")
-	g.P("mcpServer *", mcpServerPackage.Ident("MCPServer"), ",")
+	g.P("mcpServer ", mcpPackage.Ident("Server"), ",")
 	g.P(") *", serverStructName, " {")
 	g.P("return &", serverStructName, "{")
 	g.P("", clientName, ": client,")
