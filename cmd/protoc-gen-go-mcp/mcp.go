@@ -459,10 +459,32 @@ func generateValAssignmentWithCast(g *protogen.GeneratedFile, field *protogen.Fi
 	g.P("}")
 }
 
-// TODO: this needs some love, multiline strings are handled not so well, leading trailing spaces, etc
-// processCommentToString processes the comments to a single line string
 func processCommentToString(comments protogen.Comments) string {
-	return strings.TrimSuffix(strings.Replace(strings.TrimPrefix(string(comments), " "), "\n", " ", -1), " ")
+	// Remove comment markers and clean up the text
+	commentText := string(comments)
+
+	// Remove leading comment markers and spaces
+	commentText = strings.TrimPrefix(commentText, "// ")
+	commentText = strings.TrimPrefix(commentText, "/* ")
+
+	// Replace newlines with spaces
+	commentText = strings.ReplaceAll(commentText, "\n// ", " ")
+	commentText = strings.ReplaceAll(commentText, "\n", " ")
+
+	// Remove trailing comment markers
+	commentText = strings.TrimSuffix(commentText, " */")
+
+	// Clean up extra whitespace
+	commentText = strings.TrimSpace(commentText)
+
+	// Replace multiple spaces with a single space
+	spaceRegex := regexp.MustCompile(`\s+`)
+	commentText = spaceRegex.ReplaceAllString(commentText, " ")
+
+	// Escape quotes to prevent JSON issues
+	commentText = strings.ReplaceAll(commentText, "\"", "\\\"")
+
+	return commentText
 }
 
 func generateMcpServerStruct(g *protogen.GeneratedFile, mcpServerName string, clientName string) {
@@ -500,7 +522,13 @@ func QualifiedGoIdentPointer(g *protogen.GeneratedFile, ident protogen.GoIdent) 
 }
 
 func unexport(s string) string {
-	return strings.ToLower(s[:1]) + s[1:]
+	name := strings.ToLower(s[:1])
+
+	if len(s) > 1 {
+		name += s[1:]
+	}
+
+	return name
 }
 
 func protocVersion(gen *protogen.Plugin) string {
