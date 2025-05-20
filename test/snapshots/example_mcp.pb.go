@@ -9,7 +9,6 @@ import (
 	context "context"
 	"encoding/json"
 	examplev1 "protoc-gen-go-mcp/examples/gen/example/v1"
-
 	mcp "github.com/mark3labs/mcp-go/mcp"
 	server "github.com/mark3labs/mcp-go/server"
 )

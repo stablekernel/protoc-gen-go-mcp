@@ -8,19 +8,19 @@ package examplev1
 import (
 	context "context"
 	json "encoding/json"
-	mcp "github.com/mark3labs/mcp-go/mcp"
-	server "github.com/mark3labs/mcp-go/server"
+	"github.com/mark3labs/mcp-go/server"
+	mcp "golang.org/x/tools/internal/mcp" //TODO: replace with actual mcp package import when available
 )
 
 type vibeServiceMCPServer struct {
 	VibeServiceClient
 
-	MCPServer *server.MCPServer
+	MCPServer mcp.Server
 }
 
 func NewVibeServiceMCPServer(
 	client VibeServiceClient,
-	mcpServer *server.MCPServer,
+	mcpServer mcp.Server,
 ) *vibeServiceMCPServer {
 	return &vibeServiceMCPServer{
 		VibeServiceClient: client,
