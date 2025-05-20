@@ -17,7 +17,7 @@ const fileDescriptorProtoSyntaxFieldNumber = 12
 
 const grpcPackage = protogen.GoImportPath("google.golang.org/grpc")
 const contextPackage = protogen.GoImportPath("context")
-const mcpPackage = protogen.GoImportPath("github.com/mark3labs/mcp-go/mcp")
+const mcpPackage = protogen.GoImportPath("golang.org/x/tools/internal/mcp")
 const mcpServerPackage = protogen.GoImportPath("github.com/mark3labs/mcp-go/server")
 const jsonPackage = protogen.GoImportPath("encoding/json")
 
@@ -62,6 +62,8 @@ func genMCPService(gen *protogen.Plugin, file *protogen.File, g *protogen.Genera
 	clientName := service.GoName + "Client"
 	generateMcpServerStruct(g, mcpServerName, clientName)
 	generateMcpServerService(g, service, mcpServerName, clientName)
+	generateMcpHandlerTypedef(g)
+	generateToolCreationFunctions(g, service, mcpServerName)
 	generateMcpServerHandlers(g, service, mcpServerName, clientName)
 }
 
@@ -71,7 +73,7 @@ func generateMcpServerService(g *protogen.GeneratedFile, service *protogen.Servi
 
 	g.P("func ", constructorName, "(")
 	g.P("client ", clientName, ",")
-	g.P("mcpServer *", mcpServerPackage.Ident("MCPServer"), ",")
+	g.P("mcpServer ", mcpPackage.Ident("Server"), ",")
 	g.P(") *", serverStructName, " {")
 	g.P("return &", serverStructName, "{")
 	g.P("", clientName, ": client,")
@@ -79,6 +81,27 @@ func generateMcpServerService(g *protogen.GeneratedFile, service *protogen.Servi
 	g.P("}")
 	g.P("}")
 	g.P()
+}
+
+func generateMcpHandlerTypedef(g *protogen.GeneratedFile) {
+	g.P("type HandlerFunc [TReq any]func(", contextPackage.Ident("Context"), ", *", mcpPackage.Ident("ClientConnection"), ", TReq) ([]", mcpPackage.Ident("Content"), ", error)")
+}
+
+func generateToolCreationFunctions(g *protogen.GeneratedFile, service *protogen.Service, mcpServerName string) {
+	for _, method := range service.Methods {
+		generateToolCreationFunction(g, method, mcpServerName)
+		g.P()
+	}
+}
+
+func generateToolCreationFunction(g *protogen.GeneratedFile, method *protogen.Method, mcpServerName string) {
+	g.P("func (s *", unexport(mcpServerName), ") Make", method.GoName, "Tool(handler HandlerFunc[", method.Input.GoIdent, "]) (*", mcpPackage.Ident("Tool"), ") {")
+	g.P("return ", mcpPackage.Ident("MakeTool"), "(")
+	g.P("\"", method.GoName, "\",")
+	g.P("\"", processCommentToString(method.Comments.Leading), "\",")
+	g.P("handler,")
+	g.P(")")
+	g.P("}")
 }
 
 func generateMcpServerHandlers(g *protogen.GeneratedFile, service *protogen.Service, mcpServerName string, clientName string) {
@@ -490,8 +513,7 @@ func processCommentToString(comments protogen.Comments) string {
 func generateMcpServerStruct(g *protogen.GeneratedFile, mcpServerName string, clientName string) {
 	g.P("type ", unexport(mcpServerName), " struct {")
 	g.P(clientName)
-	g.P()
-	g.P("MCPServer ", QualifiedGoIdentPointer(g, mcpServerPackage.Ident("MCPServer")))
+	g.P("MCPServer ", mcpPackage.Ident("Server"))
 	g.P("}")
 	g.P()
 }
