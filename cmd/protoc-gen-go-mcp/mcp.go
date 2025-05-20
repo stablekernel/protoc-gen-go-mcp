@@ -21,6 +21,18 @@ const mcpPackage = protogen.GoImportPath("github.com/mark3labs/mcp-go/mcp")
 const mcpServerPackage = protogen.GoImportPath("github.com/mark3labs/mcp-go/server")
 const jsonPackage = protogen.GoImportPath("encoding/json")
 
+var specialCastTypes = map[string]string{
+	"bytes":    "[]byte",
+	"double":   "float64",
+	"fixed32":  "uint32",
+	"fixed64":  "uint64",
+	"float":    "float32",
+	"sfixed32": "int32",
+	"sfixed64": "int64",
+	"sint32":   "int32",
+	"sint64":   "int64",
+}
+
 // generateFile generates a _grpc.pb.go file containing gRPC service definitions.
 func generateFile(gen *protogen.Plugin, file *protogen.File) *protogen.GeneratedFile {
 	if len(file.Services) == 0 {
@@ -288,113 +300,9 @@ func generateFieldAssignment(g *protogen.GeneratedFile, field *protogen.Field, v
 
 	msgFieldName := string(field.Desc.Name())
 	g.P("if fieldVal, ok := objVal[\"", msgFieldName, "\"]; ok {")
-	castType := ""
-	switch field.Desc.Kind().String() {
-	case "string":
-		if isList {
-			castType = "[]string"
-		} else {
-			castType = "string"
-		}
-		generateValAssignmentWithCast(g, field, varName, valName, isOptional, castType)
-	case "int32":
-		if isList {
-			castType = "[]int32"
-		} else {
-			castType = "int32"
-		}
-		generateValAssignmentWithCast(g, field, varName, valName, isOptional, castType)
-	case "int64":
-		if isList {
-			castType = "[]int64"
-		} else {
-			castType = "int64"
-		}
-		generateValAssignmentWithCast(g, field, varName, valName, isOptional, castType)
-	case "bool":
-		if isList {
-			castType = "[]bool"
-		} else {
-			castType = "bool"
-		}
-		generateValAssignmentWithCast(g, field, varName, valName, isOptional, castType)
-	case "double":
-		if isList {
-			castType = "[]float64"
-		} else {
-			castType = "float64"
-		}
-		generateValAssignmentWithCast(g, field, varName, valName, isOptional, castType)
-	case "float":
-		if isList {
-			castType = "[]float32"
-		} else {
-			castType = "float32"
-		}
-		generateValAssignmentWithCast(g, field, varName, valName, isOptional, castType)
-	case "uint32":
-		if isList {
-			castType = "[]uint32"
-		} else {
-			castType = "uint32"
-		}
-		generateValAssignmentWithCast(g, field, varName, valName, isOptional, castType)
-	case "uint64":
-		if isList {
-			castType = "[]uint64"
-		} else {
-			castType = "uint64"
-		}
-		generateValAssignmentWithCast(g, field, varName, valName, isOptional, castType)
-	case "sint32":
-		if isList {
-			castType = "[]int32"
-		} else {
-			castType = "int32"
-		}
-		generateValAssignmentWithCast(g, field, varName, valName, isOptional, castType)
-	case "sfixed32":
-		if isList {
-			castType = "[]int32"
-		} else {
-			castType = "int32"
-		}
-		generateValAssignmentWithCast(g, field, varName, valName, isOptional, castType)
-	case "sint64":
-		if isList {
-			castType = "[]int64"
-		} else {
-			castType = "int64"
-		}
-		generateValAssignmentWithCast(g, field, varName, valName, isOptional, castType)
-	case "sfixed64":
-		if isList {
-			castType = "[]int64"
-		} else {
-			castType = "int64"
-		}
-		generateValAssignmentWithCast(g, field, varName, valName, isOptional, castType)
-	case "fixed32":
-		if isList {
-			castType = "[]uint32"
-		} else {
-			castType = "uint32"
-		}
-		generateValAssignmentWithCast(g, field, varName, valName, isOptional, castType)
-	case "fixed64":
-		if isList {
-			castType = "[]uint64"
-		} else {
-			castType = "uint64"
-		}
-		generateValAssignmentWithCast(g, field, varName, valName, isOptional, castType)
-	case "bytes":
-		if isList {
-			castType = "[][]byte"
-		} else {
-			castType = "[]byte"
-		}
-		generateValAssignmentWithCast(g, field, varName, valName, isOptional, castType)
+	kind := field.Desc.Kind().String()
+
+	switch kind {
 	case "message":
 		if isList {
 			// TODO: Handle list of messages
@@ -444,7 +352,7 @@ func generateFieldAssignment(g *protogen.GeneratedFile, field *protogen.Field, v
 			g.P("}")
 		}
 	default:
-		g.P("// Unsupported type: ", field.Desc.Kind().String())
+		generateValAssignmentWithCast(g, field, varName, valName, isOptional, kindToCastType(kind, isList))
 	}
 	g.P("}")
 }
@@ -569,4 +477,18 @@ func camelToSpace(s string) string {
 
 		return match
 	})
+}
+
+func kindToCastType(kind string, isList bool) (castType string) {
+	if special, ok := specialCastTypes[kind]; ok {
+		castType = special
+	} else {
+		castType = kind
+	}
+
+	if isList {
+		castType = "[]" + castType
+	}
+
+	return castType
 }
