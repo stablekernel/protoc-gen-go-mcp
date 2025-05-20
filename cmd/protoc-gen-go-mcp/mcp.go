@@ -17,7 +17,7 @@ const fileDescriptorProtoSyntaxFieldNumber = 12
 
 const grpcPackage = protogen.GoImportPath("google.golang.org/grpc")
 const contextPackage = protogen.GoImportPath("context")
-const mcpPackage = protogen.GoImportPath("github.com/mark3labs/mcp-go/mcp")
+const mcpPackage = protogen.GoImportPath("golang.org/x/tools/internal/mcp")
 const mcpServerPackage = protogen.GoImportPath("github.com/mark3labs/mcp-go/server")
 const jsonPackage = protogen.GoImportPath("encoding/json")
 
@@ -490,8 +490,7 @@ func processCommentToString(comments protogen.Comments) string {
 func generateMcpServerStruct(g *protogen.GeneratedFile, mcpServerName string, clientName string) {
 	g.P("type ", unexport(mcpServerName), " struct {")
 	g.P(clientName)
-	g.P()
-	g.P("MCPServer ", QualifiedGoIdentPointer(g, mcpServerPackage.Ident("MCPServer")))
+	g.P("MCPServer ", mcpPackage.Ident("Server"))
 	g.P("}")
 	g.P()
 }
