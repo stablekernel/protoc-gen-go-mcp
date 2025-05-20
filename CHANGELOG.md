@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.2.1](https://github.com/stablekernel/protoc-gen-go-mcp/compare/v0.2.0...v0.2.1) (2025-05-20)
+
+
+### Features
+
+* Add GitHub Actions workflow for build and release process ([#65](https://github.com/stablekernel/protoc-gen-go-mcp/issues/65)) ([4567368](https://github.com/stablekernel/protoc-gen-go-mcp/commit/4567368765fcfdc90da0cccd91bd9205299e6c09))
+* Improve comment processing ([#68](https://github.com/stablekernel/protoc-gen-go-mcp/issues/68)) ([eb53fac](https://github.com/stablekernel/protoc-gen-go-mcp/commit/eb53fac27270ce351f8086e60359faa1b4c1b646))
+
+
+### Bug Fixes
+
+* Out of range error in unexport ([#70](https://github.com/stablekernel/protoc-gen-go-mcp/issues/70)) ([3d640bd](https://github.com/stablekernel/protoc-gen-go-mcp/commit/3d640bd0176433df02b9296dd0ad06795e704cfa))
+* Update .release-please-manifest.json ([#78](https://github.com/stablekernel/protoc-gen-go-mcp/issues/78)) ([219f01a](https://github.com/stablekernel/protoc-gen-go-mcp/commit/219f01a7047034444af10b6fd871f47dc6419299))
+* Update README.md - Fixing a 404 ([#76](https://github.com/stablekernel/protoc-gen-go-mcp/issues/76)) ([2cfc22e](https://github.com/stablekernel/protoc-gen-go-mcp/commit/2cfc22e3b53ae076a383ab8ff08a7bd43c48dab1))
+
 ## [0.2.0](https://github.com/stablekernel/protoc-gen-go-mcp/compare/v0.1.0...v0.2.0) (2025-05-13)
 
 
