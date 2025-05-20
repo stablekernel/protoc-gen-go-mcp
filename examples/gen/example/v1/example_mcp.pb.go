@@ -19,12 +19,54 @@ type vibeServiceMCPServer struct {
 
 func NewVibeServiceMCPServer(
 	client VibeServiceClient,
-	mcpServer *mcp.Server,
+	mcpServer mcp.Server,
 ) *vibeServiceMCPServer {
 	return &vibeServiceMCPServer{
 		VibeServiceClient: client,
 		MCPServer:         mcpServer,
 	}
+}
+
+type HandlerFunc[TReq any] func(context.Context, *mcp.ClientConnection, TReq) ([]mcp.Content, error)
+
+func (s *vibeServiceMCPServer) MakeSetVibeTool(handler HandlerFunc[SetVibeRequest]) *mcp.Tool {
+	return mcp.MakeTool(
+		"SetVibe",
+		"This is a block comment with multiple lines to test block handling \"Hello World\"",
+		handler,
+	)
+}
+
+func (s *vibeServiceMCPServer) MakeGetVibeTool(handler HandlerFunc[GetVibeRequest]) *mcp.Tool {
+	return mcp.MakeTool(
+		"GetVibe",
+		"Get Vibe of the server",
+		handler,
+	)
+}
+
+func (s *vibeServiceMCPServer) MakeSetVibeDetailsTool(handler HandlerFunc[SetVibeDetailsRequest]) *mcp.Tool {
+	return mcp.MakeTool(
+		"SetVibeDetails",
+		"Set vibe details",
+		handler,
+	)
+}
+
+func (s *vibeServiceMCPServer) MakeSetVibeArrayTool(handler HandlerFunc[SetVibeArrayRequest]) *mcp.Tool {
+	return mcp.MakeTool(
+		"SetVibeArray",
+		"Set the vibe arrays",
+		handler,
+	)
+}
+
+func (s *vibeServiceMCPServer) MakeSetVibeObjectsTool(handler HandlerFunc[SetVibeObjectsRequest]) *mcp.Tool {
+	return mcp.MakeTool(
+		"SetVibeObjects",
+		"Set multiple vibe objects",
+		handler,
+	)
 }
 
 func (s *vibeServiceMCPServer) SetVibeHandler(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {

@@ -62,6 +62,8 @@ func genMCPService(gen *protogen.Plugin, file *protogen.File, g *protogen.Genera
 	clientName := service.GoName + "Client"
 	generateMcpServerStruct(g, mcpServerName, clientName)
 	generateMcpServerService(g, service, mcpServerName, clientName)
+	generateMcpHandlerTypedef(g)
+	generateToolCreationFunctions(g, service, mcpServerName)
 	generateMcpServerHandlers(g, service, mcpServerName, clientName)
 }
 
@@ -79,6 +81,27 @@ func generateMcpServerService(g *protogen.GeneratedFile, service *protogen.Servi
 	g.P("}")
 	g.P("}")
 	g.P()
+}
+
+func generateMcpHandlerTypedef(g *protogen.GeneratedFile) {
+	g.P("type HandlerFunc [TReq any]func(", contextPackage.Ident("Context"), ", *", mcpPackage.Ident("ClientConnection"), ", TReq) ([]", mcpPackage.Ident("Content"), ", error)")
+}
+
+func generateToolCreationFunctions(g *protogen.GeneratedFile, service *protogen.Service, mcpServerName string) {
+	for _, method := range service.Methods {
+		generateToolCreationFunction(g, method, mcpServerName)
+		g.P()
+	}
+}
+
+func generateToolCreationFunction(g *protogen.GeneratedFile, method *protogen.Method, mcpServerName string) {
+	g.P("func (s *", unexport(mcpServerName), ") Make", method.GoName, "Tool(handler HandlerFunc[", method.Input.GoIdent, "]) (*", mcpPackage.Ident("Tool"), ") {")
+	g.P("return ", mcpPackage.Ident("MakeTool"), "(")
+	g.P("\"", method.GoName, "\",")
+	g.P("\"", processCommentToString(method.Comments.Leading), "\",")
+	g.P("handler,")
+	g.P(")")
+	g.P("}")
 }
 
 func generateMcpServerHandlers(g *protogen.GeneratedFile, service *protogen.Service, mcpServerName string, clientName string) {
