@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/stablekernel/protoc-gen-go-mcp/compare/v0.2.1...v0.2.2) (2025-05-20)
+
+
+### Bug Fixes
+
+* release please token ([#80](https://github.com/stablekernel/protoc-gen-go-mcp/issues/80)) ([f1f197e](https://github.com/stablekernel/protoc-gen-go-mcp/commit/f1f197e1dfb37c454cae5b8c9aea487d6c09242c))
+
 ## [0.2.1](https://github.com/stablekernel/protoc-gen-go-mcp/compare/v0.2.0...v0.2.1) (2025-05-20)
 
 
