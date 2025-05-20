@@ -4,7 +4,6 @@ on:
       - main
 
 permissions:
-  issues: write
   contents: write
   pull-requests: write
 
@@ -13,9 +12,14 @@ name: release-please
 jobs:
   release-please:
     runs-on: ubuntu-latest
-    environment: release
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+      version: ${{ steps.release.outputs.version }}
     steps:
       - uses: googleapis/release-please-action@v4
+        id: release
         with:
-          token: ${{ secrets.TOKEN_BOT_GITHUB_TOKEN }}
-          release-type: go
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
