@@ -8,7 +8,7 @@ This is a [Topeka](#topeka) plugin for the [protoc compiler](https://grpc.io/doc
 - [protoc-gen-go-grpc](https://grpc.io/docs/languages/go/quickstart/) 1.71 or later
 
 #### Running the plugin
-Check out the [Makefile](./Makefile) for explicit command usage. Use `make generate` to generate the example MCP server from the [proto file](./protos/example.proto).
+Check out the [Makefile](./Makefile) for explicit command usage. Use `make generate` to generate the example MCP server from the [proto file](./examples/protos/example.proto).
 
 #### Debugging the plugin
 
