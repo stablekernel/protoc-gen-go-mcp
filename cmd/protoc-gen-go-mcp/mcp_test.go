@@ -25,3 +25,8 @@ func TestKindToCastType(t *testing.T) {
 		assert.Equal(t, c.expect, kindToCastType(c.kind, c.isList), c)
 	}
 }
+
+func TestUnexport(t *testing.T) {
+	assert.Equal(t, "a", unexport("A"))
+	assert.Equal(t, "ab", unexport("Ab"))
+}

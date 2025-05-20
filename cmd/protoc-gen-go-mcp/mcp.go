@@ -430,7 +430,13 @@ func QualifiedGoIdentPointer(g *protogen.GeneratedFile, ident protogen.GoIdent) 
 }
 
 func unexport(s string) string {
-	return strings.ToLower(s[:1]) + s[1:]
+	name := strings.ToLower(s[:1])
+
+	if len(s) > 1 {
+		name += s[1:]
+	}
+
+	return name
 }
 
 func protocVersion(gen *protogen.Plugin) string {
