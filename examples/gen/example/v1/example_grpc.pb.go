@@ -29,8 +29,21 @@ const (
 // VibeServiceClient is the client API for VibeService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// This is a complex comment to test string processing.
+// It includes multiple lines with various characters:
+// * Special chars: "quotes", 'single-quotes', \backslashes\
+// * Symbols: @#$%^&*()_+-={}[]|;:<>,.?/
+// * Newlines and     multiple    spaces
+//
+// It also has empty lines and indentation:
+//   - Indented item 1
+//   - Indented item 2
 type VibeServiceClient interface {
-	// Set the Vibe
+	// This is a block comment
+	// with multiple lines
+	// to test block handling
+	// "Hello World"
 	SetVibe(ctx context.Context, in *SetVibeRequest, opts ...grpc.CallOption) (*SetVibeResponse, error)
 	// Get Vibe
 	// of the server
@@ -104,8 +117,21 @@ func (c *vibeServiceClient) SetVibeObjects(ctx context.Context, in *SetVibeObjec
 // VibeServiceServer is the server API for VibeService service.
 // All implementations must embed UnimplementedVibeServiceServer
 // for forward compatibility.
+//
+// This is a complex comment to test string processing.
+// It includes multiple lines with various characters:
+// * Special chars: "quotes", 'single-quotes', \backslashes\
+// * Symbols: @#$%^&*()_+-={}[]|;:<>,.?/
+// * Newlines and     multiple    spaces
+//
+// It also has empty lines and indentation:
+//   - Indented item 1
+//   - Indented item 2
 type VibeServiceServer interface {
-	// Set the Vibe
+	// This is a block comment
+	// with multiple lines
+	// to test block handling
+	// "Hello World"
 	SetVibe(context.Context, *SetVibeRequest) (*SetVibeResponse, error)
 	// Get Vibe
 	// of the server

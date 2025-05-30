@@ -1,5 +1,34 @@
 # Changelog
 
+## [0.2.2](https://github.com/stablekernel/protoc-gen-go-mcp/compare/v0.2.1...v0.2.2) (2025-05-20)
+
+
+### Bug Fixes
+
+* release please token ([#80](https://github.com/stablekernel/protoc-gen-go-mcp/issues/80)) ([f1f197e](https://github.com/stablekernel/protoc-gen-go-mcp/commit/f1f197e1dfb37c454cae5b8c9aea487d6c09242c))
+
+## [0.2.1](https://github.com/stablekernel/protoc-gen-go-mcp/compare/v0.2.0...v0.2.1) (2025-05-20)
+
+
+### Features
+
+* Add GitHub Actions workflow for build and release process ([#65](https://github.com/stablekernel/protoc-gen-go-mcp/issues/65)) ([4567368](https://github.com/stablekernel/protoc-gen-go-mcp/commit/4567368765fcfdc90da0cccd91bd9205299e6c09))
+* Improve comment processing ([#68](https://github.com/stablekernel/protoc-gen-go-mcp/issues/68)) ([eb53fac](https://github.com/stablekernel/protoc-gen-go-mcp/commit/eb53fac27270ce351f8086e60359faa1b4c1b646))
+
+
+### Bug Fixes
+
+* Out of range error in unexport ([#70](https://github.com/stablekernel/protoc-gen-go-mcp/issues/70)) ([3d640bd](https://github.com/stablekernel/protoc-gen-go-mcp/commit/3d640bd0176433df02b9296dd0ad06795e704cfa))
+* Update .release-please-manifest.json ([#78](https://github.com/stablekernel/protoc-gen-go-mcp/issues/78)) ([219f01a](https://github.com/stablekernel/protoc-gen-go-mcp/commit/219f01a7047034444af10b6fd871f47dc6419299))
+* Update README.md - Fixing a 404 ([#76](https://github.com/stablekernel/protoc-gen-go-mcp/issues/76)) ([2cfc22e](https://github.com/stablekernel/protoc-gen-go-mcp/commit/2cfc22e3b53ae076a383ab8ff08a7bd43c48dab1))
+
+## [0.2.0](https://github.com/stablekernel/protoc-gen-go-mcp/compare/v0.1.0...v0.2.0) (2025-05-13)
+
+
+### Features
+
+* Enhance enum handling in field assignment ([#63](https://github.com/stablekernel/protoc-gen-go-mcp/issues/63)) ([6cb1b7e](https://github.com/stablekernel/protoc-gen-go-mcp/commit/6cb1b7eb2a304d77237ac4d4d6142babbf9a63ed))
+
 ## [0.1.0](https://github.com/stablekernel/protoc-gen-go-mcp/compare/v0.0.2...v0.1.0) (2025-05-08)
 
 

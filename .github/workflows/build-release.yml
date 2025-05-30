@@ -1,0 +1,101 @@
+name: Build and Release Artifacts
+
+on:
+  release:
+    types: [created]
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '>=1.24'
+          cache: true
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COSIGN_EXPERIMENTAL: 1
+
+  build-matrix:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [linux, darwin, windows]
+        arch: [amd64, arm64]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '>=1.24'
+          cache: true
+
+      - name: Build
+        shell: bash
+        run: |
+          GOOS=${{ matrix.os }} \
+          GOARCH=${{ matrix.arch }} \
+          go build -v -o protoc-gen-go-mcp${{ matrix.os == 'windows' && '.exe' || '' }} ./cmd/protoc-gen-go-mcp
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: protoc-gen-go-mcp-${{ matrix.os }}-${{ matrix.arch }}
+          path: protoc-gen-go-mcp${{ matrix.os == 'windows' && '.exe' || '' }}
+          if-no-files-found: error
+
+  attach-artifacts:
+    needs: [build-matrix]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Display structure of downloaded files
+        run: ls -R artifacts
+
+      - name: Create release archives
+        run: |
+          mkdir -p release-archives
+          cd artifacts
+          
+          for dir in */; do
+            dir_name=${dir%/}
+            if [[ "$dir_name" == *"windows"* ]]; then
+              zip -j "../release-archives/${dir_name}.zip" "$dir"/*
+            else
+              tar -czf "../release-archives/${dir_name}.tar.gz" -C "$dir" .
+            fi
+          done
+          
+          cd ..
+          ls -la release-archives
+
+      - name: Upload binaries to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-archives/*

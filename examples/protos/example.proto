@@ -67,11 +67,13 @@ message VibeScalar {
   // the details of the vibe bytes
   bytes vibe_bytes = 15;
 
+  // The details of the vibe string
   enum VibeEnum {
     VIBE_UNSET = 0;
     VIBE_GOOD = 1;
   }
 
+  // The details of the vibe string
   repeated VibeEnum vibe_enum = 16;
 }
 
@@ -134,8 +136,22 @@ message SetVibeObjectsResponse {
   repeated SomeVibeObject vibe_object = 1;
 }
 
+// This is a complex comment to test string processing.
+// It includes multiple lines with various characters:
+// * Special chars: "quotes", 'single-quotes', \backslashes\
+// * Symbols: @#$%^&*()_+-={}[]|;:<>,.?/
+// * Newlines and     multiple    spaces
+//
+// It also has empty lines and indentation:
+//   - Indented item 1
+//   - Indented item 2
 service VibeService {
-  // Set the Vibe
+/*
+ * This is a block comment
+ * with multiple lines
+ * to test block handling
+ * "Hello World"
+ */
   rpc SetVibe(SetVibeRequest) returns (SetVibeResponse) {}
   // Get Vibe
   // of the server

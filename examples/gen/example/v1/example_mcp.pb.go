@@ -73,7 +73,7 @@ func (s *vibeServiceMCPServer) SetVibeHandler(ctx context.Context, req mcp.CallT
 
 func (s *vibeServiceMCPServer) SetVibeTool() mcp.Tool {
 	tool := mcp.NewTool(
-		"SetVibe", mcp.WithDescription("Set the Vibe"),
+		"SetVibe", mcp.WithDescription("This is a block comment with multiple lines to test block handling \"Hello World\""),
 		mcp.WithObject(
 			"SetVibeRequest",
 			mcp.Description("The request to set the vibe of the server"),
@@ -127,7 +127,7 @@ func (s *vibeServiceMCPServer) GetVibeHandler(ctx context.Context, req mcp.CallT
 
 func (s *vibeServiceMCPServer) GetVibeTool() mcp.Tool {
 	tool := mcp.NewTool(
-		"GetVibe", mcp.WithDescription("Get Vibe  of the server "),
+		"GetVibe", mcp.WithDescription("Get Vibe of the server"),
 	)
 	return tool
 }
