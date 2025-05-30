@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.6
 // 	protoc        v5.29.3
-// source: examples/protos/example.proto
+// source: example.proto
 
 package examplev1
 
@@ -52,11 +52,11 @@ func (x VibeScalar_VibeEnum) String() string {
 }
 
 func (VibeScalar_VibeEnum) Descriptor() protoreflect.EnumDescriptor {
-	return file_examples_protos_example_proto_enumTypes[0].Descriptor()
+	return file_example_proto_enumTypes[0].Descriptor()
 }
 
 func (VibeScalar_VibeEnum) Type() protoreflect.EnumType {
-	return &file_examples_protos_example_proto_enumTypes[0]
+	return &file_example_proto_enumTypes[0]
 }
 
 func (x VibeScalar_VibeEnum) Number() protoreflect.EnumNumber {
@@ -65,7 +65,7 @@ func (x VibeScalar_VibeEnum) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use VibeScalar_VibeEnum.Descriptor instead.
 func (VibeScalar_VibeEnum) EnumDescriptor() ([]byte, []int) {
-	return file_examples_protos_example_proto_rawDescGZIP(), []int{6, 0}
+	return file_example_proto_rawDescGZIP(), []int{6, 0}
 }
 
 // The request to set the vibe of the server
@@ -79,7 +79,7 @@ type SetVibeRequest struct {
 
 func (x *SetVibeRequest) Reset() {
 	*x = SetVibeRequest{}
-	mi := &file_examples_protos_example_proto_msgTypes[0]
+	mi := &file_example_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -91,7 +91,7 @@ func (x *SetVibeRequest) String() string {
 func (*SetVibeRequest) ProtoMessage() {}
 
 func (x *SetVibeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_examples_protos_example_proto_msgTypes[0]
+	mi := &file_example_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -104,7 +104,7 @@ func (x *SetVibeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetVibeRequest.ProtoReflect.Descriptor instead.
 func (*SetVibeRequest) Descriptor() ([]byte, []int) {
-	return file_examples_protos_example_proto_rawDescGZIP(), []int{0}
+	return file_example_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *SetVibeRequest) GetVibe() string {
@@ -125,7 +125,7 @@ type SetVibeResponse struct {
 
 func (x *SetVibeResponse) Reset() {
 	*x = SetVibeResponse{}
-	mi := &file_examples_protos_example_proto_msgTypes[1]
+	mi := &file_example_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -137,7 +137,7 @@ func (x *SetVibeResponse) String() string {
 func (*SetVibeResponse) ProtoMessage() {}
 
 func (x *SetVibeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_examples_protos_example_proto_msgTypes[1]
+	mi := &file_example_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -150,7 +150,7 @@ func (x *SetVibeResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetVibeResponse.ProtoReflect.Descriptor instead.
 func (*SetVibeResponse) Descriptor() ([]byte, []int) {
-	return file_examples_protos_example_proto_rawDescGZIP(), []int{1}
+	return file_example_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *SetVibeResponse) GetPreviousVibe() string {
@@ -176,7 +176,7 @@ type GetVibeRequest struct {
 
 func (x *GetVibeRequest) Reset() {
 	*x = GetVibeRequest{}
-	mi := &file_examples_protos_example_proto_msgTypes[2]
+	mi := &file_example_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -188,7 +188,7 @@ func (x *GetVibeRequest) String() string {
 func (*GetVibeRequest) ProtoMessage() {}
 
 func (x *GetVibeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_examples_protos_example_proto_msgTypes[2]
+	mi := &file_example_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -201,7 +201,7 @@ func (x *GetVibeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetVibeRequest.ProtoReflect.Descriptor instead.
 func (*GetVibeRequest) Descriptor() ([]byte, []int) {
-	return file_examples_protos_example_proto_rawDescGZIP(), []int{2}
+	return file_example_proto_rawDescGZIP(), []int{2}
 }
 
 // What the server is currently vibing
@@ -214,7 +214,7 @@ type GetVibeResponse struct {
 
 func (x *GetVibeResponse) Reset() {
 	*x = GetVibeResponse{}
-	mi := &file_examples_protos_example_proto_msgTypes[3]
+	mi := &file_example_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -226,7 +226,7 @@ func (x *GetVibeResponse) String() string {
 func (*GetVibeResponse) ProtoMessage() {}
 
 func (x *GetVibeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_examples_protos_example_proto_msgTypes[3]
+	mi := &file_example_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -239,7 +239,7 @@ func (x *GetVibeResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetVibeResponse.ProtoReflect.Descriptor instead.
 func (*GetVibeResponse) Descriptor() ([]byte, []int) {
-	return file_examples_protos_example_proto_rawDescGZIP(), []int{3}
+	return file_example_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *GetVibeResponse) GetVibe() string {
@@ -260,7 +260,7 @@ type SetVibeArrayRequest struct {
 
 func (x *SetVibeArrayRequest) Reset() {
 	*x = SetVibeArrayRequest{}
-	mi := &file_examples_protos_example_proto_msgTypes[4]
+	mi := &file_example_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -272,7 +272,7 @@ func (x *SetVibeArrayRequest) String() string {
 func (*SetVibeArrayRequest) ProtoMessage() {}
 
 func (x *SetVibeArrayRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_examples_protos_example_proto_msgTypes[4]
+	mi := &file_example_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -285,7 +285,7 @@ func (x *SetVibeArrayRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetVibeArrayRequest.ProtoReflect.Descriptor instead.
 func (*SetVibeArrayRequest) Descriptor() ([]byte, []int) {
-	return file_examples_protos_example_proto_rawDescGZIP(), []int{4}
+	return file_example_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *SetVibeArrayRequest) GetVibeArray() *VibeArray {
@@ -306,7 +306,7 @@ type SetVibeArrayResponse struct {
 
 func (x *SetVibeArrayResponse) Reset() {
 	*x = SetVibeArrayResponse{}
-	mi := &file_examples_protos_example_proto_msgTypes[5]
+	mi := &file_example_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -318,7 +318,7 @@ func (x *SetVibeArrayResponse) String() string {
 func (*SetVibeArrayResponse) ProtoMessage() {}
 
 func (x *SetVibeArrayResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_examples_protos_example_proto_msgTypes[5]
+	mi := &file_example_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -331,7 +331,7 @@ func (x *SetVibeArrayResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetVibeArrayResponse.ProtoReflect.Descriptor instead.
 func (*SetVibeArrayResponse) Descriptor() ([]byte, []int) {
-	return file_examples_protos_example_proto_rawDescGZIP(), []int{5}
+	return file_example_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *SetVibeArrayResponse) GetVibeArray() *VibeArray {
@@ -380,7 +380,7 @@ type VibeScalar struct {
 
 func (x *VibeScalar) Reset() {
 	*x = VibeScalar{}
-	mi := &file_examples_protos_example_proto_msgTypes[6]
+	mi := &file_example_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -392,7 +392,7 @@ func (x *VibeScalar) String() string {
 func (*VibeScalar) ProtoMessage() {}
 
 func (x *VibeScalar) ProtoReflect() protoreflect.Message {
-	mi := &file_examples_protos_example_proto_msgTypes[6]
+	mi := &file_example_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -405,7 +405,7 @@ func (x *VibeScalar) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VibeScalar.ProtoReflect.Descriptor instead.
 func (*VibeScalar) Descriptor() ([]byte, []int) {
-	return file_examples_protos_example_proto_rawDescGZIP(), []int{6}
+	return file_example_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *VibeScalar) GetVibeDouble() float64 {
@@ -550,7 +550,7 @@ type VibeArray struct {
 
 func (x *VibeArray) Reset() {
 	*x = VibeArray{}
-	mi := &file_examples_protos_example_proto_msgTypes[7]
+	mi := &file_example_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -562,7 +562,7 @@ func (x *VibeArray) String() string {
 func (*VibeArray) ProtoMessage() {}
 
 func (x *VibeArray) ProtoReflect() protoreflect.Message {
-	mi := &file_examples_protos_example_proto_msgTypes[7]
+	mi := &file_example_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -575,7 +575,7 @@ func (x *VibeArray) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VibeArray.ProtoReflect.Descriptor instead.
 func (*VibeArray) Descriptor() ([]byte, []int) {
-	return file_examples_protos_example_proto_rawDescGZIP(), []int{7}
+	return file_example_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *VibeArray) GetVibeDoubles() []float64 {
@@ -689,7 +689,7 @@ type SetVibeDetailsRequest struct {
 
 func (x *SetVibeDetailsRequest) Reset() {
 	*x = SetVibeDetailsRequest{}
-	mi := &file_examples_protos_example_proto_msgTypes[8]
+	mi := &file_example_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -701,7 +701,7 @@ func (x *SetVibeDetailsRequest) String() string {
 func (*SetVibeDetailsRequest) ProtoMessage() {}
 
 func (x *SetVibeDetailsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_examples_protos_example_proto_msgTypes[8]
+	mi := &file_example_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -714,7 +714,7 @@ func (x *SetVibeDetailsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetVibeDetailsRequest.ProtoReflect.Descriptor instead.
 func (*SetVibeDetailsRequest) Descriptor() ([]byte, []int) {
-	return file_examples_protos_example_proto_rawDescGZIP(), []int{8}
+	return file_example_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *SetVibeDetailsRequest) GetVibe() string {
@@ -742,7 +742,7 @@ type SomeVibeObject struct {
 
 func (x *SomeVibeObject) Reset() {
 	*x = SomeVibeObject{}
-	mi := &file_examples_protos_example_proto_msgTypes[9]
+	mi := &file_example_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -754,7 +754,7 @@ func (x *SomeVibeObject) String() string {
 func (*SomeVibeObject) ProtoMessage() {}
 
 func (x *SomeVibeObject) ProtoReflect() protoreflect.Message {
-	mi := &file_examples_protos_example_proto_msgTypes[9]
+	mi := &file_example_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -767,7 +767,7 @@ func (x *SomeVibeObject) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SomeVibeObject.ProtoReflect.Descriptor instead.
 func (*SomeVibeObject) Descriptor() ([]byte, []int) {
-	return file_examples_protos_example_proto_rawDescGZIP(), []int{9}
+	return file_example_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *SomeVibeObject) GetVibe() string {
@@ -788,7 +788,7 @@ type SetVibeObjectsRequest struct {
 
 func (x *SetVibeObjectsRequest) Reset() {
 	*x = SetVibeObjectsRequest{}
-	mi := &file_examples_protos_example_proto_msgTypes[10]
+	mi := &file_example_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -800,7 +800,7 @@ func (x *SetVibeObjectsRequest) String() string {
 func (*SetVibeObjectsRequest) ProtoMessage() {}
 
 func (x *SetVibeObjectsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_examples_protos_example_proto_msgTypes[10]
+	mi := &file_example_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -813,7 +813,7 @@ func (x *SetVibeObjectsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetVibeObjectsRequest.ProtoReflect.Descriptor instead.
 func (*SetVibeObjectsRequest) Descriptor() ([]byte, []int) {
-	return file_examples_protos_example_proto_rawDescGZIP(), []int{10}
+	return file_example_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *SetVibeObjectsRequest) GetVibeObject() []*SomeVibeObject {
@@ -834,7 +834,7 @@ type SetVibeObjectsResponse struct {
 
 func (x *SetVibeObjectsResponse) Reset() {
 	*x = SetVibeObjectsResponse{}
-	mi := &file_examples_protos_example_proto_msgTypes[11]
+	mi := &file_example_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -846,7 +846,7 @@ func (x *SetVibeObjectsResponse) String() string {
 func (*SetVibeObjectsResponse) ProtoMessage() {}
 
 func (x *SetVibeObjectsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_examples_protos_example_proto_msgTypes[11]
+	mi := &file_example_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -859,7 +859,7 @@ func (x *SetVibeObjectsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetVibeObjectsResponse.ProtoReflect.Descriptor instead.
 func (*SetVibeObjectsResponse) Descriptor() ([]byte, []int) {
-	return file_examples_protos_example_proto_rawDescGZIP(), []int{11}
+	return file_example_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *SetVibeObjectsResponse) GetVibeObject() []*SomeVibeObject {
@@ -869,11 +869,17 @@ func (x *SetVibeObjectsResponse) GetVibeObject() []*SomeVibeObject {
 	return nil
 }
 
-var File_examples_protos_example_proto protoreflect.FileDescriptor
+var File_example_proto protoreflect.FileDescriptor
 
+<<<<<<< HEAD
+const file_example_proto_rawDesc = "" +
+	"\n" +
+	"\rexample.proto\x12\vexamples.v1\"$\n" +
+=======
 const file_examples_protos_example_proto_rawDesc = "" +
 	"\n" +
 	"\x1dexamples/protos/example.proto\x12\vexamples.v1\"$\n" +
+>>>>>>> main
 	"\x0eSetVibeRequest\x12\x12\n" +
 	"\x04vibe\x18\x01 \x01(\tR\x04vibe\"J\n" +
 	"\x0fSetVibeResponse\x12#\n" +
@@ -960,20 +966,20 @@ const file_examples_protos_example_proto_rawDesc = "" +
 	"\x0eSetVibeObjects\x12\".examples.v1.SetVibeObjectsRequest\x1a#.examples.v1.SetVibeObjectsResponse\"\x00B#Z!examples/gen/example/v1;examplev1b\x06proto3"
 
 var (
-	file_examples_protos_example_proto_rawDescOnce sync.Once
-	file_examples_protos_example_proto_rawDescData []byte
+	file_example_proto_rawDescOnce sync.Once
+	file_example_proto_rawDescData []byte
 )
 
-func file_examples_protos_example_proto_rawDescGZIP() []byte {
-	file_examples_protos_example_proto_rawDescOnce.Do(func() {
-		file_examples_protos_example_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_examples_protos_example_proto_rawDesc), len(file_examples_protos_example_proto_rawDesc)))
+func file_example_proto_rawDescGZIP() []byte {
+	file_example_proto_rawDescOnce.Do(func() {
+		file_example_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_example_proto_rawDesc), len(file_example_proto_rawDesc)))
 	})
-	return file_examples_protos_example_proto_rawDescData
+	return file_example_proto_rawDescData
 }
 
-var file_examples_protos_example_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_examples_protos_example_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
-var file_examples_protos_example_proto_goTypes = []any{
+var file_example_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_example_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
+var file_example_proto_goTypes = []any{
 	(VibeScalar_VibeEnum)(0),       // 0: examples.v1.VibeScalar.VibeEnum
 	(*SetVibeRequest)(nil),         // 1: examples.v1.SetVibeRequest
 	(*SetVibeResponse)(nil),        // 2: examples.v1.SetVibeResponse
@@ -988,7 +994,7 @@ var file_examples_protos_example_proto_goTypes = []any{
 	(*SetVibeObjectsRequest)(nil),  // 11: examples.v1.SetVibeObjectsRequest
 	(*SetVibeObjectsResponse)(nil), // 12: examples.v1.SetVibeObjectsResponse
 }
-var file_examples_protos_example_proto_depIdxs = []int32{
+var file_example_proto_depIdxs = []int32{
 	8,  // 0: examples.v1.SetVibeArrayRequest.vibe_array:type_name -> examples.v1.VibeArray
 	8,  // 1: examples.v1.SetVibeArrayResponse.vibe_array:type_name -> examples.v1.VibeArray
 	0,  // 2: examples.v1.VibeScalar.vibe_enum:type_name -> examples.v1.VibeScalar.VibeEnum
@@ -1012,28 +1018,28 @@ var file_examples_protos_example_proto_depIdxs = []int32{
 	0,  // [0:6] is the sub-list for field type_name
 }
 
-func init() { file_examples_protos_example_proto_init() }
-func file_examples_protos_example_proto_init() {
-	if File_examples_protos_example_proto != nil {
+func init() { file_example_proto_init() }
+func file_example_proto_init() {
+	if File_example_proto != nil {
 		return
 	}
-	file_examples_protos_example_proto_msgTypes[6].OneofWrappers = []any{}
+	file_example_proto_msgTypes[6].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_examples_protos_example_proto_rawDesc), len(file_examples_protos_example_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_example_proto_rawDesc), len(file_example_proto_rawDesc)),
 			NumEnums:      1,
 			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_examples_protos_example_proto_goTypes,
-		DependencyIndexes: file_examples_protos_example_proto_depIdxs,
-		EnumInfos:         file_examples_protos_example_proto_enumTypes,
-		MessageInfos:      file_examples_protos_example_proto_msgTypes,
+		GoTypes:           file_example_proto_goTypes,
+		DependencyIndexes: file_example_proto_depIdxs,
+		EnumInfos:         file_example_proto_enumTypes,
+		MessageInfos:      file_example_proto_msgTypes,
 	}.Build()
-	File_examples_protos_example_proto = out.File
-	file_examples_protos_example_proto_goTypes = nil
-	file_examples_protos_example_proto_depIdxs = nil
+	File_example_proto = out.File
+	file_example_proto_goTypes = nil
+	file_example_proto_depIdxs = nil
 }
