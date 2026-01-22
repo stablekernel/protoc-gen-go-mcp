@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.3](https://github.com/stablekernel/protoc-gen-go-mcp/compare/v0.2.2...v0.2.3) (2026-01-22)
+
+
+### Bug Fixes
+
+* Update golang.org/x/net to v0.38.0 ([#83](https://github.com/stablekernel/protoc-gen-go-mcp/issues/83)) ([893e7bc](https://github.com/stablekernel/protoc-gen-go-mcp/commit/893e7bcd88e04135f627d5f6e28d4c2ef38fefa4))
+
 ## [0.2.2](https://github.com/stablekernel/protoc-gen-go-mcp/compare/v0.2.1...v0.2.2) (2025-05-20)
 
 
