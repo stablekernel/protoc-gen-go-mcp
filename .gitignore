@@ -1,2 +1,6 @@
-.idea# Added by goreleaser init:
+.idea/
+bin/
 dist/
+tmp/
+*.log
+*.out
