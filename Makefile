@@ -14,10 +14,10 @@ protoc-gen-go-mcp:
 
 generate: protoc-gen-go-mcp
 	@echo "Generating new files..."
-	@export PATH="$PATH:$(shell go env GOPATH)/bin"
-	@protoc --go_out=. $(PROTOS)
-	@protoc --go-grpc_out=. $(PROTOS)
-	@protoc --go-mcp_out=. --proto_path=examples/protos $(PROTOS) && echo "Generated successfully!"
+	export PATH="$(PATH):$(shell go env GOPATH)/bin"
+	protoc --go_out=. $(PROTOS)
+	protoc --go-grpc_out=. $(PROTOS)
+	protoc --go-mcp_out=. --proto_path=examples/protos $(PROTOS) && echo "Generated successfully!"
 
 start-debugger: protoc-gen-go-mcp
 	@echo "Starting debugger"
