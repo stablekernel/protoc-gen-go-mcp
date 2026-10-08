@@ -1,0 +1,493 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Config",
+  "description": "Per-project factory configuration, i.e. the parsed contents of a\n`factory.yaml` file.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "description": "JSON Schema reference for editor completion, e.g.\n`https://raw.githubusercontent.com/stablekernel-blue/sf-factory/main/schema/factory.schema.json`.\n\nPurely advisory: sf-factory does not read this field, editors do.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "version": {
+      "description": "Schema version of this file. Currently always `1`\n(`CURRENT_VERSION`). Enforced by the JSON Schema (`sf-factory\nvalidate`) and by editors reading it; not rejected at `serde` parse\ntime. Migrations to a future version 2 are unplanned and would need\ntheir own design.",
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 1,
+      "maximum": 1
+    },
+    "name": {
+      "description": "Human-readable name for this factory, e.g. `\"sf-factory\"`. Used in\ngenerated resource names and status reporting.",
+      "type": "string"
+    },
+    "repos": {
+      "description": "Repositories this factory works on. Must list at least one. Most\nfactories list exactly one; multi-repo factories are for coordinated\ncross-repo work (orchestration and limits apply to the factory as a\nwhole, not per repo; per-repo orchestration is not yet modeled).",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Repo"
+      },
+      "minItems": 1
+    },
+    "skills": {
+      "description": "Skills available to the factory's agents, beyond OpenCode's built-ins.",
+      "$ref": "#/$defs/Skills",
+      "default": {
+        "default": [],
+        "repo": [],
+        "urls": []
+      }
+    },
+    "commands": {
+      "description": "Additional OpenCode commands (slash commands) available to the\nfactory, as paths to markdown command files relative to the repo\nroot.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "orchestration": {
+      "description": "How the factory's agents are organized and looped.",
+      "$ref": "#/$defs/Orchestration"
+    },
+    "limits": {
+      "description": "Resource and cost limits enforced on the factory's worker.",
+      "$ref": "#/$defs/Limits",
+      "default": {
+        "spot": false
+      }
+    },
+    "backend": {
+      "description": "The cloud backend used to launch the factory's worker.",
+      "$ref": "#/$defs/Backend"
+    },
+    "auth": {
+      "description": "How the factory authenticates to the repos and services it uses.",
+      "$ref": "#/$defs/Auth"
+    },
+    "tracker": {
+      "description": "The issue/work tracker the factory's orchestration loop reads from\nand writes to. Defaults to GitHub Issues.",
+      "$ref": "#/$defs/Tracker",
+      "default": {
+        "kind": "github_issues"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "name",
+    "repos",
+    "orchestration",
+    "backend",
+    "auth"
+  ],
+  "$defs": {
+    "Repo": {
+      "description": "A single repository a factory works on.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "The repository in `owner/name` form, e.g. `\"stablekernel-blue/sf-factory\"`.",
+          "type": "string"
+        },
+        "base_branch": {
+          "description": "The base branch the factory opens pull requests against. Defaults to\nthe repository's default branch when omitted.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ]
+    },
+    "Skills": {
+      "description": "Skills available to a factory's agents.",
+      "type": "object",
+      "properties": {
+        "default": {
+          "description": "Names of shared skills to enable from `stablekernel/skills` (see\n[ADR-0006](https://github.com/stablekernel-blue/sf-factory/blob/main/docs/adr/0006-shared-skills-repo.md)),\ne.g. `[\"customize-opencode\"]`. An empty list (the default, when\n`skills` is omitted entirely) means *no* shared skills are enabled;\nthere is no way yet to opt into \"all shared skills\" short of naming\nthem explicitly. Revisit if that becomes common.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "repo": {
+          "description": "Paths to skill directories inside the factory's own repo(s),\nrelative to the repo root.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "urls": {
+          "description": "Reserved, not yet implemented (see\n[ADR-0006](https://github.com/stablekernel-blue/sf-factory/blob/main/docs/adr/0006-shared-skills-repo.md),\nwhich fetches shared skills via a git checkout of\n`stablekernel/skills` and `skills.paths` instead): URLs to\nadditional skill bundles to fetch at startup.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      },
+      "additionalProperties": false
+    },
+    "Orchestration": {
+      "description": "How a factory's agents are organized and how the work loop runs.",
+      "type": "object",
+      "properties": {
+        "roles": {
+          "description": "Named agent roles available in this factory, keyed by role name\n(e.g. `\"factory\"`, `\"reviewer\"`).",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Role"
+          }
+        },
+        "loop": {
+          "description": "Configuration for the recurring work loop (audit, assess, execute,\nre-evaluate).\n\nA `loop` block with no `strategy` field defaults to the `serial`\nstrategy, so `factory.yaml` files written before `strategy` existed\nkeep working unchanged.",
+          "$ref": "#/$defs/LoopConfig"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "roles",
+        "loop"
+      ]
+    },
+    "Role": {
+      "description": "A single named agent role in a factory's orchestration.\n\nPer-role handoffs (which role hands work to which) and permission\noverrides are left to a follow-up (issue #54). When that lands, a\nper-project override may only **tighten**\n[`crate::opencode::render`]'s hardened default `permission` block\n(see that function's doc comment) — e.g. adding a `deny` rule, or\nnarrowing an existing `allow` — never loosen it (turning an existing\n`deny` into `allow`, or dropping a denylisted pattern entirely).",
+      "type": "object",
+      "properties": {
+        "agent": {
+          "description": "Name of the OpenCode agent config to use for this role, e.g.\n`\"factory\"`, `\"reviewer\"`. Corresponds to an agent defined under\n`.opencode/agents/`.",
+          "type": "string"
+        },
+        "model": {
+          "description": "Model override for this role, named as Bifrost sees it\n(`<vendor>/<model>`), e.g. `\"anthropic/claude-sonnet-5\"`. `None`\nuses the agent's own default model. `sf-factory config env` adds\nthe `bifrost/` provider prefix OpenCode expects\n(`\"bifrost/anthropic/claude-sonnet-5\"`) when setting\n`FACTORY_MODEL`, unless the prefix is already present.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "agent"
+      ]
+    },
+    "LoopConfig": {
+      "description": "Configuration for the factory's recurring work loop.\n\nHow parallel a factory runs is project-specific, so this is keyed by a\n`strategy` field: each strategy has its own required fields, and extra\nfields that belong to the other strategy (e.g. `concurrency` on a\n`serial` loop) are rejected.\n\nA `loop` block with no `strategy` field defaults to `serial`, so\n`factory.yaml` files written before `strategy` existed keep parsing\nunchanged.",
+      "oneOf": [
+        {
+          "description": "One OpenCode session runs `command` repeatedly, working through\nready issues and open PRs one at a time in the same clone. The\ndefault strategy.",
+          "type": "object",
+          "properties": {
+            "command": {
+              "description": "The OpenCode command that runs one pass of the loop, e.g.\n`\"factory-loop\"`.",
+              "type": "string"
+            },
+            "max_issues": {
+              "description": "Maximum number of new issues to start per loop pass.",
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "interval_minutes": {
+              "description": "Minutes to wait between automatic loop passes. `None` means the\nloop only runs when triggered manually (e.g. via\n`scripts/factory-local loop`).",
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint32",
+              "minimum": 0
+            },
+            "strategy": {
+              "type": "string",
+              "const": "serial"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "command",
+            "max_issues"
+          ]
+        },
+        {
+          "description": "A shell dispatcher claims ready issues and PRs with new feedback and\nruns each in its own OpenCode worker and git worktree, up to\n`concurrency` at once, polling GitHub every `poll_seconds`.\n\nEvery field has a default matching `factory/dispatch.sh`'s own\n(env-var) default, so a minimal `strategy: dispatcher` with no other\nfields is a valid config (issue #95).",
+          "type": "object",
+          "properties": {
+            "concurrency": {
+              "description": "Maximum number of concurrent workers. Must be at least 1.\nDefaults to `1`, matching `FACTORY_CONCURRENCY`'s default.",
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 1,
+              "default": 1
+            },
+            "issue_command": {
+              "description": "The OpenCode command a worker runs to implement one claimed\nissue and open its PR, e.g. `\"factory-issue\"`. Defaults to\n`\"factory-issue\"`.",
+              "type": "string",
+              "default": "factory-issue"
+            },
+            "pr_command": {
+              "description": "The OpenCode command a worker runs to address feedback and\nfailing checks on one open factory PR, e.g. `\"factory-pr\"`.\nDefaults to `\"factory-pr\"`.",
+              "type": "string",
+              "default": "factory-pr"
+            },
+            "poll_seconds": {
+              "description": "Seconds to wait between polls when idle or all worker slots are\nfull. Must be at least 10, to avoid hammering the tracker's API.\nDefaults to `60`, matching `FACTORY_POLL_SECONDS`'s default.",
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 10,
+              "default": 60
+            },
+            "max_issues": {
+              "description": "Optional cap on new issues started per dispatcher lifetime.\n`None` means no cap.\n\nOptional here (unlike `Serial::max_issues`, which is required)\nbecause a dispatcher run is typically long-lived and open-ended\n(it keeps polling until stopped), while a serial loop pass is a\nsingle bounded step where a cap is the norm; this matches\n`factory/dispatch.sh`'s `FACTORY_MAX_ISSUES`, which is also\noptional and empty by default.",
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint32",
+              "minimum": 0
+            },
+            "exit_when_idle": {
+              "description": "Whether the dispatcher exits once nothing is running or\ndispatchable, instead of polling forever. Defaults to `false`,\nmatching `FACTORY_EXIT_WHEN_IDLE`'s default.",
+              "type": "boolean",
+              "default": false
+            },
+            "strategy": {
+              "type": "string",
+              "const": "dispatcher"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "strategy"
+          ]
+        }
+      ]
+    },
+    "Limits": {
+      "description": "Resource and cost limits enforced on a factory's worker.",
+      "type": "object",
+      "properties": {
+        "ttl_minutes": {
+          "description": "Maximum lifetime of the worker in minutes, regardless of activity.\n`None` means no hard cap.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "idle_minutes": {
+          "description": "Minutes of inactivity before the worker shuts itself down. `None`\nmeans no idle shutdown.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "budget_usd": {
+          "description": "Maximum gateway spend in US dollars for the worker's lifetime.\n`None` means no budget cap is enforced by sf-factory (the gateway\nmay still enforce its own limits).",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double",
+          "minimum": 0.0
+        },
+        "cpu": {
+          "description": "vCPUs allocated to the worker.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double",
+          "exclusiveMinimum": 0.0
+        },
+        "memory_mib": {
+          "description": "Memory in MiB allocated to the worker.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "spot": {
+          "description": "Whether the worker may run on spot/preemptible capacity.",
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "Backend": {
+      "description": "The cloud backend used to launch a factory's worker.",
+      "oneOf": [
+        {
+          "description": "Run the worker as an AWS Fargate task.",
+          "type": "object",
+          "properties": {
+            "region": {
+              "description": "AWS region to launch the worker in, e.g. `\"us-east-1\"`.",
+              "type": "string"
+            },
+            "kind": {
+              "type": "string",
+              "const": "aws"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "region"
+          ]
+        },
+        {
+          "description": "Run the worker as a local Docker container (`scripts/factory-local`).",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "local"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        }
+      ]
+    },
+    "Auth": {
+      "description": "How a factory authenticates to the repositories and services it uses.\n\nBoth variants hold a *reference* to a secret (`SecretRef`), never a\nsecret value: `factory.yaml` is checked into source control.",
+      "oneOf": [
+        {
+          "description": "A GitHub personal access token scoped to the factory's repos\n(Contents, Issues, Pull requests: read/write).",
+          "type": "object",
+          "properties": {
+            "token": {
+              "description": "Reference to the secret containing the token.",
+              "$ref": "#/$defs/SecretRef"
+            },
+            "type": {
+              "type": "string",
+              "const": "pat"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "token"
+          ]
+        },
+        {
+          "description": "GitHub App installation auth (issue #45): the backend mints and\nrefreshes installation tokens itself, so `factory.yaml` only needs\nthe App and installation identifiers plus a reference to the App's\nprivate key.",
+          "type": "object",
+          "properties": {
+            "app_id": {
+              "description": "The GitHub App's numeric ID.",
+              "type": "string"
+            },
+            "installation_id": {
+              "description": "The ID of the App's installation on the factory's repos.",
+              "type": "string"
+            },
+            "private_key": {
+              "description": "Reference to the secret containing the App's private key (PEM).",
+              "$ref": "#/$defs/SecretRef"
+            },
+            "type": {
+              "type": "string",
+              "const": "github_app"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "app_id",
+            "installation_id",
+            "private_key"
+          ]
+        }
+      ]
+    },
+    "SecretRef": {
+      "description": "A reference to a secret value, never the value itself.\n\nExactly one of `env` or `secret` must be set; this is enforced by\n`serde`'s untagged-enum matching (each variant has a distinct single\nfield) and by the generated schema (`anyOf`, each branch\n`additionalProperties: false`).",
+      "anyOf": [
+        {
+          "description": "Read the secret from an environment variable already present in the\nworker's environment, e.g. set by the backend from a cloud secret\nstore.",
+          "type": "object",
+          "properties": {
+            "env": {
+              "description": "Name of the environment variable, e.g. `\"GH_TOKEN\"`.",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "env"
+          ]
+        },
+        {
+          "description": "Resolve the secret from the backend's secret store, e.g. an AWS\nSecrets Manager secret name or ARN.",
+          "type": "object",
+          "properties": {
+            "secret": {
+              "description": "Backend-specific secret name or ARN.",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "secret"
+          ]
+        }
+      ]
+    },
+    "Tracker": {
+      "description": "The issue/work tracker a factory's orchestration loop reads from and\nwrites to.",
+      "oneOf": [
+        {
+          "description": "GitHub Issues on the factory's repo(s). The default.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "github_issues"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "description": "Jira, identified by project key.",
+          "type": "object",
+          "properties": {
+            "project_key": {
+              "description": "Jira project key, e.g. `\"SF\"`.",
+              "type": "string"
+            },
+            "kind": {
+              "type": "string",
+              "const": "jira"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "project_key"
+          ]
+        }
+      ]
+    }
+  }
+}

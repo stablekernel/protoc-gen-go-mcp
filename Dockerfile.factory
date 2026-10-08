@@ -1,0 +1,64 @@
+# syntax=docker/dockerfile:1
+#
+# Image for the sf-factory agent factory (https://github.com/stablekernel-blue/sf-factory)
+# that works on this repo. It extends the sf-factory worker image with what
+# AGENTS.md's checks and `make generate` need: Go, protoc and the protoc
+# plugins, and goimports. Not used by CI or releases.
+#
+# Built by sf-factory's `scripts/factory-local` with
+#   FACTORY_DOCKERFILE=/path/to/protoc-gen-go-mcp/Dockerfile.factory
+
+ARG FACTORY_BASE_IMAGE=sf-factory-local:dev
+FROM ${FACTORY_BASE_IMAGE}
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+USER root
+
+# Go, pinned and checksum-verified (https://go.dev/dl/). The official MCP SDK
+# needs Go 1.25+.
+ARG GO_VERSION=1.27.1
+ARG GO_SHA256_ARM64=3450b45a3f9ee8568792736a5c5e70a1f2e9b36c35a8f74958c03e51d7d92bec
+ARG GO_SHA256_X64=63d339f0da5ab53635a56f2490a7984dfe12dfcff22ad749f63edaf590168445
+RUN case "$(dpkg --print-architecture)" in \
+      arm64) go_arch=arm64; go_sha="${GO_SHA256_ARM64}" ;; \
+      amd64) go_arch=amd64; go_sha="${GO_SHA256_X64}" ;; \
+      *) echo "unsupported architecture" >&2; exit 1 ;; \
+    esac \
+ && curl -fsSL -o /tmp/go.tar.gz "https://go.dev/dl/go${GO_VERSION}.linux-${go_arch}.tar.gz" \
+ && echo "${go_sha}  /tmp/go.tar.gz" | sha256sum -c - \
+ && tar -xzf /tmp/go.tar.gz -C /usr/local \
+ && rm /tmp/go.tar.gz \
+ && echo 'export PATH="$PATH:/usr/local/go/bin:$HOME/go/bin"' > /etc/profile.d/go.sh \
+ && /usr/local/go/bin/go version
+
+# protoc 29.3, the version in the committed generated headers. The protobuf
+# project publishes no checksum files; these SHA-256 sums were computed from
+# the release assets on 2026-10-08.
+ARG PROTOC_VERSION=29.3
+ARG PROTOC_SHA256_ARM64=6427349140e01f06e049e707a58709a4f221ae73ab9a0425bc4a00c8d0e1ab32
+ARG PROTOC_SHA256_X64=3e866620c5be27664f3d2fa2d656b5f3e09b5152b42f1bedbf427b333e90021a
+RUN case "$(dpkg --print-architecture)" in \
+      arm64) pc_arch=aarch_64; pc_sha="${PROTOC_SHA256_ARM64}" ;; \
+      amd64) pc_arch=x86_64;   pc_sha="${PROTOC_SHA256_X64}" ;; \
+      *) echo "unsupported architecture" >&2; exit 1 ;; \
+    esac \
+ && curl -fsSL -o /tmp/protoc.zip \
+      "https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-linux-${pc_arch}.zip" \
+ && echo "${pc_sha}  /tmp/protoc.zip" | sha256sum -c - \
+ && unzip -q /tmp/protoc.zip -d /usr/local/protoc \
+ && ln -s /usr/local/protoc/bin/protoc /usr/local/bin/protoc \
+ && chmod -R a+rX /usr/local/protoc \
+ && rm /tmp/protoc.zip \
+ && protoc --version
+
+USER factory
+ENV PATH=${PATH}:/usr/local/go/bin:/home/factory/go/bin
+
+# protoc plugins (the versions in the committed generated headers) and
+# goimports (`make fmt`). `go install` verifies modules against the Go
+# checksum database.
+RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.6 \
+ && go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.5.1 \
+ && go install golang.org/x/tools/cmd/goimports@v0.51.0 \
+ && go clean -cache -modcache \
+ && protoc-gen-go --version && protoc-gen-go-grpc --version
