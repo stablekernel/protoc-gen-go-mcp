@@ -34,10 +34,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Go's own formatting of generated comments can shift between patch
+      # releases (go/printer), so this must match the exact Go version used
+      # to produce the files committed under examples/gen/ (see
+      # Dockerfile.factory's GO_VERSION), not just a minimum.
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '>=1.24'
+          go-version: '1.27.1'
           cache: true
 
       - name: Set up protoc
@@ -46,10 +50,14 @@ jobs:
           version: '29.3'
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
-      # Versions are pinned by the `tool` directives in go.mod (currently
-      # protoc-gen-go v1.36.6 and protoc-gen-go-grpc v1.5.1).
+      # protoc-gen-go and protoc-gen-go-grpc versions are pinned explicitly
+      # here (matching the `tool` directives in go.mod) so this job doesn't
+      # silently drift if go.mod's tool pins ever change without updating
+      # the generated-code toolchain this check depends on.
       - name: Install protoc-gen-go and protoc-gen-go-grpc
-        run: go install google.golang.org/protobuf/cmd/protoc-gen-go google.golang.org/grpc/cmd/protoc-gen-go-grpc
+        run: |
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.6
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.5.1
 
       - name: Generate
         run: make generate
