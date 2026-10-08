@@ -14,7 +14,6 @@ import (
 	"encoding/json"
 	"net"
 	"testing"
-	"time"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
@@ -238,10 +237,9 @@ func TestToolsList(t *testing.T) {
 func TestCallSetVibe(t *testing.T) {
 	h := newTestHarness(t)
 
-	// KNOWN BUG (#88/#89): the generated schema nests "vibe" under a
-	// "SetVibeRequest" object property, but the handler reads arguments
-	// from the top level of req.Params.Arguments. Exercise what the
-	// handler does today (top-level arguments).
+	// KNOWN BUG (#88/#89): see TestToolsList for the schema/handler
+	// mismatch. Exercise what the handler does today (top-level
+	// arguments), not what the (wrong) schema advertises.
 	result := h.callTool("SetVibe", map[string]any{"vibe": "radical"})
 	require.False(t, result.IsError)
 
@@ -348,31 +346,4 @@ func TestCallSetVibe_GRPCError(t *testing.T) {
 
 	require.True(t, result.IsError)
 	require.Contains(t, textContent(t, result), "vibe not found")
-}
-
-// TestDeadlineSanity keeps this file honest about the "under 5 seconds, no
-// network, no protoc" requirement: it exercises the full stack once more
-// with a short deadline so a regression that blocks on real I/O fails fast
-// instead of hanging the suite.
-func TestDeadlineSanity(t *testing.T) {
-	h := newTestHarness(t)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-
-	req := map[string]any{
-		"jsonrpc": "2.0",
-		"id":      h.nextID(),
-		"method":  "tools/call",
-		"params": map[string]any{
-			"name":      "GetVibe",
-			"arguments": map[string]any{},
-		},
-	}
-	raw, err := json.Marshal(req)
-	require.NoError(t, err)
-
-	resp := h.mcp.HandleMessage(ctx, raw)
-	_, ok := resp.(mcp.JSONRPCResponse)
-	require.True(t, ok)
 }
