@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	examplev1 "protoc-gen-go-mcp/test/snapshots"
+	examplev1 "protoc-gen-go-mcp/examples/gen/example/v1"
 
 	"github.com/mark3labs/mcp-go/server"
 )
