@@ -252,7 +252,14 @@ func TestToolsList(t *testing.T) {
 	setVibe := byName["SetVibe"]
 	require.Equal(t, `This is a block comment with multiple lines to test block handling "Hello World"`, setVibe.Description)
 	require.Equal(t, "object", setVibe.InputSchema["type"])
-	require.Contains(t, setVibe.InputSchema["properties"], "vibe")
+	require.Equal(t, false, setVibe.InputSchema["additionalProperties"])
+	require.Equal(t, map[string]any{
+		"vibe": map[string]any{
+			"description": "The vibe of the server to be set",
+			"type":        "string",
+		},
+	}, setVibe.InputSchema["properties"])
+	require.NotContains(t, setVibe.InputSchema["properties"], "SetVibeRequest")
 
 	getVibe := byName["GetVibe"]
 	require.Equal(t, "Get Vibe of the server", getVibe.Description)
