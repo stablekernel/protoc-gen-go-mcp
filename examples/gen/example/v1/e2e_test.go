@@ -101,17 +101,25 @@ func (f *fakeVibeService) SetVibeDetails(_ context.Context, req *examplev1.SetVi
 	}, nil
 }
 
+// SetVibeArray returns a fixed response, independent of req, so the test can
+// assert on the tool's result content without that assertion trivially
+// passing no matter what the handler actually put there (see
+// TestCallSetVibeArray).
 func (f *fakeVibeService) SetVibeArray(_ context.Context, req *examplev1.SetVibeArrayRequest) (*examplev1.SetVibeArrayResponse, error) {
 	f.record("SetVibeArray", req)
 	return &examplev1.SetVibeArrayResponse{
-		VibeArray: req.GetVibeArray(),
+		VibeArray: &examplev1.VibeArray{VibeBools: []bool{false}},
 	}, nil
 }
 
+// SetVibeObjects returns a fixed response, independent of req, so the test
+// can assert on the tool's result content without that assertion trivially
+// passing no matter what the handler actually put there (see
+// TestCallSetVibeObjects).
 func (f *fakeVibeService) SetVibeObjects(_ context.Context, req *examplev1.SetVibeObjectsRequest) (*examplev1.SetVibeObjectsResponse, error) {
 	f.record("SetVibeObjects", req)
 	return &examplev1.SetVibeObjectsResponse{
-		VibeObject: req.GetVibeObject(),
+		VibeObject: []*examplev1.SomeVibeObject{{Vibe: "canned"}},
 	}, nil
 }
 
@@ -462,9 +470,13 @@ func TestCallSetVibeArray(t *testing.T) {
 		require.Equal(r, []bool{true, false, true}, req.GetVibeArray().GetVibeBools())
 	})
 
+	// Assert the result content exactly, against the fake backend's fixed
+	// response (see fakeVibeService.SetVibeArray), so a handler that
+	// writes the wrong value (or drops the field) is caught instead of
+	// just checking the key exists.
 	var body map[string]any
 	require.NoError(t, json.Unmarshal([]byte(result.Text), &body))
-	require.Contains(t, body, "vibe_array")
+	require.Equal(t, map[string]any{"vibe_bools": []any{false}}, body["vibe_array"])
 }
 
 func TestCallSetVibeObjects(t *testing.T) {
@@ -490,9 +502,13 @@ func TestCallSetVibeObjects(t *testing.T) {
 		require.Equal(r, []*examplev1.SomeVibeObject{{Vibe: "one"}}, req.GetVibeObject())
 	})
 
+	// Assert the result content exactly, against the fake backend's fixed
+	// response (see fakeVibeService.SetVibeObjects), so a handler that
+	// writes the wrong value (or drops the field) is caught instead of
+	// just checking the key exists.
 	var body map[string]any
 	require.NoError(t, json.Unmarshal([]byte(result.Text), &body))
-	require.Contains(t, body, "vibe_object")
+	require.Equal(t, []any{map[string]any{"vibe": "canned"}}, body["vibe_object"])
 }
 
 func TestCallSetVibe_GRPCError(t *testing.T) {
