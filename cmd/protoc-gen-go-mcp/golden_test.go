@@ -31,6 +31,7 @@ import (
 	"github.com/bufbuild/protocompile/protoutil"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/compiler/protogen"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/descriptorpb"
 	"google.golang.org/protobuf/types/pluginpb"
 )
@@ -47,9 +48,12 @@ const (
 	// write for examples/protos/example.proto.
 	goldenFilePath = "../../examples/gen/example/v1/example_mcp.pb.go"
 	// compilerMajor, compilerMinor and compilerPatch pin the protoc
-	// version recorded in the generated file's header comment (see the
-	// "- protoc" line). They must match the protoc version used to
-	// produce the committed golden file for the comparison to pass.
+	// version the generator writes verbatim into the generated file's
+	// header comment (the "- protoc" line; see generateFile in mcp.go).
+	// They must match the protoc version recorded in the committed
+	// golden file's header for the byte-for-byte comparison to pass;
+	// update them if the golden file is ever regenerated with a
+	// different protoc version.
 	compilerMajor = 5
 	compilerMinor = 29
 	compilerPatch = 3
@@ -71,9 +75,9 @@ func TestGolden(t *testing.T) {
 		FileToGenerate: []string{fileDescProto.GetName()},
 		ProtoFile:      []*descriptorpb.FileDescriptorProto{fileDescProto},
 		CompilerVersion: &pluginpb.Version{
-			Major: int32Ptr(compilerMajor),
-			Minor: int32Ptr(compilerMinor),
-			Patch: int32Ptr(compilerPatch),
+			Major: proto.Int32(compilerMajor),
+			Minor: proto.Int32(compilerMinor),
+			Patch: proto.Int32(compilerPatch),
 		},
 	}
 
@@ -99,5 +103,3 @@ func TestGolden(t *testing.T) {
 		"generated output does not match %s; if this change is intentional, run `go test ./cmd/protoc-gen-go-mcp -run Golden -update`",
 		goldenFilePath)
 }
-
-func int32Ptr(v int32) *int32 { return &v }
