@@ -1,0 +1,123 @@
+syntax = "proto3";
+
+package schemapb;
+
+option go_package = "cmd/protoc-gen-go-mcp/testdata/schemapb;schemapb";
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+
+// Color is a plain enum used to test enum schema generation.
+enum Color {
+  COLOR_UNSPECIFIED = 0;
+  COLOR_RED = 1;
+  COLOR_GREEN = 2;
+  COLOR_BLUE = 3;
+}
+
+// Node is a recursive message, used to test that recursive messages are
+// represented with $defs + $ref instead of looping forever.
+message Node {
+  // The value held by this node.
+  string value = 1;
+  // Child nodes.
+  repeated Node children = 2;
+}
+
+// Inner is a plain nested message with no recursion, used for the "nested
+// message" row.
+message Inner {
+  // A string field on the nested message.
+  string name = 1;
+}
+
+// AllScalars covers every scalar proto kind in the schema table.
+message AllScalars {
+  // A string field.
+  string s_string = 1;
+  // A bytes field.
+  bytes s_bytes = 2;
+  // A bool field.
+  bool s_bool = 3;
+  // An int32 field.
+  int32 s_int32 = 4;
+  // A sint32 field.
+  sint32 s_sint32 = 5;
+  // An sfixed32 field.
+  sfixed32 s_sfixed32 = 6;
+  // A uint32 field.
+  uint32 s_uint32 = 7;
+  // A fixed32 field.
+  fixed32 s_fixed32 = 8;
+  // An int64 field.
+  int64 s_int64 = 9;
+  // A sint64 field.
+  sint64 s_sint64 = 10;
+  // An sfixed64 field.
+  sfixed64 s_sfixed64 = 11;
+  // A uint64 field.
+  uint64 s_uint64 = 12;
+  // A fixed64 field.
+  fixed64 s_fixed64 = 13;
+  // A float field.
+  float s_float = 14;
+  // A double field.
+  double s_double = 15;
+}
+
+// SchemaTestMessage is the top-level request message used to test the
+// schema builder: it exercises every row of the schema table in the issue.
+message SchemaTestMessage {
+  // A plain string field.
+  string name = 1;
+
+  // A repeated scalar field.
+  repeated int32 numbers = 2;
+
+  // A map from string to an int32.
+  map<string, int32> counts = 3;
+
+  // A map from string to a message.
+  map<string, Inner> named_inners = 4;
+
+  // A nested (non-recursive) message field.
+  Inner inner = 5;
+
+  // A recursive message field.
+  Node root = 6;
+
+  // An enum field.
+  Color favorite_color = 7;
+
+  // A repeated enum field.
+  repeated Color colors = 8;
+
+  // A proto3 optional field: never required.
+  optional string nickname = 9;
+
+  // A oneof: its members are normal properties, never required.
+  oneof contact {
+    // Email address.
+    string email = 10;
+    // Phone number.
+    string phone = 11;
+  }
+
+  // Well-known types.
+
+  google.protobuf.Timestamp created_at = 12;
+  google.protobuf.Duration ttl = 13;
+  google.protobuf.StringValue nickname_wrapper = 14;
+  google.protobuf.Int32Value count_wrapper = 15;
+  google.protobuf.BoolValue flag_wrapper = 16;
+  google.protobuf.BytesValue blob_wrapper = 17;
+  google.protobuf.Struct metadata = 18;
+  google.protobuf.Value any_value = 19;
+  google.protobuf.ListValue any_list = 20;
+  google.protobuf.FieldMask update_mask = 21;
+  google.protobuf.Empty nothing = 22;
+}
