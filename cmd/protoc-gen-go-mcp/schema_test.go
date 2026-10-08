@@ -150,6 +150,17 @@ func TestMessageInputSchema_SchemaTestMessage(t *testing.T) {
 		assert.Contains(t, innerProps, "name")
 	})
 
+	t.Run("map to enum", func(t *testing.T) {
+		got := props["colorByName"]
+		m, ok := got.(JSONSchema)
+		require.True(t, ok)
+		assert.Equal(t, "object", m["type"])
+		valueSchema, ok := m["additionalProperties"].(JSONSchema)
+		require.True(t, ok)
+		assert.Equal(t, "string", valueSchema["type"])
+		assert.ElementsMatch(t, []any{"COLOR_UNSPECIFIED", "COLOR_RED", "COLOR_GREEN", "COLOR_BLUE"}, valueSchema["enum"])
+	})
+
 	t.Run("nested message", func(t *testing.T) {
 		got := props["inner"]
 		m, ok := got.(JSONSchema)
@@ -234,6 +245,11 @@ func TestMessageInputSchema_SchemaTestMessage(t *testing.T) {
 		{"anyList", JSONSchema{"type": "array"}},
 		{"updateMask", JSONSchema{"type": "string"}},
 		{"nothing", JSONSchema{"type": "object", "additionalProperties": false}},
+		{"scoreWrapper", JSONSchema{"type": "number"}},
+		{"ratioWrapper", JSONSchema{"type": "number"}},
+		{"bigCountWrapper", JSONSchema{"type": []any{"integer", "string"}}},
+		{"bigUnsignedWrapper", JSONSchema{"type": []any{"integer", "string"}, "minimum": 0}},
+		{"smallUnsignedWrapper", JSONSchema{"type": "integer", "minimum": 0}},
 	}
 	for _, c := range wktCases {
 		t.Run("well-known type "+c.field, func(t *testing.T) {
@@ -314,6 +330,9 @@ func randomSchemaTestMessage(r *rand.Rand, depth int) *schemapb.SchemaTestMessag
 	if depth < 2 && r.Intn(2) == 0 {
 		m.NamedInners = map[string]*schemapb.Inner{"x": {Name: randomString(r)}}
 	}
+	if r.Intn(2) == 0 {
+		m.ColorByName = map[string]schemapb.Color{"favorite": randomColor(r)}
+	}
 	if depth < 2 && r.Intn(2) == 0 {
 		m.Inner = &schemapb.Inner{Name: randomString(r)}
 	}
@@ -327,10 +346,15 @@ func randomSchemaTestMessage(r *rand.Rand, depth int) *schemapb.SchemaTestMessag
 		nick := randomString(r)
 		m.Nickname = &nick
 	}
-	if r.Intn(2) == 0 {
+	// The oneof is left unset about a third of the time, since that is a
+	// valid (and common) state that the schema must also accept.
+	switch r.Intn(3) {
+	case 0:
 		m.Contact = &schemapb.SchemaTestMessage_Email{Email: randomString(r)}
-	} else {
+	case 1:
 		m.Contact = &schemapb.SchemaTestMessage_Phone{Phone: randomString(r)}
+	case 2:
+		// leave Contact nil
 	}
 
 	// Well-known types: populate them (instead of leaving them nil) on about
@@ -359,6 +383,11 @@ func randomSchemaTestMessage(r *rand.Rand, depth int) *schemapb.SchemaTestMessag
 		}
 		m.AnyList = lv
 		m.UpdateMask = &fieldmaskpb.FieldMask{Paths: []string{"name", "root.value"}}
+		m.ScoreWrapper = wrapperspb.Double(r.Float64())
+		m.RatioWrapper = wrapperspb.Float(float32(r.Float64()))
+		m.BigCountWrapper = wrapperspb.Int64(r.Int63())
+		m.BigUnsignedWrapper = wrapperspb.UInt64(uint64(r.Int63()))
+		m.SmallUnsignedWrapper = wrapperspb.UInt32(r.Uint32())
 	}
 	return m
 }

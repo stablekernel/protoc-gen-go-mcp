@@ -118,15 +118,17 @@ func (b *schemaBuilder) messageSchema(msg *protogen.Message) JSONSchema {
 		schema["description"] = desc
 	}
 
-	// If this message turned out to be recursive, remember its schema under
-	// $defs and have the first reference point back to it too, so every
-	// occurrence (including the top-level one, when msg is itself
-	// recursive and reached again elsewhere) is consistent.
+	// Remember this message's schema under $defs regardless of whether it
+	// turns out to be recursive, so a later recursive reference (reached
+	// through some other field) can still find it; MessageInputSchema only
+	// keeps the entries actually marked in b.refs in the final output.
+	b.defs[fullName] = schema
+
+	// If this message turned out to be recursive, the first (and every)
+	// occurrence should point at the $defs entry instead of inlining it.
 	if b.refs[fullName] {
-		b.defs[fullName] = schema
 		return refSchema(fullName)
 	}
-	b.defs[fullName] = schema
 	return schema
 }
 
@@ -159,29 +161,47 @@ func (b *schemaBuilder) fieldSchema(field *protogen.Field) JSONSchema {
 	desc := field.Desc
 
 	if desc.IsMap() {
-		valueSchema := b.kindSchema(field, desc.MapValue())
+		// field.Message is the synthetic map-entry message; its second field
+		// ("value", field number 2 by the map-entry wire-format convention)
+		// is the protogen.Field that actually carries the map's value type,
+		// including, for enum or message values, the Enum/Message links that
+		// protoreflect.FieldDescriptor.MapValue alone does not provide.
+		valueField := mapValueField(field)
 		return JSONSchema{
 			"type":                 "object",
-			"additionalProperties": valueSchema,
+			"additionalProperties": b.kindSchema(valueField),
 		}
 	}
 
 	if desc.IsList() {
 		return JSONSchema{
 			"type":  "array",
-			"items": b.kindSchema(field, desc),
+			"items": b.kindSchema(field),
 		}
 	}
 
-	return b.kindSchema(field, desc)
+	return b.kindSchema(field)
+}
+
+// mapValueField returns the protogen.Field describing the value type of a
+// map field (field.Message.Fields[1], the "value" field of the synthetic
+// map-entry message, conventionally field number 2).
+func mapValueField(field *protogen.Field) *protogen.Field {
+	for _, f := range field.Message.Fields {
+		if f.Desc.Number() == 2 {
+			return f
+		}
+	}
+	// Unreachable for a well-formed map field: every map-entry message has
+	// exactly a "key" (1) and "value" (2) field.
+	panic(fmt.Sprintf("map field %q has no value (number 2) field", field.Desc.FullName()))
 }
 
 // kindSchema returns the schema for a single (non-repeated, non-map) value
-// of the given field descriptor's kind. field is the protogen.Field that
-// fd was derived from (itself, or its map value), used to reach the
-// corresponding *protogen.Message/*protogen.Enum for message/enum kinds.
-func (b *schemaBuilder) kindSchema(field *protogen.Field, fd protoreflect.FieldDescriptor) JSONSchema {
-	switch fd.Kind() {
+// described by field: field itself for an ordinary or repeated field, or
+// the value field obtained from mapValueField for a map field.
+func (b *schemaBuilder) kindSchema(field *protogen.Field) JSONSchema {
+	switch field.Desc.Kind() {
 	case protoreflect.BoolKind:
 		return JSONSchema{"type": "boolean"}
 	case protoreflect.StringKind:
@@ -201,34 +221,11 @@ func (b *schemaBuilder) kindSchema(field *protogen.Field, fd protoreflect.FieldD
 	case protoreflect.EnumKind:
 		return b.enumSchema(field.Enum)
 	case protoreflect.MessageKind, protoreflect.GroupKind:
-		return b.messageSchemaForField(field)
+		return b.messageSchema(field.Message)
 	default:
 		// Should be unreachable for a valid FieldDescriptor.
 		return JSONSchema{}
 	}
-}
-
-// messageSchemaForField resolves the *protogen.Message that corresponds to
-// field's message kind. For a map field, field.Message is the synthetic
-// map-entry message, not the value message, so the caller must instead pass
-// a field that already points at the value; messageSchemaForField handles
-// both the plain-message and map-value cases by preferring the explicit
-// value message when the field itself is a map.
-func (b *schemaBuilder) messageSchemaForField(field *protogen.Field) JSONSchema {
-	msg := field.Message
-	if field.Desc.IsMap() {
-		// field.Message is the map-entry message; its second field ("value")
-		// has the real value message, if any.
-		for _, f := range field.Message.Fields {
-			if f.Desc.Number() == 2 {
-				msg = f.Message
-			}
-		}
-	}
-	if msg == nil {
-		return JSONSchema{}
-	}
-	return b.messageSchema(msg)
 }
 
 // enumSchema returns the schema for an enum: a string restricted to the
@@ -271,8 +268,10 @@ func wellKnownTypeSchema(fullName protoreflect.FullName) JSONSchema {
 		return JSONSchema{"type": "object", "additionalProperties": false}
 	case wktDoubleValue, wktFloatValue:
 		return JSONSchema{"type": "number"}
-	case wktInt64Value, wktUInt64Value:
+	case wktInt64Value:
 		return JSONSchema{"type": []any{"integer", "string"}}
+	case wktUInt64Value:
+		return JSONSchema{"type": []any{"integer", "string"}, "minimum": 0}
 	case wktInt32Value:
 		return JSONSchema{"type": "integer"}
 	case wktUInt32Value:

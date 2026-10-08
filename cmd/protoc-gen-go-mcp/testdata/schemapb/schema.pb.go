@@ -367,6 +367,8 @@ type SchemaTestMessage struct {
 	Counts map[string]int32 `protobuf:"bytes,3,rep,name=counts,proto3" json:"counts,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
 	// A map from string to a message.
 	NamedInners map[string]*Inner `protobuf:"bytes,4,rep,name=named_inners,json=namedInners,proto3" json:"named_inners,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// A map from string to an enum.
+	ColorByName map[string]Color `protobuf:"bytes,23,rep,name=color_by_name,json=colorByName,proto3" json:"color_by_name,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value,enum=schemapb.Color"`
 	// A nested (non-recursive) message field.
 	Inner *Inner `protobuf:"bytes,5,opt,name=inner,proto3" json:"inner,omitempty"`
 	// A recursive message field.
@@ -383,20 +385,25 @@ type SchemaTestMessage struct {
 	//
 	//	*SchemaTestMessage_Email
 	//	*SchemaTestMessage_Phone
-	Contact         isSchemaTestMessage_Contact `protobuf_oneof:"contact"`
-	CreatedAt       *timestamppb.Timestamp      `protobuf:"bytes,12,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	Ttl             *durationpb.Duration        `protobuf:"bytes,13,opt,name=ttl,proto3" json:"ttl,omitempty"`
-	NicknameWrapper *wrapperspb.StringValue     `protobuf:"bytes,14,opt,name=nickname_wrapper,json=nicknameWrapper,proto3" json:"nickname_wrapper,omitempty"`
-	CountWrapper    *wrapperspb.Int32Value      `protobuf:"bytes,15,opt,name=count_wrapper,json=countWrapper,proto3" json:"count_wrapper,omitempty"`
-	FlagWrapper     *wrapperspb.BoolValue       `protobuf:"bytes,16,opt,name=flag_wrapper,json=flagWrapper,proto3" json:"flag_wrapper,omitempty"`
-	BlobWrapper     *wrapperspb.BytesValue      `protobuf:"bytes,17,opt,name=blob_wrapper,json=blobWrapper,proto3" json:"blob_wrapper,omitempty"`
-	Metadata        *structpb.Struct            `protobuf:"bytes,18,opt,name=metadata,proto3" json:"metadata,omitempty"`
-	AnyValue        *structpb.Value             `protobuf:"bytes,19,opt,name=any_value,json=anyValue,proto3" json:"any_value,omitempty"`
-	AnyList         *structpb.ListValue         `protobuf:"bytes,20,opt,name=any_list,json=anyList,proto3" json:"any_list,omitempty"`
-	UpdateMask      *fieldmaskpb.FieldMask      `protobuf:"bytes,21,opt,name=update_mask,json=updateMask,proto3" json:"update_mask,omitempty"`
-	Nothing         *emptypb.Empty              `protobuf:"bytes,22,opt,name=nothing,proto3" json:"nothing,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	Contact              isSchemaTestMessage_Contact `protobuf_oneof:"contact"`
+	CreatedAt            *timestamppb.Timestamp      `protobuf:"bytes,12,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	Ttl                  *durationpb.Duration        `protobuf:"bytes,13,opt,name=ttl,proto3" json:"ttl,omitempty"`
+	NicknameWrapper      *wrapperspb.StringValue     `protobuf:"bytes,14,opt,name=nickname_wrapper,json=nicknameWrapper,proto3" json:"nickname_wrapper,omitempty"`
+	CountWrapper         *wrapperspb.Int32Value      `protobuf:"bytes,15,opt,name=count_wrapper,json=countWrapper,proto3" json:"count_wrapper,omitempty"`
+	FlagWrapper          *wrapperspb.BoolValue       `protobuf:"bytes,16,opt,name=flag_wrapper,json=flagWrapper,proto3" json:"flag_wrapper,omitempty"`
+	BlobWrapper          *wrapperspb.BytesValue      `protobuf:"bytes,17,opt,name=blob_wrapper,json=blobWrapper,proto3" json:"blob_wrapper,omitempty"`
+	Metadata             *structpb.Struct            `protobuf:"bytes,18,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	AnyValue             *structpb.Value             `protobuf:"bytes,19,opt,name=any_value,json=anyValue,proto3" json:"any_value,omitempty"`
+	AnyList              *structpb.ListValue         `protobuf:"bytes,20,opt,name=any_list,json=anyList,proto3" json:"any_list,omitempty"`
+	UpdateMask           *fieldmaskpb.FieldMask      `protobuf:"bytes,21,opt,name=update_mask,json=updateMask,proto3" json:"update_mask,omitempty"`
+	Nothing              *emptypb.Empty              `protobuf:"bytes,22,opt,name=nothing,proto3" json:"nothing,omitempty"`
+	ScoreWrapper         *wrapperspb.DoubleValue     `protobuf:"bytes,24,opt,name=score_wrapper,json=scoreWrapper,proto3" json:"score_wrapper,omitempty"`
+	RatioWrapper         *wrapperspb.FloatValue      `protobuf:"bytes,25,opt,name=ratio_wrapper,json=ratioWrapper,proto3" json:"ratio_wrapper,omitempty"`
+	BigCountWrapper      *wrapperspb.Int64Value      `protobuf:"bytes,26,opt,name=big_count_wrapper,json=bigCountWrapper,proto3" json:"big_count_wrapper,omitempty"`
+	BigUnsignedWrapper   *wrapperspb.UInt64Value     `protobuf:"bytes,27,opt,name=big_unsigned_wrapper,json=bigUnsignedWrapper,proto3" json:"big_unsigned_wrapper,omitempty"`
+	SmallUnsignedWrapper *wrapperspb.UInt32Value     `protobuf:"bytes,28,opt,name=small_unsigned_wrapper,json=smallUnsignedWrapper,proto3" json:"small_unsigned_wrapper,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
 }
 
 func (x *SchemaTestMessage) Reset() {
@@ -453,6 +460,13 @@ func (x *SchemaTestMessage) GetCounts() map[string]int32 {
 func (x *SchemaTestMessage) GetNamedInners() map[string]*Inner {
 	if x != nil {
 		return x.NamedInners
+	}
+	return nil
+}
+
+func (x *SchemaTestMessage) GetColorByName() map[string]Color {
+	if x != nil {
+		return x.ColorByName
 	}
 	return nil
 }
@@ -594,6 +608,41 @@ func (x *SchemaTestMessage) GetNothing() *emptypb.Empty {
 	return nil
 }
 
+func (x *SchemaTestMessage) GetScoreWrapper() *wrapperspb.DoubleValue {
+	if x != nil {
+		return x.ScoreWrapper
+	}
+	return nil
+}
+
+func (x *SchemaTestMessage) GetRatioWrapper() *wrapperspb.FloatValue {
+	if x != nil {
+		return x.RatioWrapper
+	}
+	return nil
+}
+
+func (x *SchemaTestMessage) GetBigCountWrapper() *wrapperspb.Int64Value {
+	if x != nil {
+		return x.BigCountWrapper
+	}
+	return nil
+}
+
+func (x *SchemaTestMessage) GetBigUnsignedWrapper() *wrapperspb.UInt64Value {
+	if x != nil {
+		return x.BigUnsignedWrapper
+	}
+	return nil
+}
+
+func (x *SchemaTestMessage) GetSmallUnsignedWrapper() *wrapperspb.UInt32Value {
+	if x != nil {
+		return x.SmallUnsignedWrapper
+	}
+	return nil
+}
+
 type isSchemaTestMessage_Contact interface {
 	isSchemaTestMessage_Contact()
 }
@@ -641,12 +690,13 @@ const file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_rawDesc = "" +
 	"\bs_uint64\x18\f \x01(\x04R\asUint64\x12\x1b\n" +
 	"\ts_fixed64\x18\r \x01(\x06R\bsFixed64\x12\x17\n" +
 	"\as_float\x18\x0e \x01(\x02R\x06sFloat\x12\x19\n" +
-	"\bs_double\x18\x0f \x01(\x01R\asDouble\"\xf6\t\n" +
+	"\bs_double\x18\x0f \x01(\x01R\asDouble\"\x8b\x0e\n" +
 	"\x11SchemaTestMessage\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x18\n" +
 	"\anumbers\x18\x02 \x03(\x05R\anumbers\x12?\n" +
 	"\x06counts\x18\x03 \x03(\v2'.schemapb.SchemaTestMessage.CountsEntryR\x06counts\x12O\n" +
-	"\fnamed_inners\x18\x04 \x03(\v2,.schemapb.SchemaTestMessage.NamedInnersEntryR\vnamedInners\x12%\n" +
+	"\fnamed_inners\x18\x04 \x03(\v2,.schemapb.SchemaTestMessage.NamedInnersEntryR\vnamedInners\x12P\n" +
+	"\rcolor_by_name\x18\x17 \x03(\v2,.schemapb.SchemaTestMessage.ColorByNameEntryR\vcolorByName\x12%\n" +
 	"\x05inner\x18\x05 \x01(\v2\x0f.schemapb.InnerR\x05inner\x12\"\n" +
 	"\x04root\x18\x06 \x01(\v2\x0e.schemapb.NodeR\x04root\x126\n" +
 	"\x0efavorite_color\x18\a \x01(\x0e2\x0f.schemapb.ColorR\rfavoriteColor\x12'\n" +
@@ -667,13 +717,21 @@ const file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_rawDesc = "" +
 	"\bany_list\x18\x14 \x01(\v2\x1a.google.protobuf.ListValueR\aanyList\x12;\n" +
 	"\vupdate_mask\x18\x15 \x01(\v2\x1a.google.protobuf.FieldMaskR\n" +
 	"updateMask\x120\n" +
-	"\anothing\x18\x16 \x01(\v2\x16.google.protobuf.EmptyR\anothing\x1a9\n" +
+	"\anothing\x18\x16 \x01(\v2\x16.google.protobuf.EmptyR\anothing\x12A\n" +
+	"\rscore_wrapper\x18\x18 \x01(\v2\x1c.google.protobuf.DoubleValueR\fscoreWrapper\x12@\n" +
+	"\rratio_wrapper\x18\x19 \x01(\v2\x1b.google.protobuf.FloatValueR\fratioWrapper\x12G\n" +
+	"\x11big_count_wrapper\x18\x1a \x01(\v2\x1b.google.protobuf.Int64ValueR\x0fbigCountWrapper\x12N\n" +
+	"\x14big_unsigned_wrapper\x18\x1b \x01(\v2\x1c.google.protobuf.UInt64ValueR\x12bigUnsignedWrapper\x12R\n" +
+	"\x16small_unsigned_wrapper\x18\x1c \x01(\v2\x1c.google.protobuf.UInt32ValueR\x14smallUnsignedWrapper\x1a9\n" +
 	"\vCountsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\x1aO\n" +
 	"\x10NamedInnersEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12%\n" +
-	"\x05value\x18\x02 \x01(\v2\x0f.schemapb.InnerR\x05value:\x028\x01B\t\n" +
+	"\x05value\x18\x02 \x01(\v2\x0f.schemapb.InnerR\x05value:\x028\x01\x1aO\n" +
+	"\x10ColorByNameEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12%\n" +
+	"\x05value\x18\x02 \x01(\x0e2\x0f.schemapb.ColorR\x05value:\x028\x01B\t\n" +
 	"\acontactB\v\n" +
 	"\t_nickname*N\n" +
 	"\x05Color\x12\x15\n" +
@@ -696,7 +754,7 @@ func file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_rawDescGZIP() []b
 }
 
 var file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_goTypes = []any{
 	(Color)(0),                     // 0: schemapb.Color
 	(*Node)(nil),                   // 1: schemapb.Node
@@ -705,43 +763,56 @@ var file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_goTypes = []any{
 	(*SchemaTestMessage)(nil),      // 4: schemapb.SchemaTestMessage
 	nil,                            // 5: schemapb.SchemaTestMessage.CountsEntry
 	nil,                            // 6: schemapb.SchemaTestMessage.NamedInnersEntry
-	(*timestamppb.Timestamp)(nil),  // 7: google.protobuf.Timestamp
-	(*durationpb.Duration)(nil),    // 8: google.protobuf.Duration
-	(*wrapperspb.StringValue)(nil), // 9: google.protobuf.StringValue
-	(*wrapperspb.Int32Value)(nil),  // 10: google.protobuf.Int32Value
-	(*wrapperspb.BoolValue)(nil),   // 11: google.protobuf.BoolValue
-	(*wrapperspb.BytesValue)(nil),  // 12: google.protobuf.BytesValue
-	(*structpb.Struct)(nil),        // 13: google.protobuf.Struct
-	(*structpb.Value)(nil),         // 14: google.protobuf.Value
-	(*structpb.ListValue)(nil),     // 15: google.protobuf.ListValue
-	(*fieldmaskpb.FieldMask)(nil),  // 16: google.protobuf.FieldMask
-	(*emptypb.Empty)(nil),          // 17: google.protobuf.Empty
+	nil,                            // 7: schemapb.SchemaTestMessage.ColorByNameEntry
+	(*timestamppb.Timestamp)(nil),  // 8: google.protobuf.Timestamp
+	(*durationpb.Duration)(nil),    // 9: google.protobuf.Duration
+	(*wrapperspb.StringValue)(nil), // 10: google.protobuf.StringValue
+	(*wrapperspb.Int32Value)(nil),  // 11: google.protobuf.Int32Value
+	(*wrapperspb.BoolValue)(nil),   // 12: google.protobuf.BoolValue
+	(*wrapperspb.BytesValue)(nil),  // 13: google.protobuf.BytesValue
+	(*structpb.Struct)(nil),        // 14: google.protobuf.Struct
+	(*structpb.Value)(nil),         // 15: google.protobuf.Value
+	(*structpb.ListValue)(nil),     // 16: google.protobuf.ListValue
+	(*fieldmaskpb.FieldMask)(nil),  // 17: google.protobuf.FieldMask
+	(*emptypb.Empty)(nil),          // 18: google.protobuf.Empty
+	(*wrapperspb.DoubleValue)(nil), // 19: google.protobuf.DoubleValue
+	(*wrapperspb.FloatValue)(nil),  // 20: google.protobuf.FloatValue
+	(*wrapperspb.Int64Value)(nil),  // 21: google.protobuf.Int64Value
+	(*wrapperspb.UInt64Value)(nil), // 22: google.protobuf.UInt64Value
+	(*wrapperspb.UInt32Value)(nil), // 23: google.protobuf.UInt32Value
 }
 var file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_depIdxs = []int32{
 	1,  // 0: schemapb.Node.children:type_name -> schemapb.Node
 	5,  // 1: schemapb.SchemaTestMessage.counts:type_name -> schemapb.SchemaTestMessage.CountsEntry
 	6,  // 2: schemapb.SchemaTestMessage.named_inners:type_name -> schemapb.SchemaTestMessage.NamedInnersEntry
-	2,  // 3: schemapb.SchemaTestMessage.inner:type_name -> schemapb.Inner
-	1,  // 4: schemapb.SchemaTestMessage.root:type_name -> schemapb.Node
-	0,  // 5: schemapb.SchemaTestMessage.favorite_color:type_name -> schemapb.Color
-	0,  // 6: schemapb.SchemaTestMessage.colors:type_name -> schemapb.Color
-	7,  // 7: schemapb.SchemaTestMessage.created_at:type_name -> google.protobuf.Timestamp
-	8,  // 8: schemapb.SchemaTestMessage.ttl:type_name -> google.protobuf.Duration
-	9,  // 9: schemapb.SchemaTestMessage.nickname_wrapper:type_name -> google.protobuf.StringValue
-	10, // 10: schemapb.SchemaTestMessage.count_wrapper:type_name -> google.protobuf.Int32Value
-	11, // 11: schemapb.SchemaTestMessage.flag_wrapper:type_name -> google.protobuf.BoolValue
-	12, // 12: schemapb.SchemaTestMessage.blob_wrapper:type_name -> google.protobuf.BytesValue
-	13, // 13: schemapb.SchemaTestMessage.metadata:type_name -> google.protobuf.Struct
-	14, // 14: schemapb.SchemaTestMessage.any_value:type_name -> google.protobuf.Value
-	15, // 15: schemapb.SchemaTestMessage.any_list:type_name -> google.protobuf.ListValue
-	16, // 16: schemapb.SchemaTestMessage.update_mask:type_name -> google.protobuf.FieldMask
-	17, // 17: schemapb.SchemaTestMessage.nothing:type_name -> google.protobuf.Empty
-	2,  // 18: schemapb.SchemaTestMessage.NamedInnersEntry.value:type_name -> schemapb.Inner
-	19, // [19:19] is the sub-list for method output_type
-	19, // [19:19] is the sub-list for method input_type
-	19, // [19:19] is the sub-list for extension type_name
-	19, // [19:19] is the sub-list for extension extendee
-	0,  // [0:19] is the sub-list for field type_name
+	7,  // 3: schemapb.SchemaTestMessage.color_by_name:type_name -> schemapb.SchemaTestMessage.ColorByNameEntry
+	2,  // 4: schemapb.SchemaTestMessage.inner:type_name -> schemapb.Inner
+	1,  // 5: schemapb.SchemaTestMessage.root:type_name -> schemapb.Node
+	0,  // 6: schemapb.SchemaTestMessage.favorite_color:type_name -> schemapb.Color
+	0,  // 7: schemapb.SchemaTestMessage.colors:type_name -> schemapb.Color
+	8,  // 8: schemapb.SchemaTestMessage.created_at:type_name -> google.protobuf.Timestamp
+	9,  // 9: schemapb.SchemaTestMessage.ttl:type_name -> google.protobuf.Duration
+	10, // 10: schemapb.SchemaTestMessage.nickname_wrapper:type_name -> google.protobuf.StringValue
+	11, // 11: schemapb.SchemaTestMessage.count_wrapper:type_name -> google.protobuf.Int32Value
+	12, // 12: schemapb.SchemaTestMessage.flag_wrapper:type_name -> google.protobuf.BoolValue
+	13, // 13: schemapb.SchemaTestMessage.blob_wrapper:type_name -> google.protobuf.BytesValue
+	14, // 14: schemapb.SchemaTestMessage.metadata:type_name -> google.protobuf.Struct
+	15, // 15: schemapb.SchemaTestMessage.any_value:type_name -> google.protobuf.Value
+	16, // 16: schemapb.SchemaTestMessage.any_list:type_name -> google.protobuf.ListValue
+	17, // 17: schemapb.SchemaTestMessage.update_mask:type_name -> google.protobuf.FieldMask
+	18, // 18: schemapb.SchemaTestMessage.nothing:type_name -> google.protobuf.Empty
+	19, // 19: schemapb.SchemaTestMessage.score_wrapper:type_name -> google.protobuf.DoubleValue
+	20, // 20: schemapb.SchemaTestMessage.ratio_wrapper:type_name -> google.protobuf.FloatValue
+	21, // 21: schemapb.SchemaTestMessage.big_count_wrapper:type_name -> google.protobuf.Int64Value
+	22, // 22: schemapb.SchemaTestMessage.big_unsigned_wrapper:type_name -> google.protobuf.UInt64Value
+	23, // 23: schemapb.SchemaTestMessage.small_unsigned_wrapper:type_name -> google.protobuf.UInt32Value
+	2,  // 24: schemapb.SchemaTestMessage.NamedInnersEntry.value:type_name -> schemapb.Inner
+	0,  // 25: schemapb.SchemaTestMessage.ColorByNameEntry.value:type_name -> schemapb.Color
+	26, // [26:26] is the sub-list for method output_type
+	26, // [26:26] is the sub-list for method input_type
+	26, // [26:26] is the sub-list for extension type_name
+	26, // [26:26] is the sub-list for extension extendee
+	0,  // [0:26] is the sub-list for field type_name
 }
 
 func init() { file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_init() }
@@ -759,7 +830,7 @@ func file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_rawDesc), len(file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   6,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

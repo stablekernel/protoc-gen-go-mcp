@@ -84,6 +84,9 @@ message SchemaTestMessage {
   // A map from string to a message.
   map<string, Inner> named_inners = 4;
 
+  // A map from string to an enum.
+  map<string, Color> color_by_name = 23;
+
   // A nested (non-recursive) message field.
   Inner inner = 5;
 
@@ -120,4 +123,9 @@ message SchemaTestMessage {
   google.protobuf.ListValue any_list = 20;
   google.protobuf.FieldMask update_mask = 21;
   google.protobuf.Empty nothing = 22;
+  google.protobuf.DoubleValue score_wrapper = 24;
+  google.protobuf.FloatValue ratio_wrapper = 25;
+  google.protobuf.Int64Value big_count_wrapper = 26;
+  google.protobuf.UInt64Value big_unsigned_wrapper = 27;
+  google.protobuf.UInt32Value small_unsigned_wrapper = 28;
 }
