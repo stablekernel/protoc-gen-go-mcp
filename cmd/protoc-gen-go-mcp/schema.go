@@ -36,9 +36,10 @@ type JSONSchema map[string]any
 
 // schemaBuilder turns protogen.Message descriptors into JSON Schemas that
 // describe exactly what protojson.Unmarshal accepts for that message. It
-// caches message schemas so recursive and repeated message types are only
-// computed once, and represents recursive messages with "$defs" + "$ref"
-// instead of infinitely inlining them.
+// detects messages that are part of a reference cycle and represents them
+// with "$defs" + "$ref" instead of infinitely inlining them; other message
+// types are inlined at every occurrence, even when referenced more than
+// once.
 type schemaBuilder struct {
 	// defs holds the schema for every message that is either recursive or
 	// referenced more than once, keyed by the message's proto full name.

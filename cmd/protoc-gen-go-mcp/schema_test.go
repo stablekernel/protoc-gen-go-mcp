@@ -107,6 +107,8 @@ func TestMessageInputSchema_AllScalars(t *testing.T) {
 	assert.Equal(t, "object", schema["type"])
 	assert.Equal(t, false, schema["additionalProperties"])
 	assert.NotContains(t, schema, "required", "proto3 messages must not emit \"required\"")
+	assert.Equal(t, "AllScalars covers every scalar proto kind in the schema table.", schema["description"],
+		"message-level description should come from the message's leading comment")
 }
 
 func TestMessageInputSchema_SchemaTestMessage(t *testing.T) {
