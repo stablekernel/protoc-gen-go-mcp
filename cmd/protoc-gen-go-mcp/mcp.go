@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"google.golang.org/protobuf/compiler/protogen"
@@ -15,25 +17,14 @@ const fileDescriptorProtoPackageFieldNumber = 2
 // FileDescriptorProto.syntax field number
 const fileDescriptorProtoSyntaxFieldNumber = 12
 
-const grpcPackage = protogen.GoImportPath("google.golang.org/grpc")
 const contextPackage = protogen.GoImportPath("context")
-const mcpPackage = protogen.GoImportPath("github.com/mark3labs/mcp-go/mcp")
-const mcpServerPackage = protogen.GoImportPath("github.com/mark3labs/mcp-go/server")
 const jsonPackage = protogen.GoImportPath("encoding/json")
+const mcpPackage = protogen.GoImportPath("github.com/modelcontextprotocol/go-sdk/mcp")
+const protojsonPackage = protogen.GoImportPath("google.golang.org/protobuf/encoding/protojson")
 
-var specialCastTypes = map[string]string{
-	"bytes":    "[]byte",
-	"double":   "float64",
-	"fixed32":  "uint32",
-	"fixed64":  "uint64",
-	"float":    "float32",
-	"sfixed32": "int32",
-	"sfixed64": "int64",
-	"sint32":   "int32",
-	"sint64":   "int64",
-}
-
-// generateFile generates a _grpc.pb.go file containing gRPC service definitions.
+// generateFile generates a _mcp.pb.go file containing, for each gRPC service
+// in file, an MCP server that exposes each non-streaming RPC as an MCP tool
+// and forwards tool calls to a gRPC client.
 func generateFile(gen *protogen.Plugin, file *protogen.File) *protogen.GeneratedFile {
 	if len(file.Services) == 0 {
 		return nil
@@ -83,7 +74,7 @@ func generateMcpServerService(g *protogen.GeneratedFile, service *protogen.Servi
 
 	g.P("func ", constructorName, "(")
 	g.P("client ", clientName, ",")
-	g.P("mcpServer *", mcpServerPackage.Ident("MCPServer"), ",")
+	g.P("mcpServer *", mcpPackage.Ident("Server"), ",")
 	g.P(") *", serverStructName, " {")
 	g.P("return &", serverStructName, "{")
 	g.P("", clientName, ": client,")
@@ -101,9 +92,9 @@ func generateMcpServerHandlers(g *protogen.GeneratedFile, service *protogen.Serv
 			// TODO: Evaluate support of streaming methods
 		} else {
 			methods = append(methods, method)
-			generateHandler(g, method, mcpServerName, clientName)
-			g.P()
 			generateMCPTool(g, method, mcpServerName)
+			g.P()
+			generateHandler(g, method, mcpServerName, clientName)
 			g.P()
 		}
 	}
@@ -112,261 +103,77 @@ func generateMcpServerHandlers(g *protogen.GeneratedFile, service *protogen.Serv
 	generateDefaultToolsRegistration(g, methods, mcpServerName)
 }
 
+// generateMCPTool emits a method that builds the *mcp.Tool for method: its
+// name, description (from the method's leading comment, falling back to a
+// space-separated version of its Go name), and input schema (the JSON
+// Schema for the request message, from MessageInputSchema, embedded as a
+// json.RawMessage literal so mcp.AddTool validates arguments against it
+// instead of inferring a schema from the handler's argument type).
 func generateMCPTool(g *protogen.GeneratedFile, method *protogen.Method, mcpServerName string) {
-	g.P("func (s *", unexport(mcpServerName), ") ", method.GoName, "Tool() (", mcpPackage.Ident("Tool"), ") {")
-
 	methodDescription := ""
 	if len(method.Comments.Leading) > 0 {
 		methodDescription = processCommentToString(method.Comments.Leading)
 	} else {
 		methodDescription = camelToSpace(method.GoName)
 	}
-	g.P("tool := mcp.NewTool(")
-	g.P("\"", method.GoName, "\", mcp.WithDescription(\"", methodDescription, "\"),")
-	if method.Input != nil {
-		if len(method.Input.Fields) > 0 {
-			generateMCPToolField(g, method.Input)
-		}
+
+	schema := MessageInputSchema(method.Input)
+	schemaJSON, err := json.Marshal(schema)
+	if err != nil {
+		// Unreachable: schema is built entirely out of maps, slices and
+		// JSON-safe scalars (see schema.go), none of which json.Marshal can
+		// fail on.
+		panic(fmt.Sprintf("marshaling input schema for %s: %v", method.Input.Desc.FullName(), err))
 	}
-	g.P(")")
-	g.P("return tool")
+
+	g.P("func (s *", unexport(mcpServerName), ") ", method.GoName, "Tool() *", mcpPackage.Ident("Tool"), " {")
+	g.P("return &", mcpPackage.Ident("Tool"), "{")
+	g.P("Name: \"", method.GoName, "\",")
+	g.P("Description: \"", methodDescription, "\",")
+	g.P("InputSchema: ", jsonPackage.Ident("RawMessage"), "(", quoteBacktickString(string(schemaJSON)), "),")
+	g.P("}")
 	g.P("}")
 }
 
-func generateMCPToolField(g *protogen.GeneratedFile, input *protogen.Message) {
-	g.P("mcp.WithObject(")
-	g.P("\"", input.Desc.Name(), "\",")
-	g.P("mcp.Description(\"", processCommentToString(input.Comments.Leading), "\"),")
-	g.P("mcp.Properties(map[string]any{")
-	for _, messageField := range input.Fields {
-		generateMCPPropertyForField(g, messageField)
-	}
-	g.P("}),")
-	g.P("),")
-}
-
-func generateMCPPropertyForField(g *protogen.GeneratedFile, field *protogen.Field) {
-	g.P("\"", field.Desc.Name(), "\": map[string]any{")
-	typeName := field.Desc.Kind().String()
-	switch field.Desc.Kind().String() {
-	case "double", "float", "int32", "int64", "uint32", "uint64", "sint32", "sint64", "fixed32", "fixed64", "sfixed32", "sfixed64":
-		typeName = "number"
-	case "bool":
-		typeName = "boolean"
-	case "bytes":
-		typeName = "string"
-	}
-	if field.Desc.IsList() {
-		typeName = "array"
-	}
-	g.P("\"type\": \"", typeName, "\",")
-	description := ""
-	if field.Comments.Leading != "" {
-		description = processCommentToString(field.Comments.Leading)
-	} else {
-		description = camelToSpace(field.GoName)
-	}
-	g.P("\"description\": \"", description, "\",")
-	if field.Desc.HasOptionalKeyword() {
-		g.P("\"required\": false,")
-	} else {
-		g.P("\"required\": true,")
-	}
-	if field.Desc.Kind().String() == "bytes" {
-		g.P("\"format\": \"byte\",")
-	}
-	g.P("},")
-}
-
+// generateHandler emits the typed tool handler for method: it decodes the
+// raw JSON arguments into the request message with protojson.Unmarshal (the
+// SDK has already validated them against the schema generateMCPTool emits),
+// calls the gRPC client, and returns the response as protojson text, or the
+// gRPC error as a tool error.
 func generateHandler(g *protogen.GeneratedFile, method *protogen.Method, mcpServerName string, clientName string) {
-	g.QualifiedGoIdent(jsonPackage.Ident("Marshal"))
+	g.P("func (s *", unexport(mcpServerName), ") ", method.GoName, "Handler(ctx ", contextPackage.Ident("Context"), ", req *", mcpPackage.Ident("CallToolRequest"), ", args ", jsonPackage.Ident("RawMessage"), ") (*", mcpPackage.Ident("CallToolResult"), ", any, error) {")
 
-	g.P("func (s *", unexport(mcpServerName), ") ", method.GoName, "Handler(ctx ", contextPackage.Ident("Context"), ", req ", mcpPackage.Ident("CallToolRequest"), ") (", QualifiedGoIdentPointer(g, mcpPackage.Ident("CallToolResult")), ", error) {")
-
-	// Create request message
-	g.P("// Create request message from parameters")
 	g.P("protoReq := &", g.QualifiedGoIdent(method.Input.GoIdent), "{}")
+	g.P("if len(args) > 0 {")
+	g.P("if err := ", protojsonPackage.Ident("Unmarshal"), "(args, protoReq); err != nil {")
+	g.P("return nil, nil, err")
+	g.P("}")
+	g.P("}")
+	g.P()
 
-	// Process each field in the input message
-	for _, field := range method.Input.Fields {
-		// Get parameter from request parameters
-		fieldName := string(field.Desc.Name())
-		g.P("// Extract ", fieldName)
-
-		switch field.Desc.Kind().String() {
-		case "string":
-			if field.Desc.IsList() {
-
-			} else {
-				g.P("if val, ok := req.Params.Arguments[\"", fieldName, "\"]; ok {")
-				g.P("if strVal, ok := val.(string); ok {")
-				g.P("protoReq.", field.GoName, " = strVal")
-				g.P("}")
-				g.P("}")
-			}
-		case "message":
-			if field.Desc.IsList() {
-
-			} else {
-				g.P("if val, ok := req.Params.Arguments[\"", fieldName, "\"]; ok {")
-				g.P("if objVal, ok := val.(map[string]any); ok {")
-				g.P("msgVal := &", g.QualifiedGoIdent(field.Message.GoIdent), "{}")
-
-				// Process nested message fields
-				for _, msgField := range field.Message.Fields {
-					generateFieldAssignment(g, msgField, "msgVal", "fieldVal")
-				}
-
-				g.P("protoReq.", field.GoName, " = msgVal")
-				g.P("}")
-				g.P("}")
-			}
-		// Add cases for other types (int32, int64, bool, etc.)
-		case "int32", "int64":
-			if field.Desc.IsList() {
-
-			} else {
-				g.P("if val, ok := req.Params.Arguments[\"", fieldName, "\"]; ok {")
-				g.P("if numVal, ok := val.(float64); ok {") // JSON numbers come as float64
-				if field.Desc.Kind().String() == "int32" {
-					g.P("protoReq.", field.GoName, " = int32(numVal)")
-				} else {
-					g.P("protoReq.", field.GoName, " = int64(numVal)")
-				}
-				g.P("}")
-				g.P("}")
-			}
-		case "bool":
-			if field.Desc.IsList() {
-
-			} else {
-				g.P("if val, ok := req.Params.Arguments[\"", fieldName, "\"]; ok {")
-				g.P("if boolVal, ok := val.(bool); ok {")
-				g.P("protoReq.", field.GoName, " = boolVal")
-				g.P("}")
-				g.P("}")
-			}
-		}
-	}
-
-	// Call the client method
-	g.P("// Call the client method")
 	g.P("resp, err := s.", clientName, ".", method.GoName, "(ctx, protoReq)")
 	g.P("if err != nil {")
-	g.P("// Return error as a CallToolResult with IsError=true")
-	g.P("return &", mcpPackage.Ident("CallToolResult"), "{")
-	g.P("Content: []", mcpPackage.Ident("Content"), "{")
-	g.P("&", mcpPackage.Ident("TextContent"), "{")
-	g.P("Text: err.Error(),")
-	g.P("},")
-	g.P("},")
-	g.P("IsError: true,")
-	g.P("}, nil")
+	g.P("return nil, nil, err")
 	g.P("}")
+	g.P()
 
-	// Create and return successful result
-	g.P("// Create successful result")
-	g.P("// Convert response to JSON")
-	g.P("respContent := make(map[string]any)")
-
-	// Add response fields
-	if len(method.Output.Fields) > 0 {
-		for _, field := range method.Output.Fields {
-			fieldName := string(field.Desc.Name())
-			g.P("respContent[\"", fieldName, "\"] = resp.", field.GoName)
-		}
-	}
-
-	g.P("// Create and return the CallToolResult")
-	g.P("jsonContent, err := json.Marshal(respContent)")
+	g.P("respJSON, err := ", protojsonPackage.Ident("Marshal"), "(resp)")
 	g.P("if err != nil {")
-	g.P("return mcp.NewToolResultErrorFromErr(\"error marshaling\", err), nil")
+	g.P("return nil, nil, err")
 	g.P("}")
+	g.P()
+
 	g.P("return &", mcpPackage.Ident("CallToolResult"), "{")
 	g.P("Content: []", mcpPackage.Ident("Content"), "{")
-	g.P("&", mcpPackage.Ident("TextContent"), "{")
-	g.P("Text:        string(jsonContent),")
-	g.P("Type: \"text\",")
+	g.P("&", mcpPackage.Ident("TextContent"), "{Text: string(respJSON)},")
 	g.P("},")
-	g.P("},")
-	g.P("IsError: false,")
-	g.P("}, nil")
+	g.P("}, nil, nil")
 	g.P("}")
 }
 
-func generateFieldAssignment(g *protogen.GeneratedFile, field *protogen.Field, varName string, valName string) {
-	isOptional := field.Desc.HasOptionalKeyword()
-	isList := field.Desc.IsList()
-
-	msgFieldName := string(field.Desc.Name())
-	g.P("if fieldVal, ok := objVal[\"", msgFieldName, "\"]; ok {")
-	kind := field.Desc.Kind().String()
-
-	switch kind {
-	case "message":
-		if isList {
-			// TODO: Handle list of messages
-		} else {
-			g.P("if objVal, ok := ", valName, ".(map[string]any); ok {")
-			g.P("msgVal := &", g.QualifiedGoIdent(field.Message.GoIdent), "{}")
-			g.P("// Process nested fields")
-			for _, nestedField := range field.Message.Fields {
-				generateFieldAssignment(g, nestedField, "msgVal", "fieldVal")
-			}
-			g.P(varName, ".", field.GoName, " = msgVal")
-			g.P("}")
-		}
-	case "enum":
-		if isList {
-			g.P("if arrVal, ok := ", valName, ".([]any); ok {")
-			g.P("for _, item := range arrVal {")
-			g.P("if numVal, ok := item.(float64); ok {")
-			g.P("", varName, ".", field.GoName, " = append(", varName, ".", field.GoName, ", ", g.QualifiedGoIdent(field.Enum.GoIdent), "(int32(numVal)))")
-			g.P("} else if strVal, ok := item.(string); ok {")
-			g.P("// Try to convert string enum value if provided as string")
-			g.P("if val, ok := ", g.QualifiedGoIdent(field.Enum.GoIdent), "_value[strVal]; ok {")
-			g.P("", varName, ".", field.GoName, " = append(", varName, ".", field.GoName, ", ", g.QualifiedGoIdent(field.Enum.GoIdent), "(val))")
-			g.P("}")
-			g.P("}")
-			g.P("}")
-			g.P("}")
-		} else {
-			g.P("if numVal, ok := ", valName, ".(float64); ok {")
-			if isOptional {
-				g.P("val := ", g.QualifiedGoIdent(field.Enum.GoIdent), "(int32(numVal))")
-				g.P(varName, ".", field.GoName, " = &val")
-			} else {
-				g.P(varName, ".", field.GoName, " = ", g.QualifiedGoIdent(field.Enum.GoIdent), "(int32(numVal))")
-			}
-			g.P("} else if strVal, ok := ", valName, ".(string); ok {")
-			if isOptional {
-				g.P("if val, ok := ", g.QualifiedGoIdent(field.Enum.GoIdent), "_value[strVal]; ok {")
-				g.P("enumVal := ", g.QualifiedGoIdent(field.Enum.GoIdent), "(val)")
-				g.P(varName, ".", field.GoName, " = &enumVal")
-				g.P("}")
-			} else {
-				g.P("if val, ok := ", g.QualifiedGoIdent(field.Enum.GoIdent), "_value[strVal]; ok {")
-				g.P(varName, ".", field.GoName, " = ", g.QualifiedGoIdent(field.Enum.GoIdent), "(val)")
-				g.P("}")
-			}
-			g.P("}")
-		}
-	default:
-		generateValAssignmentWithCast(g, field, varName, valName, isOptional, kindToCastType(kind, isList))
-	}
-	g.P("}")
-}
-
-func generateValAssignmentWithCast(g *protogen.GeneratedFile, field *protogen.Field, varName string, valName string, isOptional bool, castType string) {
-	g.P("if numVal, ok := ", valName, ".(", castType, "); ok {")
-	if isOptional {
-		g.P(varName, ".", field.GoName, " = &numVal")
-	} else {
-		g.P(varName, ".", field.GoName, " = numVal")
-	}
-	g.P("}")
-}
-
+// processCommentToString turns a (possibly multi-line, possibly
+// block-style) leading proto comment into a single-line, double-quote-safe
+// string suitable for embedding in a Go string literal.
 func processCommentToString(comments protogen.Comments) string {
 	// Remove comment markers and clean up the text
 	commentText := string(comments)
@@ -399,7 +206,7 @@ func generateMcpServerStruct(g *protogen.GeneratedFile, mcpServerName string, cl
 	g.P("type ", unexport(mcpServerName), " struct {")
 	g.P(clientName)
 	g.P()
-	g.P("MCPServer ", QualifiedGoIdentPointer(g, mcpServerPackage.Ident("MCPServer")))
+	g.P("MCPServer ", QualifiedGoIdentPointer(g, mcpPackage.Ident("Server")))
 	g.P("}")
 	g.P()
 }
@@ -413,9 +220,13 @@ func generateDefaultToolsRegistration(g *protogen.GeneratedFile, methods []*prot
 	g.P()
 }
 
+// generateToolRegistration emits a RegisterTool method that registers a
+// tool and its typed handler with mcp.AddTool, so the SDK validates
+// arguments against the tool's input schema before the handler ever runs
+// (the raw Server.AddTool does not validate).
 func generateToolRegistration(g *protogen.GeneratedFile, mcpServerName string) {
-	g.P("func (s *", unexport(mcpServerName), ") RegisterTool(tool ", mcpPackage.Ident("Tool"), ", handler ", mcpServerPackage.Ident("ToolHandlerFunc"), ") {")
-	g.P("s.MCPServer.AddTool(tool, handler)")
+	g.P("func (s *", unexport(mcpServerName), ") RegisterTool(tool *", mcpPackage.Ident("Tool"), ", handler ", mcpPackage.Ident("ToolHandlerFor"), "[", jsonPackage.Ident("RawMessage"), ", any]) {")
+	g.P(mcpPackage.Ident("AddTool"), "(s.MCPServer, tool, handler)")
 	g.P("}")
 	g.P()
 }
@@ -479,16 +290,12 @@ func camelToSpace(s string) string {
 	})
 }
 
-func kindToCastType(kind string, isList bool) (castType string) {
-	if special, ok := specialCastTypes[kind]; ok {
-		castType = special
-	} else {
-		castType = kind
+// quoteBacktickString returns a Go string literal for s, preferring a
+// backtick-quoted raw string (readable for embedded JSON) unless s itself
+// contains a backtick, in which case it falls back to strconv.Quote.
+func quoteBacktickString(s string) string {
+	if !strings.Contains(s, "`") {
+		return "`" + s + "`"
 	}
-
-	if isList {
-		castType = "[]" + castType
-	}
-
-	return castType
+	return strconv.Quote(s)
 }

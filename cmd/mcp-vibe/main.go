@@ -9,7 +9,7 @@ import (
 
 	examplev1 "protoc-gen-go-mcp/examples/gen/example/v1"
 
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 func main() {
@@ -17,15 +17,15 @@ func main() {
 	defer stop()
 
 	client := newVibeServiceClient(ctx)
-	mcpServer := server.NewMCPServer(
-		"vibe",
-		"0.0.1",
-	)
+	mcpServer := mcp.NewServer(&mcp.Implementation{
+		Name:    "vibe",
+		Version: "0.0.1",
+	}, nil)
 
 	s := examplev1.NewVibeServiceMCPServer(client, mcpServer)
 	s.RegisterDefaultTools()
 
-	if err := server.ServeStdio(mcpServer); err != nil {
+	if err := mcpServer.Run(ctx, &mcp.StdioTransport{}); err != nil {
 		fmt.Printf("failed to start server: %v\n", err)
 		return
 	}
