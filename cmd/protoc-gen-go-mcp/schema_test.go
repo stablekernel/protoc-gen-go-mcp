@@ -319,6 +319,22 @@ func TestSchemaValidatesPopulatedMessages(t *testing.T) {
 	}
 }
 
+// TestAnySchemaAllowsAdditionalProperties locks in that anySchema()
+// deliberately leaves "additionalProperties" unset (so it defaults to true):
+// unlike every other message schema this builder emits, which forbid
+// unknown properties, an Any's "additional" properties are exactly the
+// packed message's own fields, which the builder cannot know statically.
+// This guards against a future change accidentally tightening anySchema()
+// to "additionalProperties": false, which TestSchemaValidatesPopulatedMessages
+// alone would not catch, since protojson.Marshal(anypb.New(...)) happens to
+// also satisfy a false additionalProperties when the packed message has no
+// extra fields colliding with "@type".
+func TestAnySchemaAllowsAdditionalProperties(t *testing.T) {
+	schema := anySchema()
+	assert.NotContains(t, schema, "additionalProperties",
+		"anySchema must not set additionalProperties: false, or real Any payloads would be rejected")
+}
+
 // TestSchemaValidatesNonFiniteFloats checks that the special NaN/+Inf/-Inf
 // string encodings protojson uses for float/double (and the FloatValue/
 // DoubleValue wrappers) validate against the generated schema: a plain

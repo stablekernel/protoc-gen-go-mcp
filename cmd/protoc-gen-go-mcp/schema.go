@@ -361,6 +361,11 @@ func floatSchema() JSONSchema {
 // runtime property of the registry, not the static proto definition), so
 // it only requires the "@type" field protojson always adds and otherwise
 // allows arbitrary additional properties for the unpacked message's fields.
+// Unlike every other message schema this builder emits, "additionalProperties"
+// is deliberately left unset (so it defaults to true) rather than false: the
+// unpacked message's fields are exactly those arbitrary additional
+// properties, so forbidding them would make the schema reject every real
+// Any payload.
 func anySchema() JSONSchema {
 	return JSONSchema{
 		"type": "object",
