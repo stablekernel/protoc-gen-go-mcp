@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.3.0](https://github.com/stablekernel/protoc-gen-go-mcp/compare/v0.2.2...v0.3.0) (2026-10-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* generated MCP servers now import `github.com/modelcontextprotocol/go-sdk/mcp` instead of `github.com/mark3labs/mcp-go`. Users of generated code must update to the official SDK and adjust to the following shape changes:
+
+### Features
+
+* generate JSON Schema for tool inputs from proto descriptors ([#88](https://github.com/stablekernel/protoc-gen-go-mcp/issues/88)) ([#98](https://github.com/stablekernel/protoc-gen-go-mcp/issues/98)) ([b896688](https://github.com/stablekernel/protoc-gen-go-mcp/commit/b896688e0b00f422f5fb3a0916a94f9620d8ed29))
+* generate MCP servers on the official Go MCP SDK ([#99](https://github.com/stablekernel/protoc-gen-go-mcp/issues/99)) ([422becb](https://github.com/stablekernel/protoc-gen-go-mcp/commit/422becbd5c7c15bd62f04a3aace8489dbe69fbd9)), closes [#89](https://github.com/stablekernel/protoc-gen-go-mcp/issues/89)
+
+
+### Bug Fixes
+
+* escape proto comments correctly in generated descriptions and schemas ([#100](https://github.com/stablekernel/protoc-gen-go-mcp/issues/100)) ([#101](https://github.com/stablekernel/protoc-gen-go-mcp/issues/101)) ([5171bd7](https://github.com/stablekernel/protoc-gen-go-mcp/commit/5171bd7584e2432df91693ee9f346fe94ea11ae0))
+* Update golang.org/x/net to v0.38.0 ([#83](https://github.com/stablekernel/protoc-gen-go-mcp/issues/83)) ([893e7bc](https://github.com/stablekernel/protoc-gen-go-mcp/commit/893e7bcd88e04135f627d5f6e28d4c2ef38fefa4))
+
 ## [0.2.2](https://github.com/stablekernel/protoc-gen-go-mcp/compare/v0.2.1...v0.2.2) (2025-05-20)
 
 
