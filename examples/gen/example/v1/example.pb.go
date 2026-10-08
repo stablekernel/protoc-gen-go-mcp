@@ -71,7 +71,8 @@ func (VibeScalar_VibeEnum) EnumDescriptor() ([]byte, []int) {
 // The request to set the vibe of the server
 type SetVibeRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	//The vibe of the server to be set
+	// The vibe of the server to be set. Must match \d+ or a `code` like
+	// "chill", and must not contain a literal newline.
 	Vibe          string `protobuf:"bytes,1,opt,name=vibe,proto3" json:"vibe,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache

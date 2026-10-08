@@ -250,12 +250,12 @@ func TestToolsList(t *testing.T) {
 	// fields, named with their protojson (lowerCamel) JSON name, not
 	// nested under a property named after the request message.
 	setVibe := byName["SetVibe"]
-	require.Equal(t, `This is a block comment with multiple lines to test block handling "Hello World"`, setVibe.Description)
+	require.Equal(t, "This is a block comment with multiple lines to test block handling \"Hello World\", a `backtick`, and a path like C:\\vibes\\new", setVibe.Description)
 	require.Equal(t, "object", setVibe.InputSchema["type"])
 	require.Equal(t, false, setVibe.InputSchema["additionalProperties"])
 	require.Equal(t, map[string]any{
 		"vibe": map[string]any{
-			"description": "The vibe of the server to be set",
+			"description": "The vibe of the server to be set. Must match \\d+ or a `code` like \"chill\", and must not contain a literal newline.",
 			"type":        "string",
 		},
 	}, setVibe.InputSchema["properties"])

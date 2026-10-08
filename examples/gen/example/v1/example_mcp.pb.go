@@ -31,8 +31,8 @@ func NewVibeServiceMCPServer(
 func (s *vibeServiceMCPServer) SetVibeTool() *mcp.Tool {
 	return &mcp.Tool{
 		Name:        "SetVibe",
-		Description: "This is a block comment with multiple lines to test block handling \"Hello World\"",
-		InputSchema: json.RawMessage(`{"additionalProperties":false,"description":"The request to set the vibe of the server","properties":{"vibe":{"description":"The vibe of the server to be set","type":"string"}},"type":"object"}`),
+		Description: "This is a block comment with multiple lines to test block handling \"Hello World\", a `backtick`, and a path like C:\\vibes\\new",
+		InputSchema: json.RawMessage("{\"additionalProperties\":false,\"description\":\"The request to set the vibe of the server\",\"properties\":{\"vibe\":{\"description\":\"The vibe of the server to be set. Must match \\\\d+ or a `code` like \\\"chill\\\", and must not contain a literal newline.\",\"type\":\"string\"}},\"type\":\"object\"}"),
 	}
 }
 

@@ -129,7 +129,7 @@ func generateMCPTool(g *protogen.GeneratedFile, method *protogen.Method, mcpServ
 	g.P("func (s *", unexport(mcpServerName), ") ", method.GoName, "Tool() *", mcpPackage.Ident("Tool"), " {")
 	g.P("return &", mcpPackage.Ident("Tool"), "{")
 	g.P("Name: \"", method.GoName, "\",")
-	g.P("Description: \"", methodDescription, "\",")
+	g.P("Description: ", strconv.Quote(methodDescription), ",")
 	g.P("InputSchema: ", jsonPackage.Ident("RawMessage"), "(", quoteBacktickString(string(schemaJSON)), "),")
 	g.P("}")
 	g.P("}")
@@ -172,35 +172,45 @@ func generateHandler(g *protogen.GeneratedFile, method *protogen.Method, mcpServ
 }
 
 // processCommentToString turns a (possibly multi-line, possibly
-// block-style) leading proto comment into a single-line, double-quote-safe
-// string suitable for embedding in a Go string literal.
+// block-style) leading proto comment into a single-line string with its
+// raw text otherwise untouched: callers are responsible for escaping it
+// for whatever they embed it in (a Go string literal via strconv.Quote, a
+// JSON Schema "description" via encoding/json), so this never escapes
+// quotes or backslashes itself - doing so here would corrupt the text when
+// a caller's own encoding escapes it a second time.
 func processCommentToString(comments protogen.Comments) string {
-	// Remove comment markers and clean up the text
+	// protogen.Comments strings for a line comment ("// foo") have the
+	// "// " prefix already stripped from the first line (but not
+	// continuation lines) and a trailing newline; a block comment
+	// ("/* foo */") keeps its "/* " prefix and " */" suffix. Strip both
+	// styles uniformly below instead of relying on that asymmetry.
 	commentText := string(comments)
 
-	// Remove leading comment markers and spaces
 	commentText = strings.TrimPrefix(commentText, "// ")
 	commentText = strings.TrimPrefix(commentText, "/* ")
-
-	// Replace newlines with spaces
-	commentText = strings.ReplaceAll(commentText, "\n// ", " ")
-	commentText = strings.ReplaceAll(commentText, "\n", " ")
-
-	// Remove trailing comment markers
 	commentText = strings.TrimSuffix(commentText, " */")
 
-	// Clean up extra whitespace
+	// Join every line (dropping any remaining "// " line-comment prefix)
+	// into a single space-separated line.
+	lines := strings.Split(commentText, "\n")
+	for i, line := range lines {
+		lines[i] = strings.TrimPrefix(line, "// ")
+	}
+	commentText = strings.Join(lines, " ")
+
 	commentText = strings.TrimSpace(commentText)
 
-	// Replace multiple spaces with a single space
-	spaceRegex := regexp.MustCompile(`\s+`)
-	commentText = spaceRegex.ReplaceAllString(commentText, " ")
-
-	// Escape quotes to prevent JSON issues
-	commentText = strings.ReplaceAll(commentText, "\"", "\\\"")
+	// Collapse runs of whitespace (including the spaces just introduced
+	// for blank comment lines) into a single space.
+	commentText = whitespaceRunRegexp.ReplaceAllString(commentText, " ")
 
 	return commentText
 }
+
+// whitespaceRunRegexp matches one or more consecutive whitespace
+// characters, used by processCommentToString to collapse them to a single
+// space.
+var whitespaceRunRegexp = regexp.MustCompile(`\s+`)
 
 func generateMcpServerStruct(g *protogen.GeneratedFile, mcpServerName string, clientName string) {
 	g.P("type ", unexport(mcpServerName), " struct {")
