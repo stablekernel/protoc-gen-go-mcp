@@ -1,0 +1,52 @@
+# yaml-language-server: $schema=./.sf-factory/factory.schema.json
+#
+# Scaffolded by `sf-factory init`. See
+# https://github.com/stablekernel-blue/sf-factory/blob/main/docs/factory-yaml.md
+# for the full field-by-field reference,
+# https://github.com/stablekernel-blue/sf-factory/blob/main/examples/factory.yaml
+# for a complete annotated example, and `sf-factory validate factory.yaml`
+# to check this file before deploying it. ./.sf-factory/factory.schema.json (next to this
+# file) is a local copy of the JSON Schema this repo doesn't have on its
+# own; refresh it after upgrading sf-factory with `sf-factory schema >
+# ./.sf-factory/factory.schema.json`.
+$schema: ./.sf-factory/factory.schema.json
+version: 1
+name: protoc-gen-go-mcp
+repos:
+- name: stablekernel/protoc-gen-go-mcp
+  base_branch: main
+skills:
+  default: []
+  repo: []
+  urls: []
+commands: []
+orchestration:
+  roles:
+    factory:
+      agent: factory
+      model: anthropic/claude-sonnet-5
+  # Parallel workers, one git worktree each. Three issues of the v0.3.0
+  # milestone (#85, #86, #88) can start at once; the rest are blocked by them.
+  loop:
+    strategy: dispatcher
+    concurrency: 3
+    issue_command: factory-issue
+    pr_command: factory-pr
+    poll_seconds: 60
+    exit_when_idle: false
+limits:
+  ttl_minutes: 480
+  idle_minutes: 30
+  budget_usd: 25.0
+  cpu: 2.0
+  memory_mib: 4096
+  spot: true
+# Runs locally for now (sf-factory's scripts/factory-local).
+backend:
+  kind: local
+auth:
+  type: pat
+  token:
+    env: GH_TOKEN
+tracker:
+  kind: github_issues
