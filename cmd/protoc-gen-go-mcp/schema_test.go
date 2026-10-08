@@ -1,13 +1,15 @@
 package main
 
 import (
-	_ "embed"
+	"context"
 	"encoding/json"
 	"math"
 	"math/rand"
 	"testing"
 	"time"
 
+	"github.com/bufbuild/protocompile"
+	"github.com/bufbuild/protocompile/protoutil"
 	"github.com/google/jsonschema-go/jsonschema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -27,41 +29,43 @@ import (
 	schemapb "protoc-gen-go-mcp/cmd/protoc-gen-go-mcp/testdata/schemapb"
 )
 
-// schemaProtoSet is a pre-built google.protobuf.FileDescriptorSet (with
-// --include_source_info, so leading comments are present) for schema.proto
-// and its transitive imports. It is generated with:
-//
-//	protoc --proto_path=. --proto_path=<well-known-types include dir> \
-//	  --include_source_info --include_imports \
-//	  --descriptor_set_out=cmd/protoc-gen-go-mcp/testdata/schemapb/schema.binpb \
-//	  cmd/protoc-gen-go-mcp/testdata/schemapb/schema.proto
-//
-// It is checked in (rather than built by the test, or via
-// protodesc.ToFileDescriptorProto on the registered descriptors) because the
-// registered descriptors only carry runtime-retention options and do not
-// include comments, which the schema builder's descriptions depend on.
-//
-//go:embed testdata/schemapb/schema.binpb
-var schemaProtoSet []byte
+// schemaProtoDir is where schema.proto lives, relative to this package.
+const schemaProtoDir = "testdata/schemapb"
+
+// schemaProtoFile is the proto file to compile, relative to schemaProtoDir.
+const schemaProtoFile = "schema.proto"
 
 // loadMessage builds the *protogen.Message for a message type declared in
-// schema.proto, by feeding protogen a CodeGeneratorRequest built from
-// schemaProtoSet. This mirrors what protoc actually sends a plugin.
+// schema.proto, by parsing and linking the proto source in-process with
+// github.com/bufbuild/protocompile (the same approach golden_test.go uses
+// for examples/protos/example.proto) and feeding the resulting descriptor,
+// complete with leading comments, to protogen via a CodeGeneratorRequest.
+// This mirrors what protoc actually sends a plugin, without needing a
+// checked-in, protoc-built FileDescriptorSet fixture.
 func loadMessage(t *testing.T, messageName protoreflect.Name) *protogen.Message {
 	t.Helper()
 
-	var fds descriptorpb.FileDescriptorSet
-	require.NoError(t, proto.Unmarshal(schemaProtoSet, &fds))
+	compiler := protocompile.Compiler{
+		Resolver:       protocompile.WithStandardImports(&protocompile.SourceResolver{ImportPaths: []string{schemaProtoDir}}),
+		SourceInfoMode: protocompile.SourceInfoStandard,
+	}
+	files, err := compiler.Compile(context.Background(), schemaProtoFile)
+	require.NoError(t, err, "parsing %s", schemaProtoFile)
+	require.Len(t, files, 1)
 
-	const path = "cmd/protoc-gen-go-mcp/testdata/schemapb/schema.proto"
+	fileDescProto := protoutil.ProtoFromFileDescriptor(files[0])
+
 	req := &pluginpb.CodeGeneratorRequest{
-		FileToGenerate: []string{path},
-		ProtoFile:      fds.File,
+		FileToGenerate: []string{fileDescProto.GetName()},
+		// Dependencies must precede the file that imports them: protogen
+		// (via protodesc) builds its file registry by processing ProtoFile
+		// in order and requires each import already registered.
+		ProtoFile: append(depFileDescriptors(t, files[0]), fileDescProto),
 	}
 	plugin, err := protogen.Options{}.New(req)
 	require.NoError(t, err)
 
-	file := plugin.FilesByPath[path]
+	file := plugin.FilesByPath[fileDescProto.GetName()]
 	require.NotNil(t, file)
 
 	for _, m := range file.Messages {
@@ -69,8 +73,36 @@ func loadMessage(t *testing.T, messageName protoreflect.Name) *protogen.Message 
 			return m
 		}
 	}
-	t.Fatalf("message %q not found in file %q", messageName, path)
+	t.Fatalf("message %q not found in file %q", messageName, fileDescProto.GetName())
 	return nil
+}
+
+// depFileDescriptors returns the FileDescriptorProto for every file
+// transitively imported by file (schema.proto's imports are all
+// google/protobuf well-known types), deduplicated by path. protogen needs
+// every transitively imported file in the CodeGeneratorRequest's ProtoFile,
+// the same way protoc itself includes them.
+func depFileDescriptors(t *testing.T, file protoreflect.FileDescriptor) []*descriptorpb.FileDescriptorProto {
+	t.Helper()
+
+	seen := map[string]bool{file.Path(): true}
+	var deps []*descriptorpb.FileDescriptorProto
+
+	var visit func(protoreflect.FileDescriptor)
+	visit = func(f protoreflect.FileDescriptor) {
+		imports := f.Imports()
+		for i := 0; i < imports.Len(); i++ {
+			dep := imports.Get(i).FileDescriptor
+			if seen[dep.Path()] {
+				continue
+			}
+			seen[dep.Path()] = true
+			deps = append(deps, protoutil.ProtoFromFileDescriptor(dep))
+			visit(dep)
+		}
+	}
+	visit(file)
+	return deps
 }
 
 // withDescription returns a copy of schema with "description" set to desc,

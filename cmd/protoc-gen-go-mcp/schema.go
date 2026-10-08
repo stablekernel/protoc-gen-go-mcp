@@ -304,6 +304,9 @@ func wellKnownTypeSchema(fullName protoreflect.FullName) JSONSchema {
 	case wktStruct:
 		return JSONSchema{"type": "object"}
 	case wktValue:
+		// google.protobuf.Value can hold any JSON value (null, bool,
+		// number, string, array or object); an empty schema accepts
+		// anything, which is the only accurate representation.
 		return JSONSchema{}
 	case wktListValue:
 		return JSONSchema{"type": "array"}
