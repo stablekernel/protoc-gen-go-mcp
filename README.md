@@ -3,9 +3,16 @@ protoc-gen-go-mcp
 This is a [Topeka](#topeka) plugin for the [protoc compiler](https://grpc.io/docs/protoc-installation/) that generates a [model-context-protocol(MCP)](https://modelcontextprotocol.io/introduction) server based on a [protocol buffer](https://protobuf.dev/) definition. Conceptually, this allows an AI model to use existing [gRPC](https://grpc.io/) codebases with natural language, allowing for rapid prototyping and usage of LLM capabilities for protobuf based codebases.
 
 #### Prerequisites
-- [Go](https://go.dev/doc/install) 1.25 or later
-- [protoc](https://grpc.io/docs/protoc-installation/) 3.20 or later
-- [protoc-gen-go-grpc](https://grpc.io/docs/languages/go/quickstart/) 1.71 or later
+- [Go](https://go.dev/doc/install) 1.25 or later (the generated code imports
+  the official MCP SDK, which requires it)
+- [protoc](https://grpc.io/docs/protoc-installation/) 29.3 (the version this
+  plugin is tested against; see [`Makefile`](./Makefile) and
+  [`AGENTS.md`](./AGENTS.md))
+- [protoc-gen-go](https://pkg.go.dev/google.golang.org/protobuf/cmd/protoc-gen-go)
+  v1.36.6 and
+  [protoc-gen-go-grpc](https://pkg.go.dev/google.golang.org/grpc/cmd/protoc-gen-go-grpc)
+  v1.5.1 (the exact versions pinned as `tool` directives in
+  [`go.mod`](./go.mod))
 
 #### Running the plugin
 Check out the [Makefile](./Makefile) for explicit command usage. Use `make generate` to generate the example MCP server from the [proto file](./examples/protos/example.proto).
@@ -48,6 +55,83 @@ Add the `mcp-vibe` server to your mcp servers:
   }
 }
 ```
+
+#### What the plugin generates
+A generated `New<Service>MCPServer` wraps a gRPC client and an
+[`*mcp.Server`](https://pkg.go.dev/github.com/modelcontextprotocol/go-sdk/mcp#Server)
+from the [official Go MCP SDK](https://github.com/modelcontextprotocol/go-sdk).
+Once you've called `RegisterDefaultTools()` (or registered individual tools,
+see below), serve that `*mcp.Server` the way any MCP server is served. The
+two most common transports:
+
+```golang
+// client is a examplev1.VibeServiceClient for the backend gRPC service, e.g.
+// examplev1.NewVibeServiceClient(conn) for a grpc.ClientConn.
+
+// Over stdio, for CLI-launched MCP clients (see cmd/mcp-vibe/main.go for the
+// full, runnable version of this).
+stdioServer := mcp.NewServer(&mcp.Implementation{Name: "vibe", Version: "0.0.1"}, nil)
+examplev1.NewVibeServiceMCPServer(client, stdioServer).RegisterDefaultTools()
+if err := stdioServer.Run(ctx, &mcp.StdioTransport{}); err != nil {
+	panic(err)
+}
+```
+
+```golang
+// Over Streamable HTTP, for network clients. client is the same
+// examplev1.VibeServiceClient as above.
+httpServer := mcp.NewServer(&mcp.Implementation{Name: "vibe", Version: "0.0.1"}, nil)
+examplev1.NewVibeServiceMCPServer(client, httpServer).RegisterDefaultTools()
+handler := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server {
+	return httpServer
+}, nil)
+if err := http.ListenAndServe(":8080", handler); err != nil {
+	panic(err)
+}
+```
+
+Both snippets are kept compiling in
+[`examples/gen/example/v1/example_test.go`](./examples/gen/example/v1/example_test.go)
+(`Example_wiring`), so they stay in sync with the generated API; `go vet` and
+`go test` cover that file on every run of the [checks](./AGENTS.md) (it is a
+`_test.go` file, so plain `go build` skips it).
+
+#### How tool arguments map to the request message
+Each tool's `InputSchema` is the [JSON Schema](https://json-schema.org/) for
+its RPC's request message, and the generated handler decodes incoming
+arguments with
+[`protojson.Unmarshal`](https://pkg.go.dev/google.golang.org/protobuf/encoding/protojson#Unmarshal).
+That means tool arguments follow protojson's mapping, not the proto field
+names or Go struct tags:
+
+- **Field names are protojson names** (lowerCamel by default, e.g. a proto
+  field `previous_vibe` is the JSON key `previousVibe`), not the original
+  snake_case proto name. The schema's `additionalProperties: false` rejects
+  an unrecognized key — including the snake_case form — as a tool error
+  rather than silently ignoring or coercing it.
+- **64-bit integers (`int64`, `uint64`, `sint64`, `fixed64`, `sfixed64`) are
+  accepted as either a JSON number or a decimal string** (`"type":
+  ["integer", "string"]`), matching protojson's own encoding of them as
+  strings (to avoid precision loss in JSON's float64 number type). All other
+  integer kinds are plain JSON numbers.
+- **Enum fields are their value's name as a string** (e.g. `"VIBE_GOOD"`),
+  not the underlying numeric value, matching protojson's default enum
+  encoding.
+- **`bytes` fields are base64-encoded strings**, per protojson's `bytes`
+  mapping.
+- **`float`/`double` fields also accept the strings `"NaN"`, `"Infinity"`
+  and `"-Infinity"`** (in addition to a JSON number), matching protojson's
+  encoding of those non-finite values (a plain JSON number can't represent
+  them).
+- Tool call results are protojson-encoded the same way, so a result's keys
+  and enum/int64 representations follow the same rules — **including that
+  protojson omits zero-valued fields** (an empty string, `0`, `false`, an
+  unset enum, etc.) from the result entirely, rather than emitting them
+  explicitly.
+- **A gRPC error from the backend becomes a tool error** (`isError: true`)
+  whose text is the error as returned by the generated client, which for a
+  `status.Error` includes the gRPC status code (e.g. `rpc error: code =
+  NotFound desc = vibe not found`).
 
 #### Philosophical Notes 
 The plugin uses the existing code generation for protocol buffers and gRPC servers and builds upon that base, using and reusing parts where necessary. This gives us a healthy amount of code reuse while allowing us to control what we expose to end users. We want this plugin to provide sane, out-of-the-box functionality while allowing for easy extension.
@@ -101,6 +185,51 @@ func (s *vibeServiceMCPServer) RegisterDefaultTools() {
     //...other tools added below
 }
 ```
+
+#### Upgrading from 0.2.x
+0.3.0 moves generated code from
+[`github.com/mark3labs/mcp-go`](https://github.com/mark3labs/mcp-go) to the
+[official Go MCP SDK](https://github.com/modelcontextprotocol/go-sdk)
+(`github.com/modelcontextprotocol/go-sdk`, requiring Go 1.25). Regenerating
+with 0.3.0 changes the generated API:
+
+- **`New<Service>MCPServer` takes a
+  [`*mcp.Server`](https://pkg.go.dev/github.com/modelcontextprotocol/go-sdk/mcp#Server)**
+  (was `*server.MCPServer`), and the generated struct's exported `MCPServer`
+  field has the same new type. Construct it with `mcp.NewServer(&mcp.Implementation{...}, nil)`
+  and serve it as shown in [What the plugin generates](#what-the-plugin-generates)
+  above.
+- **`XxxTool()` returns `*mcp.Tool`** (was `mcp.Tool`), built directly as
+  `&mcp.Tool{Name, Description, InputSchema}` rather than via `mcp.NewTool(...)`.
+- **`RegisterTool`'s signature changed**: its tool parameter is now `*mcp.Tool`
+  (was `mcp.Tool`) and its handler parameter is now
+  `mcp.ToolHandlerFor[json.RawMessage, any]` — i.e.
+  `func(ctx context.Context, req *mcp.CallToolRequest, args json.RawMessage) (*mcp.CallToolResult, any, error)`
+  (was `func(context.Context, mcp.CallToolRequest) (*mcp.CallToolResult, error)`).
+  Registration now goes through
+  [`mcp.AddTool`](https://pkg.go.dev/github.com/modelcontextprotocol/go-sdk/mcp#AddTool),
+  so the SDK validates incoming arguments against the tool's input schema
+  before the handler ever runs — the old SDK didn't enforce the schema at
+  all.
+- **Each tool's `InputSchema` is now the top-level request-message schema**
+  (previously nested under a property named after the request message).
+- **Tool call arguments and results are protojson**, not the old
+  reflection-based encoding: see
+  [How tool arguments map to the request message](#how-tool-arguments-map-to-the-request-message)
+  above for the field-naming, 64-bit-integer, and enum differences this
+  implies. In particular, a caller sending the old snake_case field names
+  (e.g. `previous_vibe`) now gets a tool error, because the schema's
+  `additionalProperties: false` rejects unrecognized keys. Results are also
+  affected: **protojson omits zero-valued fields**, so a caller that relied
+  on seeing an explicit `0`/`""`/`false` for an unset field in the old
+  encoding now won't see that key in the result at all.
+- **Go 1.25 or later is required** to build generated code and this plugin.
+
+To upgrade: update Go, `protoc-gen-go`, and `protoc-gen-go-grpc` to the
+versions in [Prerequisites](#prerequisites); regenerate with
+`protoc --go-mcp_out=...` (or `make generate` for the example); update any
+callers that construct the generated server, call `RegisterTool` directly,
+or send/parse tool arguments or results, per the changes above.
 
 #### Topeka
 [Topeka](https://topeka.ai) is an open source project that provides code-generators for [Model-Context-Protocol (MCP)](https://modelcontextprotocol.io/introduction).
