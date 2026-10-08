@@ -40,6 +40,7 @@ const (
 //   - Indented item 1
 //   - Indented item 2
 type VibeServiceClient interface {
+	//
 	// This is a block comment
 	// with multiple lines
 	// to test block handling
@@ -47,6 +48,7 @@ type VibeServiceClient interface {
 	SetVibe(ctx context.Context, in *SetVibeRequest, opts ...grpc.CallOption) (*SetVibeResponse, error)
 	// Get Vibe
 	// of the server
+	//
 	GetVibe(ctx context.Context, in *GetVibeRequest, opts ...grpc.CallOption) (*GetVibeResponse, error)
 	// Set vibe details
 	SetVibeDetails(ctx context.Context, in *SetVibeDetailsRequest, opts ...grpc.CallOption) (*SetVibeResponse, error)
@@ -128,6 +130,7 @@ func (c *vibeServiceClient) SetVibeObjects(ctx context.Context, in *SetVibeObjec
 //   - Indented item 1
 //   - Indented item 2
 type VibeServiceServer interface {
+	//
 	// This is a block comment
 	// with multiple lines
 	// to test block handling
@@ -135,6 +138,7 @@ type VibeServiceServer interface {
 	SetVibe(context.Context, *SetVibeRequest) (*SetVibeResponse, error)
 	// Get Vibe
 	// of the server
+	//
 	GetVibe(context.Context, *GetVibeRequest) (*GetVibeResponse, error)
 	// Set vibe details
 	SetVibeDetails(context.Context, *SetVibeDetailsRequest) (*SetVibeResponse, error)
