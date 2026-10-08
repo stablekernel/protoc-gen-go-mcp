@@ -2,13 +2,14 @@
 // versions:
 // 	protoc-gen-go v1.36.6
 // 	protoc        v5.29.3
-// source: cmd/protoc-gen-go-mcp/testdata/schemapb/schema.proto
+// source: schema.proto
 
 package schemapb
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	anypb "google.golang.org/protobuf/types/known/anypb"
 	durationpb "google.golang.org/protobuf/types/known/durationpb"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	fieldmaskpb "google.golang.org/protobuf/types/known/fieldmaskpb"
@@ -64,11 +65,11 @@ func (x Color) String() string {
 }
 
 func (Color) Descriptor() protoreflect.EnumDescriptor {
-	return file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_enumTypes[0].Descriptor()
+	return file_schema_proto_enumTypes[0].Descriptor()
 }
 
 func (Color) Type() protoreflect.EnumType {
-	return &file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_enumTypes[0]
+	return &file_schema_proto_enumTypes[0]
 }
 
 func (x Color) Number() protoreflect.EnumNumber {
@@ -77,7 +78,7 @@ func (x Color) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use Color.Descriptor instead.
 func (Color) EnumDescriptor() ([]byte, []int) {
-	return file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_rawDescGZIP(), []int{0}
+	return file_schema_proto_rawDescGZIP(), []int{0}
 }
 
 // Node is a recursive message, used to test that recursive messages are
@@ -94,7 +95,7 @@ type Node struct {
 
 func (x *Node) Reset() {
 	*x = Node{}
-	mi := &file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_msgTypes[0]
+	mi := &file_schema_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -106,7 +107,7 @@ func (x *Node) String() string {
 func (*Node) ProtoMessage() {}
 
 func (x *Node) ProtoReflect() protoreflect.Message {
-	mi := &file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_msgTypes[0]
+	mi := &file_schema_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -119,7 +120,7 @@ func (x *Node) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Node.ProtoReflect.Descriptor instead.
 func (*Node) Descriptor() ([]byte, []int) {
-	return file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_rawDescGZIP(), []int{0}
+	return file_schema_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *Node) GetValue() string {
@@ -148,7 +149,7 @@ type Inner struct {
 
 func (x *Inner) Reset() {
 	*x = Inner{}
-	mi := &file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_msgTypes[1]
+	mi := &file_schema_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -160,7 +161,7 @@ func (x *Inner) String() string {
 func (*Inner) ProtoMessage() {}
 
 func (x *Inner) ProtoReflect() protoreflect.Message {
-	mi := &file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_msgTypes[1]
+	mi := &file_schema_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -173,7 +174,7 @@ func (x *Inner) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Inner.ProtoReflect.Descriptor instead.
 func (*Inner) Descriptor() ([]byte, []int) {
-	return file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_rawDescGZIP(), []int{1}
+	return file_schema_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *Inner) GetName() string {
@@ -222,7 +223,7 @@ type AllScalars struct {
 
 func (x *AllScalars) Reset() {
 	*x = AllScalars{}
-	mi := &file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_msgTypes[2]
+	mi := &file_schema_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -234,7 +235,7 @@ func (x *AllScalars) String() string {
 func (*AllScalars) ProtoMessage() {}
 
 func (x *AllScalars) ProtoReflect() protoreflect.Message {
-	mi := &file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_msgTypes[2]
+	mi := &file_schema_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -247,7 +248,7 @@ func (x *AllScalars) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AllScalars.ProtoReflect.Descriptor instead.
 func (*AllScalars) Descriptor() ([]byte, []int) {
-	return file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_rawDescGZIP(), []int{2}
+	return file_schema_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *AllScalars) GetSString() string {
@@ -402,13 +403,14 @@ type SchemaTestMessage struct {
 	BigCountWrapper      *wrapperspb.Int64Value      `protobuf:"bytes,26,opt,name=big_count_wrapper,json=bigCountWrapper,proto3" json:"big_count_wrapper,omitempty"`
 	BigUnsignedWrapper   *wrapperspb.UInt64Value     `protobuf:"bytes,27,opt,name=big_unsigned_wrapper,json=bigUnsignedWrapper,proto3" json:"big_unsigned_wrapper,omitempty"`
 	SmallUnsignedWrapper *wrapperspb.UInt32Value     `protobuf:"bytes,28,opt,name=small_unsigned_wrapper,json=smallUnsignedWrapper,proto3" json:"small_unsigned_wrapper,omitempty"`
+	AnyPayload           *anypb.Any                  `protobuf:"bytes,29,opt,name=any_payload,json=anyPayload,proto3" json:"any_payload,omitempty"`
 	unknownFields        protoimpl.UnknownFields
 	sizeCache            protoimpl.SizeCache
 }
 
 func (x *SchemaTestMessage) Reset() {
 	*x = SchemaTestMessage{}
-	mi := &file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_msgTypes[3]
+	mi := &file_schema_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -420,7 +422,7 @@ func (x *SchemaTestMessage) String() string {
 func (*SchemaTestMessage) ProtoMessage() {}
 
 func (x *SchemaTestMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_msgTypes[3]
+	mi := &file_schema_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -433,7 +435,7 @@ func (x *SchemaTestMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SchemaTestMessage.ProtoReflect.Descriptor instead.
 func (*SchemaTestMessage) Descriptor() ([]byte, []int) {
-	return file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_rawDescGZIP(), []int{3}
+	return file_schema_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *SchemaTestMessage) GetName() string {
@@ -643,6 +645,13 @@ func (x *SchemaTestMessage) GetSmallUnsignedWrapper() *wrapperspb.UInt32Value {
 	return nil
 }
 
+func (x *SchemaTestMessage) GetAnyPayload() *anypb.Any {
+	if x != nil {
+		return x.AnyPayload
+	}
+	return nil
+}
+
 type isSchemaTestMessage_Contact interface {
 	isSchemaTestMessage_Contact()
 }
@@ -661,11 +670,11 @@ func (*SchemaTestMessage_Email) isSchemaTestMessage_Contact() {}
 
 func (*SchemaTestMessage_Phone) isSchemaTestMessage_Contact() {}
 
-var File_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto protoreflect.FileDescriptor
+var File_schema_proto protoreflect.FileDescriptor
 
-const file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_rawDesc = "" +
+const file_schema_proto_rawDesc = "" +
 	"\n" +
-	"4cmd/protoc-gen-go-mcp/testdata/schemapb/schema.proto\x12\bschemapb\x1a\x1egoogle/protobuf/duration.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a google/protobuf/field_mask.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1egoogle/protobuf/wrappers.proto\"H\n" +
+	"\fschema.proto\x12\bschemapb\x1a\x19google/protobuf/any.proto\x1a\x1egoogle/protobuf/duration.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a google/protobuf/field_mask.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1egoogle/protobuf/wrappers.proto\"H\n" +
 	"\x04Node\x12\x14\n" +
 	"\x05value\x18\x01 \x01(\tR\x05value\x12*\n" +
 	"\bchildren\x18\x02 \x03(\v2\x0e.schemapb.NodeR\bchildren\"\x1b\n" +
@@ -690,7 +699,7 @@ const file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_rawDesc = "" +
 	"\bs_uint64\x18\f \x01(\x04R\asUint64\x12\x1b\n" +
 	"\ts_fixed64\x18\r \x01(\x06R\bsFixed64\x12\x17\n" +
 	"\as_float\x18\x0e \x01(\x02R\x06sFloat\x12\x19\n" +
-	"\bs_double\x18\x0f \x01(\x01R\asDouble\"\x8b\x0e\n" +
+	"\bs_double\x18\x0f \x01(\x01R\asDouble\"\xc2\x0e\n" +
 	"\x11SchemaTestMessage\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x18\n" +
 	"\anumbers\x18\x02 \x03(\x05R\anumbers\x12?\n" +
@@ -722,7 +731,9 @@ const file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_rawDesc = "" +
 	"\rratio_wrapper\x18\x19 \x01(\v2\x1b.google.protobuf.FloatValueR\fratioWrapper\x12G\n" +
 	"\x11big_count_wrapper\x18\x1a \x01(\v2\x1b.google.protobuf.Int64ValueR\x0fbigCountWrapper\x12N\n" +
 	"\x14big_unsigned_wrapper\x18\x1b \x01(\v2\x1c.google.protobuf.UInt64ValueR\x12bigUnsignedWrapper\x12R\n" +
-	"\x16small_unsigned_wrapper\x18\x1c \x01(\v2\x1c.google.protobuf.UInt32ValueR\x14smallUnsignedWrapper\x1a9\n" +
+	"\x16small_unsigned_wrapper\x18\x1c \x01(\v2\x1c.google.protobuf.UInt32ValueR\x14smallUnsignedWrapper\x125\n" +
+	"\vany_payload\x18\x1d \x01(\v2\x14.google.protobuf.AnyR\n" +
+	"anyPayload\x1a9\n" +
 	"\vCountsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\x1aO\n" +
@@ -742,20 +753,20 @@ const file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_rawDesc = "" +
 	"COLOR_BLUE\x10\x03B2Z0cmd/protoc-gen-go-mcp/testdata/schemapb;schemapbb\x06proto3"
 
 var (
-	file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_rawDescOnce sync.Once
-	file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_rawDescData []byte
+	file_schema_proto_rawDescOnce sync.Once
+	file_schema_proto_rawDescData []byte
 )
 
-func file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_rawDescGZIP() []byte {
-	file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_rawDescOnce.Do(func() {
-		file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_rawDesc), len(file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_rawDesc)))
+func file_schema_proto_rawDescGZIP() []byte {
+	file_schema_proto_rawDescOnce.Do(func() {
+		file_schema_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_schema_proto_rawDesc), len(file_schema_proto_rawDesc)))
 	})
-	return file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_rawDescData
+	return file_schema_proto_rawDescData
 }
 
-var file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
-var file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_goTypes = []any{
+var file_schema_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_schema_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_schema_proto_goTypes = []any{
 	(Color)(0),                     // 0: schemapb.Color
 	(*Node)(nil),                   // 1: schemapb.Node
 	(*Inner)(nil),                  // 2: schemapb.Inner
@@ -780,8 +791,9 @@ var file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_goTypes = []any{
 	(*wrapperspb.Int64Value)(nil),  // 21: google.protobuf.Int64Value
 	(*wrapperspb.UInt64Value)(nil), // 22: google.protobuf.UInt64Value
 	(*wrapperspb.UInt32Value)(nil), // 23: google.protobuf.UInt32Value
+	(*anypb.Any)(nil),              // 24: google.protobuf.Any
 }
-var file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_depIdxs = []int32{
+var file_schema_proto_depIdxs = []int32{
 	1,  // 0: schemapb.Node.children:type_name -> schemapb.Node
 	5,  // 1: schemapb.SchemaTestMessage.counts:type_name -> schemapb.SchemaTestMessage.CountsEntry
 	6,  // 2: schemapb.SchemaTestMessage.named_inners:type_name -> schemapb.SchemaTestMessage.NamedInnersEntry
@@ -806,21 +818,22 @@ var file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_depIdxs = []int32{
 	21, // 21: schemapb.SchemaTestMessage.big_count_wrapper:type_name -> google.protobuf.Int64Value
 	22, // 22: schemapb.SchemaTestMessage.big_unsigned_wrapper:type_name -> google.protobuf.UInt64Value
 	23, // 23: schemapb.SchemaTestMessage.small_unsigned_wrapper:type_name -> google.protobuf.UInt32Value
-	2,  // 24: schemapb.SchemaTestMessage.NamedInnersEntry.value:type_name -> schemapb.Inner
-	0,  // 25: schemapb.SchemaTestMessage.ColorByNameEntry.value:type_name -> schemapb.Color
-	26, // [26:26] is the sub-list for method output_type
-	26, // [26:26] is the sub-list for method input_type
-	26, // [26:26] is the sub-list for extension type_name
-	26, // [26:26] is the sub-list for extension extendee
-	0,  // [0:26] is the sub-list for field type_name
+	24, // 24: schemapb.SchemaTestMessage.any_payload:type_name -> google.protobuf.Any
+	2,  // 25: schemapb.SchemaTestMessage.NamedInnersEntry.value:type_name -> schemapb.Inner
+	0,  // 26: schemapb.SchemaTestMessage.ColorByNameEntry.value:type_name -> schemapb.Color
+	27, // [27:27] is the sub-list for method output_type
+	27, // [27:27] is the sub-list for method input_type
+	27, // [27:27] is the sub-list for extension type_name
+	27, // [27:27] is the sub-list for extension extendee
+	0,  // [0:27] is the sub-list for field type_name
 }
 
-func init() { file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_init() }
-func file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_init() {
-	if File_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto != nil {
+func init() { file_schema_proto_init() }
+func file_schema_proto_init() {
+	if File_schema_proto != nil {
 		return
 	}
-	file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_msgTypes[3].OneofWrappers = []any{
+	file_schema_proto_msgTypes[3].OneofWrappers = []any{
 		(*SchemaTestMessage_Email)(nil),
 		(*SchemaTestMessage_Phone)(nil),
 	}
@@ -828,18 +841,18 @@ func file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_init() {
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_rawDesc), len(file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_schema_proto_rawDesc), len(file_schema_proto_rawDesc)),
 			NumEnums:      1,
 			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_goTypes,
-		DependencyIndexes: file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_depIdxs,
-		EnumInfos:         file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_enumTypes,
-		MessageInfos:      file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_msgTypes,
+		GoTypes:           file_schema_proto_goTypes,
+		DependencyIndexes: file_schema_proto_depIdxs,
+		EnumInfos:         file_schema_proto_enumTypes,
+		MessageInfos:      file_schema_proto_msgTypes,
 	}.Build()
-	File_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto = out.File
-	file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_goTypes = nil
-	file_cmd_protoc_gen_go_mcp_testdata_schemapb_schema_proto_depIdxs = nil
+	File_schema_proto = out.File
+	file_schema_proto_goTypes = nil
+	file_schema_proto_depIdxs = nil
 }

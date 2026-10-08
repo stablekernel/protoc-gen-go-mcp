@@ -3,6 +3,7 @@ package main
 import (
 	_ "embed"
 	"encoding/json"
+	"math"
 	"math/rand"
 	"testing"
 	"time"
@@ -15,6 +16,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/descriptorpb"
+	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -71,6 +73,17 @@ func loadMessage(t *testing.T, messageName protoreflect.Name) *protogen.Message 
 	return nil
 }
 
+// withDescription returns a copy of schema with "description" set to desc,
+// for building the "want" side of a table-driven assertion from a schema
+// returned by a production helper like floatSchema.
+func withDescription(schema JSONSchema, desc string) JSONSchema {
+	out := JSONSchema{"description": desc}
+	for k, v := range schema {
+		out[k] = v
+	}
+	return out
+}
+
 func TestMessageInputSchema_AllScalars(t *testing.T) {
 	msg := loadMessage(t, "AllScalars")
 	schema := MessageInputSchema(msg)
@@ -95,8 +108,8 @@ func TestMessageInputSchema_AllScalars(t *testing.T) {
 		{"sSfixed64", JSONSchema{"type": []any{"integer", "string"}, "description": "An sfixed64 field."}},
 		{"sUint64", JSONSchema{"type": []any{"integer", "string"}, "minimum": 0, "description": "A uint64 field."}},
 		{"sFixed64", JSONSchema{"type": []any{"integer", "string"}, "minimum": 0, "description": "A fixed64 field."}},
-		{"sFloat", JSONSchema{"type": "number", "description": "A float field."}},
-		{"sDouble", JSONSchema{"type": "number", "description": "A double field."}},
+		{"sFloat", withDescription(floatSchema(), "A float field.")},
+		{"sDouble", withDescription(floatSchema(), "A double field.")},
 	}
 	for _, c := range cases {
 		t.Run(c.field, func(t *testing.T) {
@@ -247,11 +260,12 @@ func TestMessageInputSchema_SchemaTestMessage(t *testing.T) {
 		{"anyList", JSONSchema{"type": "array"}},
 		{"updateMask", JSONSchema{"type": "string"}},
 		{"nothing", JSONSchema{"type": "object", "additionalProperties": false}},
-		{"scoreWrapper", JSONSchema{"type": "number"}},
-		{"ratioWrapper", JSONSchema{"type": "number"}},
+		{"scoreWrapper", floatSchema()},
+		{"ratioWrapper", floatSchema()},
 		{"bigCountWrapper", JSONSchema{"type": []any{"integer", "string"}}},
 		{"bigUnsignedWrapper", JSONSchema{"type": []any{"integer", "string"}, "minimum": 0}},
 		{"smallUnsignedWrapper", JSONSchema{"type": "integer", "minimum": 0}},
+		{"anyPayload", anySchema()},
 	}
 	for _, c := range wktCases {
 		t.Run("well-known type "+c.field, func(t *testing.T) {
@@ -303,6 +317,65 @@ func TestSchemaValidatesPopulatedMessages(t *testing.T) {
 		m := randomSchemaTestMessage(rnd, 0)
 		assertProtoValidatesAgainstSchema(t, resolved, m)
 	}
+}
+
+// TestSchemaValidatesNonFiniteFloats checks that the special NaN/+Inf/-Inf
+// string encodings protojson uses for float/double (and the FloatValue/
+// DoubleValue wrappers) validate against the generated schema: a plain
+// "number" cannot represent them, so the schema must also accept the
+// strings protojson actually emits for them.
+func TestSchemaValidatesNonFiniteFloats(t *testing.T) {
+	msg := loadMessage(t, "SchemaTestMessage")
+	schema := MessageInputSchema(msg)
+	resolved := resolve(t, schema)
+
+	for _, v := range []float64{math.NaN(), math.Inf(1), math.Inf(-1)} {
+		m := &schemapb.SchemaTestMessage{
+			ScoreWrapper: wrapperspb.Double(v),
+			RatioWrapper: wrapperspb.Float(float32(v)),
+		}
+		assertProtoValidatesAgainstSchema(t, resolved, m)
+	}
+}
+
+// TestMessageInputSchema_RecursiveRootMessage checks that building a schema
+// for a message that is itself part of a reference cycle (rather than one
+// reached through a field, as in TestMessageInputSchema_SchemaTestMessage)
+// still produces a root schema with "type": "object": the official Go MCP
+// SDK requires every tool's input schema to have an object type and panics
+// otherwise, so the root may never be a bare {"$ref": ...}.
+func TestMessageInputSchema_RecursiveRootMessage(t *testing.T) {
+	msg := loadMessage(t, "Node")
+	schema := MessageInputSchema(msg)
+
+	require.Equal(t, "object", schema["type"], "root schema must have type \"object\", not a $ref")
+	require.NotContains(t, schema, "$ref", "root schema must not itself be a $ref")
+
+	props, ok := schema["properties"].(JSONSchema)
+	require.True(t, ok)
+	childrenSchema, ok := props["children"].(JSONSchema)
+	require.True(t, ok)
+	assert.Equal(t, "array", childrenSchema["type"])
+	itemSchema, ok := childrenSchema["items"].(JSONSchema)
+	require.True(t, ok)
+	assert.Equal(t, "#/$defs/schemapb.Node", itemSchema["$ref"])
+
+	defs, ok := schema["$defs"].(JSONSchema)
+	require.True(t, ok, "$defs should be present for a recursive root message")
+	nodeSchema, ok := defs["schemapb.Node"].(JSONSchema)
+	require.True(t, ok, "$defs should contain the Node schema")
+	assert.Equal(t, "object", nodeSchema["type"])
+
+	resolved := resolve(t, schema)
+	three := &schemapb.Node{
+		Value: "root",
+		Children: []*schemapb.Node{
+			{Value: "child", Children: []*schemapb.Node{
+				{Value: "grandchild"},
+			}},
+		},
+	}
+	assertProtoValidatesAgainstSchema(t, resolved, three)
 }
 
 func assertProtoValidatesAgainstSchema(t *testing.T, resolved *jsonschema.Resolved, m proto.Message) {
@@ -390,6 +463,11 @@ func randomSchemaTestMessage(r *rand.Rand, depth int) *schemapb.SchemaTestMessag
 		m.BigCountWrapper = wrapperspb.Int64(r.Int63())
 		m.BigUnsignedWrapper = wrapperspb.UInt64(uint64(r.Int63()))
 		m.SmallUnsignedWrapper = wrapperspb.UInt32(r.Uint32())
+		any, err := anypb.New(&schemapb.Inner{Name: randomString(r)})
+		if err != nil {
+			panic(err)
+		}
+		m.AnyPayload = any
 	}
 	return m
 }

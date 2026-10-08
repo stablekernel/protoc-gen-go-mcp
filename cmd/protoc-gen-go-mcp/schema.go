@@ -27,6 +27,7 @@ const (
 	wktBoolValue   protoreflect.FullName = "google.protobuf.BoolValue"
 	wktStringValue protoreflect.FullName = "google.protobuf.StringValue"
 	wktBytesValue  protoreflect.FullName = "google.protobuf.BytesValue"
+	wktAny         protoreflect.FullName = "google.protobuf.Any"
 )
 
 // JSONSchema is a JSON Schema (draft 2020-12) object, represented as
@@ -58,6 +59,31 @@ type schemaBuilder struct {
 // schema describes exactly what protojson.Unmarshal accepts for msg: see
 // fieldSchema and messageSchema for the field-by-field and
 // well-known-type rules.
+//
+// Design decisions, deliberately stricter than everything protojson.Unmarshal
+// actually accepts, to keep the schema clear for LLM clients (which generate
+// arguments from it, they don't need to additionally accept every input
+// protojson happens to tolerate for backward compatibility):
+//
+//   - Enum fields only accept the value's name as a string (e.g. "COLOR_RED"),
+//     not the underlying int32 number, even though protojson.Unmarshal accepts
+//     both.
+//   - No field is ever typed to accept JSON null, even though
+//     protojson.Unmarshal treats an explicit null the same as the field being
+//     absent for most (not all - see wktValue) field types.
+//   - Property names are the field's lowerCamel JSON name
+//     (field.Desc.JSONName(), what protojson.Marshal emits and the first
+//     thing protojson.Unmarshal tries), never the field's original
+//     snake_case proto name, even though protojson.Unmarshal also accepts
+//     that.
+//   - uint32/int32/sint32/fixed32/sfixed32 fields only accept a JSON number,
+//     never the decimal string protojson.Unmarshal also accepts for them (as
+//     it does for every integer field, not just the 64-bit ones that
+//     protojson.Marshal itself emits as strings).
+//
+// format and contentEncoding keywords on string schemas (e.g. "date-time",
+// "base64") are descriptive labels only: github.com/google/jsonschema-go,
+// like most JSON Schema implementations, does not validate against them.
 func MessageInputSchema(msg *protogen.Message) JSONSchema {
 	b := &schemaBuilder{
 		defs:     map[protoreflect.FullName]JSONSchema{},
@@ -68,6 +94,24 @@ func MessageInputSchema(msg *protogen.Message) JSONSchema {
 	if len(b.refs) == 0 {
 		return root
 	}
+
+	// If msg is itself part of a reference cycle, messageSchema returned a
+	// bare {"$ref": ...} for it instead of an object schema (so that other
+	// occurrences of msg can point at a single $defs entry). An MCP tool's
+	// input schema must itself have "type": "object" (the official Go SDK
+	// panics in mcp.AddTool otherwise), so unwrap that one level here: use a
+	// shallow copy of msg's own $defs entry as the root, instead of a $ref
+	// to it. A copy (rather than the $defs entry itself) is required: the
+	// root and the $defs entry both need a (different) "$defs" key below,
+	// and reusing the same map for both would make it self-referential,
+	// which later hangs json.Marshal.
+	if root["$ref"] != nil {
+		root = JSONSchema{}
+		for k, v := range b.defs[msg.Desc.FullName()] {
+			root[k] = v
+		}
+	}
+
 	defs := JSONSchema{}
 	for name := range b.refs {
 		if s, ok := b.defs[name]; ok {
@@ -218,7 +262,7 @@ func (b *schemaBuilder) kindSchema(field *protogen.Field) JSONSchema {
 	case protoreflect.Uint64Kind, protoreflect.Fixed64Kind:
 		return JSONSchema{"type": []any{"integer", "string"}, "minimum": 0}
 	case protoreflect.FloatKind, protoreflect.DoubleKind:
-		return JSONSchema{"type": "number"}
+		return floatSchema()
 	case protoreflect.EnumKind:
 		return b.enumSchema(field.Enum)
 	case protoreflect.MessageKind, protoreflect.GroupKind:
@@ -267,8 +311,10 @@ func wellKnownTypeSchema(fullName protoreflect.FullName) JSONSchema {
 		return JSONSchema{"type": "string"}
 	case wktEmpty:
 		return JSONSchema{"type": "object", "additionalProperties": false}
+	case wktAny:
+		return anySchema()
 	case wktDoubleValue, wktFloatValue:
-		return JSONSchema{"type": "number"}
+		return floatSchema()
 	case wktInt64Value:
 		return JSONSchema{"type": []any{"integer", "string"}}
 	case wktUInt64Value:
@@ -292,6 +338,37 @@ func wellKnownTypeSchema(fullName protoreflect.FullName) JSONSchema {
 // $defs entry for the message with the given full name.
 func refSchema(fullName protoreflect.FullName) JSONSchema {
 	return JSONSchema{"$ref": "#/$defs/" + string(fullName)}
+}
+
+// floatSchema returns the schema for a proto float, double, FloatValue or
+// DoubleValue field. protojson marshals NaN and +/-Infinity as the JSON
+// strings "NaN", "Infinity" and "-Infinity" (a plain "number" cannot
+// represent them), so the schema must accept both a JSON number and one of
+// those three strings to describe exactly what protojson produces/accepts.
+func floatSchema() JSONSchema {
+	return JSONSchema{
+		"anyOf": []any{
+			JSONSchema{"type": "number"},
+			JSONSchema{"type": "string", "enum": []any{"NaN", "Infinity", "-Infinity"}},
+		},
+	}
+}
+
+// anySchema returns the schema for google.protobuf.Any. protojson encodes
+// an Any as its unpacked JSON representation plus an injected "@type"
+// string field naming the packed message's type; the schema builder has no
+// way to know which message types a given Any field may hold (that is a
+// runtime property of the registry, not the static proto definition), so
+// it only requires the "@type" field protojson always adds and otherwise
+// allows arbitrary additional properties for the unpacked message's fields.
+func anySchema() JSONSchema {
+	return JSONSchema{
+		"type": "object",
+		"properties": JSONSchema{
+			"@type": JSONSchema{"type": "string"},
+		},
+		"required": []any{"@type"},
+	}
 }
 
 // fieldDescriptionFromComments turns a leading proto comment into a
