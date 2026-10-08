@@ -27,18 +27,25 @@ func main() {
 		ParamFunc: flags.Set,
 	}
 
-	opts.Run(func(gen *protogen.Plugin) error {
-		gen.SupportedFeatures = uint64(pluginpb.CodeGeneratorResponse_FEATURE_PROTO3_OPTIONAL) | uint64(pluginpb.CodeGeneratorResponse_FEATURE_SUPPORTS_EDITIONS)
-		gen.SupportedEditionsMinimum = descriptorpb.Edition_EDITION_PROTO2
-		gen.SupportedEditionsMaximum = descriptorpb.Edition_EDITION_2023
+	opts.Run(generate)
+}
 
-		for _, f := range gen.Files {
-			if !f.Generate {
-				continue
-			}
+// generate runs the plugin's code generation against gen, producing one
+// generated file per .proto file that has a service and is marked for
+// generation. It is the function protogen.Options.Run invokes from main,
+// factored out so tests can call it directly on a hand-built
+// *protogen.Plugin without needing protoc or a protoc-gen-go-mcp binary.
+func generate(gen *protogen.Plugin) error {
+	gen.SupportedFeatures = uint64(pluginpb.CodeGeneratorResponse_FEATURE_PROTO3_OPTIONAL) | uint64(pluginpb.CodeGeneratorResponse_FEATURE_SUPPORTS_EDITIONS)
+	gen.SupportedEditionsMinimum = descriptorpb.Edition_EDITION_PROTO2
+	gen.SupportedEditionsMaximum = descriptorpb.Edition_EDITION_2023
 
-			generateFile(gen, f)
+	for _, f := range gen.Files {
+		if !f.Generate {
+			continue
 		}
-		return nil
-	})
+
+		generateFile(gen, f)
+	}
+	return nil
 }
