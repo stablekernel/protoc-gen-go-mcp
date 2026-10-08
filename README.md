@@ -70,28 +70,31 @@ two most common transports:
 
 // Over stdio, for CLI-launched MCP clients (see cmd/mcp-vibe/main.go for the
 // full, runnable version of this).
-server := mcp.NewServer(&mcp.Implementation{Name: "vibe", Version: "0.0.1"}, nil)
-examplev1.NewVibeServiceMCPServer(client, server).RegisterDefaultTools()
-if err := server.Run(ctx, &mcp.StdioTransport{}); err != nil {
-	log.Fatal(err)
+stdioServer := mcp.NewServer(&mcp.Implementation{Name: "vibe", Version: "0.0.1"}, nil)
+examplev1.NewVibeServiceMCPServer(client, stdioServer).RegisterDefaultTools()
+if err := stdioServer.Run(ctx, &mcp.StdioTransport{}); err != nil {
+	panic(err)
 }
 ```
 
 ```golang
 // Over Streamable HTTP, for network clients. client is the same
 // examplev1.VibeServiceClient as above.
-server := mcp.NewServer(&mcp.Implementation{Name: "vibe", Version: "0.0.1"}, nil)
-examplev1.NewVibeServiceMCPServer(client, server).RegisterDefaultTools()
+httpServer := mcp.NewServer(&mcp.Implementation{Name: "vibe", Version: "0.0.1"}, nil)
+examplev1.NewVibeServiceMCPServer(client, httpServer).RegisterDefaultTools()
 handler := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server {
-	return server
+	return httpServer
 }, nil)
-log.Fatal(http.ListenAndServe(":8080", handler))
+if err := http.ListenAndServe(":8080", handler); err != nil {
+	panic(err)
+}
 ```
 
 Both snippets are kept compiling in
 [`examples/gen/example/v1/example_test.go`](./examples/gen/example/v1/example_test.go)
 (`Example_wiring`), so they stay in sync with the generated API; `go vet` and
-`go build` cover that file on every run of the [checks](./AGENTS.md).
+`go test` cover that file on every run of the [checks](./AGENTS.md) (it is a
+`_test.go` file, so plain `go build` skips it).
 
 #### How tool arguments map to the request message
 Each tool's `InputSchema` is the [JSON Schema](https://json-schema.org/) for
@@ -116,8 +119,19 @@ names or Go struct tags:
   encoding.
 - **`bytes` fields are base64-encoded strings**, per protojson's `bytes`
   mapping.
+- **`float`/`double` fields also accept the strings `"NaN"`, `"Infinity"`
+  and `"-Infinity"`** (in addition to a JSON number), matching protojson's
+  encoding of those non-finite values (a plain JSON number can't represent
+  them).
 - Tool call results are protojson-encoded the same way, so a result's keys
-  and enum/int64 representations follow the same rules.
+  and enum/int64 representations follow the same rules — **including that
+  protojson omits zero-valued fields** (an empty string, `0`, `false`, an
+  unset enum, etc.) from the result entirely, rather than emitting them
+  explicitly.
+- **A gRPC error from the backend becomes a tool error** (`isError: true`)
+  whose text is the error as returned by the generated client, which for a
+  `status.Error` includes the gRPC status code (e.g. `rpc error: code =
+  NotFound desc = vibe not found`).
 
 #### Philosophical Notes 
 The plugin uses the existing code generation for protocol buffers and gRPC servers and builds upon that base, using and reusing parts where necessary. This gives us a healthy amount of code reuse while allowing us to control what we expose to end users. We want this plugin to provide sane, out-of-the-box functionality while allowing for easy extension.
@@ -205,7 +219,10 @@ with 0.3.0 changes the generated API:
   above for the field-naming, 64-bit-integer, and enum differences this
   implies. In particular, a caller sending the old snake_case field names
   (e.g. `previous_vibe`) now gets a tool error, because the schema's
-  `additionalProperties: false` rejects unrecognized keys.
+  `additionalProperties: false` rejects unrecognized keys. Results are also
+  affected: **protojson omits zero-valued fields**, so a caller that relied
+  on seeing an explicit `0`/`""`/`false` for an unset field in the old
+  encoding now won't see that key in the result at all.
 - **Go 1.25 or later is required** to build generated code and this plugin.
 
 To upgrade: update Go, `protoc-gen-go`, and `protoc-gen-go-grpc` to the

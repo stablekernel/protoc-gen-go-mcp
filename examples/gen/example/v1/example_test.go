@@ -1,8 +1,8 @@
-// This file backs the README's "What the plugin generates" and "How tool
-// arguments map to the request message" sections: go vet and go build cover
-// it, so the snippets shown there cannot silently drift from code that
+// This file backs the README's "What the plugin generates" section: go vet
+// and go test cover it (it is a _test.go file, so plain go build skips it),
+// so the wiring snippets shown there cannot silently drift from code that
 // actually compiles against the generated API. It is not meant to be run as
-// a test (ExampleWiring never returns), only compiled.
+// a test (Example_wiring never returns), only compiled.
 package examplev1_test
 
 import (
@@ -18,7 +18,7 @@ import (
 
 // Example_wiring shows how to serve a generated MCP server over both stdio
 // and Streamable HTTP, given a gRPC client for the service it wraps. It is
-// compiled by `go build`/`go vet` but never run (it blocks forever), so it
+// compiled by `go vet`/`go test` but never run (it blocks forever), so it
 // has no "Output:" comment.
 func Example_wiring() {
 	ctx := context.Background()
