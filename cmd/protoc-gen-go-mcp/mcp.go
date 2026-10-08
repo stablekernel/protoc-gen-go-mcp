@@ -179,11 +179,15 @@ func generateHandler(g *protogen.GeneratedFile, method *protogen.Method, mcpServ
 // quotes or backslashes itself - doing so here would corrupt the text when
 // a caller's own encoding escapes it a second time.
 func processCommentToString(comments protogen.Comments) string {
-	// protogen.Comments strings for a line comment ("// foo") have the
-	// "// " prefix already stripped from the first line (but not
-	// continuation lines) and a trailing newline; a block comment
-	// ("/* foo */") keeps its "/* " prefix and " */" suffix. Strip both
-	// styles uniformly below instead of relying on that asymmetry.
+	// protogen.Comments strings for a line comment ("// foo") already
+	// have the "// " prefix stripped from the first line and a trailing
+	// newline, but each continuation line still has its own "// " (the
+	// source text between consecutive "//" markers, including that
+	// prefix, becomes part of the comment string); a block comment
+	// ("/* foo */") instead keeps its "/* " prefix and " */" suffix on
+	// the string as a whole, with no per-line marker to strip. Strip the
+	// block markers first, then strip any remaining per-line "// " below
+	// (a no-op for an already-prefix-stripped block comment).
 	commentText := string(comments)
 
 	commentText = strings.TrimPrefix(commentText, "// ")
