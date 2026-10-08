@@ -8,19 +8,19 @@ package examplev1
 import (
 	context "context"
 	json "encoding/json"
-	mcp "github.com/mark3labs/mcp-go/mcp"
-	server "github.com/mark3labs/mcp-go/server"
+	mcp "github.com/modelcontextprotocol/go-sdk/mcp"
+	protojson "google.golang.org/protobuf/encoding/protojson"
 )
 
 type vibeServiceMCPServer struct {
 	VibeServiceClient
 
-	MCPServer *server.MCPServer
+	MCPServer *mcp.Server
 }
 
 func NewVibeServiceMCPServer(
 	client VibeServiceClient,
-	mcpServer *server.MCPServer,
+	mcpServer *mcp.Server,
 ) *vibeServiceMCPServer {
 	return &vibeServiceMCPServer{
 		VibeServiceClient: client,
@@ -28,455 +28,173 @@ func NewVibeServiceMCPServer(
 	}
 }
 
-func (s *vibeServiceMCPServer) SetVibeHandler(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	// Create request message from parameters
+func (s *vibeServiceMCPServer) SetVibeTool() *mcp.Tool {
+	return &mcp.Tool{
+		Name:        "SetVibe",
+		Description: "This is a block comment with multiple lines to test block handling \"Hello World\"",
+		InputSchema: json.RawMessage(`{"additionalProperties":false,"description":"The request to set the vibe of the server","properties":{"vibe":{"description":"The vibe of the server to be set","type":"string"}},"type":"object"}`),
+	}
+}
+
+func (s *vibeServiceMCPServer) SetVibeHandler(ctx context.Context, req *mcp.CallToolRequest, args json.RawMessage) (*mcp.CallToolResult, any, error) {
 	protoReq := &SetVibeRequest{}
-	// Extract vibe
-	if val, ok := req.Params.Arguments["vibe"]; ok {
-		if strVal, ok := val.(string); ok {
-			protoReq.Vibe = strVal
+	if len(args) > 0 {
+		if err := protojson.Unmarshal(args, protoReq); err != nil {
+			return nil, nil, err
 		}
 	}
-	// Call the client method
+
 	resp, err := s.VibeServiceClient.SetVibe(ctx, protoReq)
 	if err != nil {
-		// Return error as a CallToolResult with IsError=true
-		return &mcp.CallToolResult{
-			Content: []mcp.Content{
-				&mcp.TextContent{
-					Text: err.Error(),
-				},
-			},
-			IsError: true,
-		}, nil
+		return nil, nil, err
 	}
-	// Create successful result
-	// Convert response to JSON
-	respContent := make(map[string]any)
-	respContent["previous_vibe"] = resp.PreviousVibe
-	respContent["vibe"] = resp.Vibe
-	// Create and return the CallToolResult
-	jsonContent, err := json.Marshal(respContent)
+
+	respJSON, err := protojson.Marshal(resp)
 	if err != nil {
-		return mcp.NewToolResultErrorFromErr("error marshaling", err), nil
+		return nil, nil, err
 	}
+
 	return &mcp.CallToolResult{
 		Content: []mcp.Content{
-			&mcp.TextContent{
-				Text: string(jsonContent),
-				Type: "text",
-			},
+			&mcp.TextContent{Text: string(respJSON)},
 		},
-		IsError: false,
-	}, nil
+	}, nil, nil
 }
 
-func (s *vibeServiceMCPServer) SetVibeTool() mcp.Tool {
-	tool := mcp.NewTool(
-		"SetVibe", mcp.WithDescription("This is a block comment with multiple lines to test block handling \"Hello World\""),
-		mcp.WithObject(
-			"SetVibeRequest",
-			mcp.Description("The request to set the vibe of the server"),
-			mcp.Properties(map[string]any{
-				"vibe": map[string]any{
-					"type":        "string",
-					"description": "The vibe of the server to be set",
-					"required":    true,
-				},
-			}),
-		),
-	)
-	return tool
+func (s *vibeServiceMCPServer) GetVibeTool() *mcp.Tool {
+	return &mcp.Tool{
+		Name:        "GetVibe",
+		Description: "Get Vibe of the server",
+		InputSchema: json.RawMessage(`{"additionalProperties":false,"description":"The request to get the vibe of the server","properties":{},"type":"object"}`),
+	}
 }
 
-func (s *vibeServiceMCPServer) GetVibeHandler(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	// Create request message from parameters
+func (s *vibeServiceMCPServer) GetVibeHandler(ctx context.Context, req *mcp.CallToolRequest, args json.RawMessage) (*mcp.CallToolResult, any, error) {
 	protoReq := &GetVibeRequest{}
-	// Call the client method
+	if len(args) > 0 {
+		if err := protojson.Unmarshal(args, protoReq); err != nil {
+			return nil, nil, err
+		}
+	}
+
 	resp, err := s.VibeServiceClient.GetVibe(ctx, protoReq)
 	if err != nil {
-		// Return error as a CallToolResult with IsError=true
-		return &mcp.CallToolResult{
-			Content: []mcp.Content{
-				&mcp.TextContent{
-					Text: err.Error(),
-				},
-			},
-			IsError: true,
-		}, nil
+		return nil, nil, err
 	}
-	// Create successful result
-	// Convert response to JSON
-	respContent := make(map[string]any)
-	respContent["vibe"] = resp.Vibe
-	// Create and return the CallToolResult
-	jsonContent, err := json.Marshal(respContent)
+
+	respJSON, err := protojson.Marshal(resp)
 	if err != nil {
-		return mcp.NewToolResultErrorFromErr("error marshaling", err), nil
+		return nil, nil, err
 	}
+
 	return &mcp.CallToolResult{
 		Content: []mcp.Content{
-			&mcp.TextContent{
-				Text: string(jsonContent),
-				Type: "text",
-			},
+			&mcp.TextContent{Text: string(respJSON)},
 		},
-		IsError: false,
-	}, nil
+	}, nil, nil
 }
 
-func (s *vibeServiceMCPServer) GetVibeTool() mcp.Tool {
-	tool := mcp.NewTool(
-		"GetVibe", mcp.WithDescription("Get Vibe of the server"),
-	)
-	return tool
+func (s *vibeServiceMCPServer) SetVibeDetailsTool() *mcp.Tool {
+	return &mcp.Tool{
+		Name:        "SetVibeDetails",
+		Description: "Set vibe details",
+		InputSchema: json.RawMessage(`{"additionalProperties":false,"description":"The detailed vibe of the server","properties":{"vibe":{"description":"The vibe of the string to be set","type":"string"},"vibeScalar":{"additionalProperties":false,"description":"The details of the vibe","properties":{"vibeBool":{"description":"The details of the vibe bool","type":"boolean"},"vibeBytes":{"contentEncoding":"base64","description":"the details of the vibe bytes","type":"string"},"vibeDouble":{"anyOf":[{"type":"number"},{"enum":["NaN","Infinity","-Infinity"],"type":"string"}],"description":"The details of the vibe double"},"vibeEnum":{"description":"The details of the vibe string","items":{"description":"The details of the vibe string","enum":["VIBE_UNSET","VIBE_GOOD"],"type":"string"},"type":"array"},"vibeFixed32":{"description":"The details of the vibe fixed32","minimum":0,"type":"integer"},"vibeFixed64":{"description":"The details of the vibe fixed64","minimum":0,"type":["integer","string"]},"vibeFloat":{"anyOf":[{"type":"number"},{"enum":["NaN","Infinity","-Infinity"],"type":"string"}],"description":"the details of the vibe float"},"vibeInt32":{"description":"The details of the vibe int32","type":"integer"},"vibeInt64":{"description":"The details of the vibe int64","type":["integer","string"]},"vibeSfixed32":{"description":"The details of the vibe sfixed32","type":"integer"},"vibeSfixed64":{"description":"The details of the vibe sfixed64","type":["integer","string"]},"vibeSint32":{"description":"The details of the vibe sint32","type":"integer"},"vibeSint64":{"description":"The details of the vibe sint64","type":["integer","string"]},"vibeUint32":{"description":"The details of the vibe uint32","minimum":0,"type":"integer"},"vibeUint64":{"description":"The details of the vibe uint64","minimum":0,"type":["integer","string"]}},"type":"object"}},"type":"object"}`),
+	}
 }
 
-func (s *vibeServiceMCPServer) SetVibeDetailsHandler(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	// Create request message from parameters
+func (s *vibeServiceMCPServer) SetVibeDetailsHandler(ctx context.Context, req *mcp.CallToolRequest, args json.RawMessage) (*mcp.CallToolResult, any, error) {
 	protoReq := &SetVibeDetailsRequest{}
-	// Extract vibe
-	if val, ok := req.Params.Arguments["vibe"]; ok {
-		if strVal, ok := val.(string); ok {
-			protoReq.Vibe = strVal
+	if len(args) > 0 {
+		if err := protojson.Unmarshal(args, protoReq); err != nil {
+			return nil, nil, err
 		}
 	}
-	// Extract vibe_scalar
-	if val, ok := req.Params.Arguments["vibe_scalar"]; ok {
-		if objVal, ok := val.(map[string]any); ok {
-			msgVal := &VibeScalar{}
-			if fieldVal, ok := objVal["vibe_double"]; ok {
-				if numVal, ok := fieldVal.(float64); ok {
-					msgVal.VibeDouble = numVal
-				}
-			}
-			if fieldVal, ok := objVal["vibe_float"]; ok {
-				if numVal, ok := fieldVal.(float32); ok {
-					msgVal.VibeFloat = numVal
-				}
-			}
-			if fieldVal, ok := objVal["vibe_int32"]; ok {
-				if numVal, ok := fieldVal.(int32); ok {
-					msgVal.VibeInt32 = numVal
-				}
-			}
-			if fieldVal, ok := objVal["vibe_int64"]; ok {
-				if numVal, ok := fieldVal.(int64); ok {
-					msgVal.VibeInt64 = numVal
-				}
-			}
-			if fieldVal, ok := objVal["vibe_uint32"]; ok {
-				if numVal, ok := fieldVal.(uint32); ok {
-					msgVal.VibeUint32 = &numVal
-				}
-			}
-			if fieldVal, ok := objVal["vibe_uint64"]; ok {
-				if numVal, ok := fieldVal.(uint64); ok {
-					msgVal.VibeUint64 = numVal
-				}
-			}
-			if fieldVal, ok := objVal["vibe_sint32"]; ok {
-				if numVal, ok := fieldVal.(int32); ok {
-					msgVal.VibeSint32 = numVal
-				}
-			}
-			if fieldVal, ok := objVal["vibe_sint64"]; ok {
-				if numVal, ok := fieldVal.(int64); ok {
-					msgVal.VibeSint64 = numVal
-				}
-			}
-			if fieldVal, ok := objVal["vibe_fixed32"]; ok {
-				if numVal, ok := fieldVal.(uint32); ok {
-					msgVal.VibeFixed32 = numVal
-				}
-			}
-			if fieldVal, ok := objVal["vibe_fixed64"]; ok {
-				if numVal, ok := fieldVal.(uint64); ok {
-					msgVal.VibeFixed64 = numVal
-				}
-			}
-			if fieldVal, ok := objVal["vibe_sfixed32"]; ok {
-				if numVal, ok := fieldVal.(int32); ok {
-					msgVal.VibeSfixed32 = numVal
-				}
-			}
-			if fieldVal, ok := objVal["vibe_sfixed64"]; ok {
-				if numVal, ok := fieldVal.(int64); ok {
-					msgVal.VibeSfixed64 = numVal
-				}
-			}
-			if fieldVal, ok := objVal["vibe_bool"]; ok {
-				if numVal, ok := fieldVal.(bool); ok {
-					msgVal.VibeBool = numVal
-				}
-			}
-			if fieldVal, ok := objVal["vibe_bytes"]; ok {
-				if numVal, ok := fieldVal.([]byte); ok {
-					msgVal.VibeBytes = numVal
-				}
-			}
-			if fieldVal, ok := objVal["vibe_enum"]; ok {
-				if arrVal, ok := fieldVal.([]any); ok {
-					for _, item := range arrVal {
-						if numVal, ok := item.(float64); ok {
-							msgVal.VibeEnum = append(msgVal.VibeEnum, VibeScalar_VibeEnum(int32(numVal)))
-						} else if strVal, ok := item.(string); ok {
-							// Try to convert string enum value if provided as string
-							if val, ok := VibeScalar_VibeEnum_value[strVal]; ok {
-								msgVal.VibeEnum = append(msgVal.VibeEnum, VibeScalar_VibeEnum(val))
-							}
-						}
-					}
-				}
-			}
-			protoReq.VibeScalar = msgVal
-		}
-	}
-	// Call the client method
+
 	resp, err := s.VibeServiceClient.SetVibeDetails(ctx, protoReq)
 	if err != nil {
-		// Return error as a CallToolResult with IsError=true
-		return &mcp.CallToolResult{
-			Content: []mcp.Content{
-				&mcp.TextContent{
-					Text: err.Error(),
-				},
-			},
-			IsError: true,
-		}, nil
+		return nil, nil, err
 	}
-	// Create successful result
-	// Convert response to JSON
-	respContent := make(map[string]any)
-	respContent["previous_vibe"] = resp.PreviousVibe
-	respContent["vibe"] = resp.Vibe
-	// Create and return the CallToolResult
-	jsonContent, err := json.Marshal(respContent)
+
+	respJSON, err := protojson.Marshal(resp)
 	if err != nil {
-		return mcp.NewToolResultErrorFromErr("error marshaling", err), nil
+		return nil, nil, err
 	}
+
 	return &mcp.CallToolResult{
 		Content: []mcp.Content{
-			&mcp.TextContent{
-				Text: string(jsonContent),
-				Type: "text",
-			},
+			&mcp.TextContent{Text: string(respJSON)},
 		},
-		IsError: false,
-	}, nil
+	}, nil, nil
 }
 
-func (s *vibeServiceMCPServer) SetVibeDetailsTool() mcp.Tool {
-	tool := mcp.NewTool(
-		"SetVibeDetails", mcp.WithDescription("Set vibe details"),
-		mcp.WithObject(
-			"SetVibeDetailsRequest",
-			mcp.Description("The detailed vibe of the server"),
-			mcp.Properties(map[string]any{
-				"vibe": map[string]any{
-					"type":        "string",
-					"description": "The vibe of the string to be set",
-					"required":    true,
-				},
-				"vibe_scalar": map[string]any{
-					"type":        "message",
-					"description": "The details of the vibe",
-					"required":    true,
-				},
-			}),
-		),
-	)
-	return tool
+func (s *vibeServiceMCPServer) SetVibeArrayTool() *mcp.Tool {
+	return &mcp.Tool{
+		Name:        "SetVibeArray",
+		Description: "Set the vibe arrays",
+		InputSchema: json.RawMessage(`{"additionalProperties":false,"description":"The vibe array request","properties":{"vibeArray":{"additionalProperties":false,"description":"The details of the vibe array","properties":{"vibeBools":{"description":"The details of the vibe bool array","items":{"type":"boolean"},"type":"array"},"vibeByteses":{"description":"the details of the vibe bytes array","items":{"contentEncoding":"base64","type":"string"},"type":"array"},"vibeDoubles":{"description":"The details of the vibe double array","items":{"anyOf":[{"type":"number"},{"enum":["NaN","Infinity","-Infinity"],"type":"string"}]},"type":"array"},"vibeFixed32s":{"description":"The details of the vibe fixed32 array","items":{"minimum":0,"type":"integer"},"type":"array"},"vibeFixed64s":{"description":"The details of the vibe fixed64 array","items":{"minimum":0,"type":["integer","string"]},"type":"array"},"vibeFloats":{"description":"the details of the vibe float array","items":{"anyOf":[{"type":"number"},{"enum":["NaN","Infinity","-Infinity"],"type":"string"}]},"type":"array"},"vibeInt32s":{"description":"The details of the vibe int32 array","items":{"type":"integer"},"type":"array"},"vibeInt64s":{"description":"The details of the vibe int64 array","items":{"type":["integer","string"]},"type":"array"},"vibeSfixed32s":{"description":"The details of the vibe sfixed32 array","items":{"type":"integer"},"type":"array"},"vibeSfixed64s":{"description":"The details of the vibe sfixed64 array","items":{"type":["integer","string"]},"type":"array"},"vibeSint32s":{"description":"The details of the vibe sint32 array","items":{"type":"integer"},"type":"array"},"vibeSint64s":{"description":"The details of the vibe sint64 array","items":{"type":["integer","string"]},"type":"array"},"vibeUint32s":{"description":"The details of the vibe uint32 array","items":{"minimum":0,"type":"integer"},"type":"array"},"vibeUint64s":{"description":"The details of the vibe uint64 array","items":{"minimum":0,"type":["integer","string"]},"type":"array"}},"type":"object"}},"type":"object"}`),
+	}
 }
 
-func (s *vibeServiceMCPServer) SetVibeArrayHandler(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	// Create request message from parameters
+func (s *vibeServiceMCPServer) SetVibeArrayHandler(ctx context.Context, req *mcp.CallToolRequest, args json.RawMessage) (*mcp.CallToolResult, any, error) {
 	protoReq := &SetVibeArrayRequest{}
-	// Extract vibe_array
-	if val, ok := req.Params.Arguments["vibe_array"]; ok {
-		if objVal, ok := val.(map[string]any); ok {
-			msgVal := &VibeArray{}
-			if fieldVal, ok := objVal["vibe_doubles"]; ok {
-				if numVal, ok := fieldVal.([]float64); ok {
-					msgVal.VibeDoubles = numVal
-				}
-			}
-			if fieldVal, ok := objVal["vibe_floats"]; ok {
-				if numVal, ok := fieldVal.([]float32); ok {
-					msgVal.VibeFloats = numVal
-				}
-			}
-			if fieldVal, ok := objVal["vibe_int32s"]; ok {
-				if numVal, ok := fieldVal.([]int32); ok {
-					msgVal.VibeInt32S = numVal
-				}
-			}
-			if fieldVal, ok := objVal["vibe_int64s"]; ok {
-				if numVal, ok := fieldVal.([]int64); ok {
-					msgVal.VibeInt64S = numVal
-				}
-			}
-			if fieldVal, ok := objVal["vibe_uint32s"]; ok {
-				if numVal, ok := fieldVal.([]uint32); ok {
-					msgVal.VibeUint32S = numVal
-				}
-			}
-			if fieldVal, ok := objVal["vibe_uint64s"]; ok {
-				if numVal, ok := fieldVal.([]uint64); ok {
-					msgVal.VibeUint64S = numVal
-				}
-			}
-			if fieldVal, ok := objVal["vibe_sint32s"]; ok {
-				if numVal, ok := fieldVal.([]int32); ok {
-					msgVal.VibeSint32S = numVal
-				}
-			}
-			if fieldVal, ok := objVal["vibe_sint64s"]; ok {
-				if numVal, ok := fieldVal.([]int64); ok {
-					msgVal.VibeSint64S = numVal
-				}
-			}
-			if fieldVal, ok := objVal["vibe_fixed32s"]; ok {
-				if numVal, ok := fieldVal.([]uint32); ok {
-					msgVal.VibeFixed32S = numVal
-				}
-			}
-			if fieldVal, ok := objVal["vibe_fixed64s"]; ok {
-				if numVal, ok := fieldVal.([]uint64); ok {
-					msgVal.VibeFixed64S = numVal
-				}
-			}
-			if fieldVal, ok := objVal["vibe_sfixed32s"]; ok {
-				if numVal, ok := fieldVal.([]int32); ok {
-					msgVal.VibeSfixed32S = numVal
-				}
-			}
-			if fieldVal, ok := objVal["vibe_sfixed64s"]; ok {
-				if numVal, ok := fieldVal.([]int64); ok {
-					msgVal.VibeSfixed64S = numVal
-				}
-			}
-			if fieldVal, ok := objVal["vibe_bools"]; ok {
-				if numVal, ok := fieldVal.([]bool); ok {
-					msgVal.VibeBools = numVal
-				}
-			}
-			if fieldVal, ok := objVal["vibe_byteses"]; ok {
-				if numVal, ok := fieldVal.([][]byte); ok {
-					msgVal.VibeByteses = numVal
-				}
-			}
-			protoReq.VibeArray = msgVal
+	if len(args) > 0 {
+		if err := protojson.Unmarshal(args, protoReq); err != nil {
+			return nil, nil, err
 		}
 	}
-	// Call the client method
+
 	resp, err := s.VibeServiceClient.SetVibeArray(ctx, protoReq)
 	if err != nil {
-		// Return error as a CallToolResult with IsError=true
-		return &mcp.CallToolResult{
-			Content: []mcp.Content{
-				&mcp.TextContent{
-					Text: err.Error(),
-				},
-			},
-			IsError: true,
-		}, nil
+		return nil, nil, err
 	}
-	// Create successful result
-	// Convert response to JSON
-	respContent := make(map[string]any)
-	respContent["vibe_array"] = resp.VibeArray
-	// Create and return the CallToolResult
-	jsonContent, err := json.Marshal(respContent)
+
+	respJSON, err := protojson.Marshal(resp)
 	if err != nil {
-		return mcp.NewToolResultErrorFromErr("error marshaling", err), nil
+		return nil, nil, err
 	}
+
 	return &mcp.CallToolResult{
 		Content: []mcp.Content{
-			&mcp.TextContent{
-				Text: string(jsonContent),
-				Type: "text",
-			},
+			&mcp.TextContent{Text: string(respJSON)},
 		},
-		IsError: false,
-	}, nil
+	}, nil, nil
 }
 
-func (s *vibeServiceMCPServer) SetVibeArrayTool() mcp.Tool {
-	tool := mcp.NewTool(
-		"SetVibeArray", mcp.WithDescription("Set the vibe arrays"),
-		mcp.WithObject(
-			"SetVibeArrayRequest",
-			mcp.Description("The vibe array request"),
-			mcp.Properties(map[string]any{
-				"vibe_array": map[string]any{
-					"type":        "message",
-					"description": "The details of the vibe array",
-					"required":    true,
-				},
-			}),
-		),
-	)
-	return tool
+func (s *vibeServiceMCPServer) SetVibeObjectsTool() *mcp.Tool {
+	return &mcp.Tool{
+		Name:        "SetVibeObjects",
+		Description: "Set multiple vibe objects",
+		InputSchema: json.RawMessage(`{"additionalProperties":false,"description":"The request to set multiple vibe objects on the server","properties":{"vibeObject":{"description":"The details of the vibe","items":{"additionalProperties":false,"description":"The vibe object of the server","properties":{"vibe":{"description":"The vibe of the server","type":"string"}},"type":"object"},"type":"array"}},"type":"object"}`),
+	}
 }
 
-func (s *vibeServiceMCPServer) SetVibeObjectsHandler(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	// Create request message from parameters
+func (s *vibeServiceMCPServer) SetVibeObjectsHandler(ctx context.Context, req *mcp.CallToolRequest, args json.RawMessage) (*mcp.CallToolResult, any, error) {
 	protoReq := &SetVibeObjectsRequest{}
-	// Extract vibe_object
-	// Call the client method
+	if len(args) > 0 {
+		if err := protojson.Unmarshal(args, protoReq); err != nil {
+			return nil, nil, err
+		}
+	}
+
 	resp, err := s.VibeServiceClient.SetVibeObjects(ctx, protoReq)
 	if err != nil {
-		// Return error as a CallToolResult with IsError=true
-		return &mcp.CallToolResult{
-			Content: []mcp.Content{
-				&mcp.TextContent{
-					Text: err.Error(),
-				},
-			},
-			IsError: true,
-		}, nil
+		return nil, nil, err
 	}
-	// Create successful result
-	// Convert response to JSON
-	respContent := make(map[string]any)
-	respContent["vibe_object"] = resp.VibeObject
-	// Create and return the CallToolResult
-	jsonContent, err := json.Marshal(respContent)
+
+	respJSON, err := protojson.Marshal(resp)
 	if err != nil {
-		return mcp.NewToolResultErrorFromErr("error marshaling", err), nil
+		return nil, nil, err
 	}
+
 	return &mcp.CallToolResult{
 		Content: []mcp.Content{
-			&mcp.TextContent{
-				Text: string(jsonContent),
-				Type: "text",
-			},
+			&mcp.TextContent{Text: string(respJSON)},
 		},
-		IsError: false,
-	}, nil
+	}, nil, nil
 }
 
-func (s *vibeServiceMCPServer) SetVibeObjectsTool() mcp.Tool {
-	tool := mcp.NewTool(
-		"SetVibeObjects", mcp.WithDescription("Set multiple vibe objects"),
-		mcp.WithObject(
-			"SetVibeObjectsRequest",
-			mcp.Description("The request to set multiple vibe objects on the server"),
-			mcp.Properties(map[string]any{
-				"vibe_object": map[string]any{
-					"type":        "array",
-					"description": "The details of the vibe",
-					"required":    true,
-				},
-			}),
-		),
-	)
-	return tool
-}
-
-func (s *vibeServiceMCPServer) RegisterTool(tool mcp.Tool, handler server.ToolHandlerFunc) {
-	s.MCPServer.AddTool(tool, handler)
+func (s *vibeServiceMCPServer) RegisterTool(tool *mcp.Tool, handler mcp.ToolHandlerFor[json.RawMessage, any]) {
+	mcp.AddTool(s.MCPServer, tool, handler)
 }
 
 func (s *vibeServiceMCPServer) RegisterDefaultTools() {

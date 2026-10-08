@@ -3,7 +3,7 @@ protoc-gen-go-mcp
 This is a [Topeka](#topeka) plugin for the [protoc compiler](https://grpc.io/docs/protoc-installation/) that generates a [model-context-protocol(MCP)](https://modelcontextprotocol.io/introduction) server based on a [protocol buffer](https://protobuf.dev/) definition. Conceptually, this allows an AI model to use existing [gRPC](https://grpc.io/) codebases with natural language, allowing for rapid prototyping and usage of LLM capabilities for protobuf based codebases.
 
 #### Prerequisites
-- [Go](https://go.dev/doc/install) 1.20 or later
+- [Go](https://go.dev/doc/install) 1.25 or later
 - [protoc](https://grpc.io/docs/protoc-installation/) 3.20 or later
 - [protoc-gen-go-grpc](https://grpc.io/docs/languages/go/quickstart/) 1.71 or later
 
@@ -75,10 +75,12 @@ service VibeService {
 ```
 This snippet defines the `SetVibe` RPC, which takes a `SetVibeRequest` message and contains a definition of the request parameter `SetVibeRequest` message. The plugin generates the following tools by default:
 ```golang
-func (s *vibeServiceMCPServer) SetVibeTool() mcp.Tool {
-	tool := mcp.NewTool("...internal instantiation of the tool")
-	// ... internal implementation follows
-	return tool
+func (s *vibeServiceMCPServer) SetVibeTool() *mcp.Tool {
+	return &mcp.Tool{
+		Name:        "SetVibe",
+		Description: "Set Vibe",
+		InputSchema: json.RawMessage(`{"type":"object", ...}`), // JSON Schema derived from SetVibeRequest
+	}
 }
 ```
 This tool can be subsequently registered with the server to make the RPC available to the model.
@@ -86,16 +88,16 @@ This tool can be subsequently registered with the server to make the RPC availab
 2. The `protoc-gen-go-mcp` plugin generates a default handler that interacts with a generated gRPC client for interaction with this server to parse the `mcp.Tool` into a defined gRPC request leveraging a generated client.
 
 ```golang
-func (s *vibeServiceMCPServer) SetVibeHandler(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func (s *vibeServiceMCPServer) SetVibeHandler(ctx context.Context, req *mcp.CallToolRequest, args json.RawMessage) (*mcp.CallToolResult, any, error) {
 	//... internal instantiation of the handler
 }
 ```
 
-3. These two pieces are combined upon registration to provide the LLM with knowledge of the RPC method and how to use them:
+3. These two pieces are combined upon registration to provide the LLM with knowledge of the RPC method and how to use them. Registration uses [`mcp.AddTool`](https://pkg.go.dev/github.com/modelcontextprotocol/go-sdk/mcp#AddTool), so the SDK validates incoming arguments against the tool's input schema before the handler ever runs:
 ```golang
 func (s *vibeServiceMCPServer) RegisterDefaultTools() {
 	//...other tools added above
-	s.MCPServer.AddTool(s.SetVibeTool(), s.SetVibeHandler)
+	s.RegisterTool(s.SetVibeTool(), s.SetVibeHandler)
     //...other tools added below
 }
 ```
