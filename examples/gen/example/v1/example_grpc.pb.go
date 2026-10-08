@@ -44,7 +44,7 @@ type VibeServiceClient interface {
 	// This is a block comment
 	// with multiple lines
 	// to test block handling
-	// "Hello World"
+	// "Hello World", a `backtick`, and a path like C:\vibes\new
 	SetVibe(ctx context.Context, in *SetVibeRequest, opts ...grpc.CallOption) (*SetVibeResponse, error)
 	// Get Vibe
 	// of the server
@@ -134,7 +134,7 @@ type VibeServiceServer interface {
 	// This is a block comment
 	// with multiple lines
 	// to test block handling
-	// "Hello World"
+	// "Hello World", a `backtick`, and a path like C:\vibes\new
 	SetVibe(context.Context, *SetVibeRequest) (*SetVibeResponse, error)
 	// Get Vibe
 	// of the server

@@ -6,7 +6,8 @@ option go_package = "examples/gen/example/v1;examplev1";
 
 // The request to set the vibe of the server
 message SetVibeRequest {
-  //The vibe of the server to be set
+  // The vibe of the server to be set. Must match \d+ or a `code` like
+  // "chill", and must not contain a literal newline.
   string vibe = 1;
 }
 
@@ -150,7 +151,7 @@ service VibeService {
  * This is a block comment
  * with multiple lines
  * to test block handling
- * "Hello World"
+ * "Hello World", a `backtick`, and a path like C:\vibes\new
  */
   rpc SetVibe(SetVibeRequest) returns (SetVibeResponse) {}
   // Get Vibe
